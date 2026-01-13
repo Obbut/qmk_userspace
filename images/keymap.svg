@@ -637,23 +637,23 @@ text.hold { font-size: 10px; fill: #666666; }
 </g>
 <g transform="translate(644, 105)" class="key keypos-18">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap"><tspan style="font-size: 67%">RM_TO…</tspan></text>
+<text x="0" y="0" class="key tap">RGB</text>
 </g>
 <g transform="translate(700, 98)" class="key keypos-19">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap"><tspan style="font-size: 67%">RM_SA…</tspan></text>
+<text x="0" y="0" class="key tap">Sat+</text>
 </g>
 <g transform="translate(756, 84)" class="key keypos-20">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap"><tspan style="font-size: 67%">RM_HU…</tspan></text>
+<text x="0" y="0" class="key tap">Hue+</text>
 </g>
 <g transform="translate(812, 98)" class="key keypos-21">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap"><tspan style="font-size: 67%">RM_VA…</tspan></text>
+<text x="0" y="0" class="key tap">Brt+</text>
 </g>
 <g transform="translate(868, 126)" class="key keypos-22">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap"><tspan style="font-size: 67%">RM_NE…</tspan></text>
+<text x="0" y="0" class="key tap">Next</text>
 </g>
 <g transform="translate(924, 126)" class="key keypos-23">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
@@ -698,26 +698,26 @@ text.hold { font-size: 10px; fill: #666666; }
 </g>
 <g transform="translate(700, 154)" class="key keypos-35">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap"><tspan style="font-size: 67%">RM_SA…</tspan></text>
+<text x="0" y="0" class="key tap">Sat-</text>
 </g>
 <g transform="translate(756, 140)" class="key keypos-36">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap"><tspan style="font-size: 67%">RM_HU…</tspan></text>
+<text x="0" y="0" class="key tap">Hue-</text>
 </g>
 <g transform="translate(812, 154)" class="key keypos-37">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap"><tspan style="font-size: 67%">RM_VA…</tspan></text>
+<text x="0" y="0" class="key tap">Brt-</text>
 </g>
 <g transform="translate(868, 182)" class="key keypos-38">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap"><tspan style="font-size: 67%">RM_PR…</tspan></text>
+<text x="0" y="0" class="key tap">Prev</text>
 </g>
 <g transform="translate(924, 182)" class="key keypos-39">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
 </g>
 <g transform="translate(168, 210)" class="key keypos-40">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap"><tspan style="font-size: 67%">RM_PR…</tspan></text>
+<text x="0" y="0" class="key tap">Prev</text>
 </g>
 <g transform="translate(224, 210)" class="key keypos-41">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
@@ -745,7 +745,7 @@ text.hold { font-size: 10px; fill: #666666; }
 </g>
 <g transform="translate(784, 210)" class="key keypos-49">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap"><tspan style="font-size: 67%">RM_NE…</tspan></text>
+<text x="0" y="0" class="key tap">Next</text>
 </g>
 </g>
 </g>
