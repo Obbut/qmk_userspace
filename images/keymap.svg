@@ -136,14 +136,15 @@ text.hold { font-size: 10px; fill: #666666; }
 </g>
 <g transform="translate(369, 193) rotate(30.0)" class="key keypos-30">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
+<text x="0" y="0" class="key tap">OPT</text>
 </g>
 <g transform="translate(429, 239) rotate(45.0)" class="key keypos-31">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">Fn</text>
-<text x="0" y="24" class="key hold"><tspan style="font-size: 80%">MO(3)</tspan></text>
+<text x="0" y="0" class="key tap"><tspan style="font-size: 67%">Scree…</tspan></text>
 </g>
 <g transform="translate(523, 239) rotate(-45.0)" class="key keypos-32">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
+<text x="0" y="0" class="key tap">Fn</text>
 </g>
 <g transform="translate(583, 193) rotate(-30.0)" class="key keypos-33">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
