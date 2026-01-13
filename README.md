@@ -19,8 +19,8 @@ make clean        # Remove compiled firmware files
 
 1. Put the keyboard half into bootloader mode (double-tap reset button)
 2. Run the appropriate flash command or copy the .uf2 file to the mounted drive:
-   - `kyria_rev4_obbut_cirque.uf2` → Left half (Cirque trackpad)
-   - `kyria_rev4_obbut_encoder.uf2` → Right half (Encoder)
+   - `kyria_rev4_obbut_left_cirque.uf2` → Left half (Cirque trackpad)
+   - `kyria_rev4_obbut_right_encoder.uf2` → Right half (Encoder)
 
 ## Keymap
 
