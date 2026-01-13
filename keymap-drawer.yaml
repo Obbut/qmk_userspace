@@ -1,0 +1,36 @@
+draw_config:
+  key_h: 56
+  key_w: 56
+  combo_h: 22
+  combo_w: 26
+  key_rx: 6
+  key_ry: 6
+  inner_pad_w: 2
+  inner_pad_h: 2
+  outer_pad_w: 30
+  outer_pad_h: 56
+  line_spacing: 1.2
+  arc_radius: 6
+  append_colon_to_layer_header: true
+  small_pad: 2
+  shrink_wide_legends: 4
+  glyph_tap_size: 14
+  glyph_hold_size: 11
+  svg_style: |
+    svg {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 14px;
+      font-kerning: normal;
+      text-rendering: optimizeLegibility;
+    }
+    text { text-anchor: middle; dominant-baseline: middle; }
+    rect.key { fill: #f5f5f5; stroke: #cccccc; }
+    rect.held { fill: #a8d8ea; }
+    text.tap { font-size: 12px; fill: #333333; }
+    text.hold { font-size: 10px; fill: #666666; }
+
+parse_config:
+  mark_alternate_layer_activators: true
+  qmk_keycode_map:
+    KC_TRNS: ""
+    KC_NO: ""

@@ -1,0 +1,28 @@
+layout:
+  qmk_keyboard: splitkb/kyria/rev3
+  layout_name: LAYOUT_split_3x6_5
+
+layers:
+  Default:
+    - [TAB,  Q, W, F, P, B,    J, L, U,   Y, ";",  BSPC]
+    - [ESC,  A, R, S, T, G,    M, N, E,   I, O,    "'"]
+    - [LSFT, Z, X, C, D, V,    "", {t: Fn, h: MO(3)},    "", "", K, H, ",", ".", /,  ENT]
+    - [MUTE, LCTL, LGUI, {t: Lower, h: MO(1)}, SPC,    SPC, {t: Raise, h: MO(2)}, {t: Lower, h: MO(1)}, "", MUTE]
+
+  Lower:
+    - ["", "", "", "", "", "",    "", "", "", "", DEL, BSPC]
+    - ["", "", "", "", "", "",    LEFT, DOWN, UP, RGHT, "", ""]
+    - ["", "", "", "", "", "",    "", "",    "", "", "", "", "", "", "", ""]
+    - [MPRV, "", "", "", "", "",    "", "", "", MNXT]
+
+  Raise:
+    - ["`", "!", "@", "[", "]", "",    "", "7", "8", "9", "-", ""]
+    - ["",  "#", $,  "(", ")", ":",    "", "4", "5", "6", +, "="]
+    - ["",  "%", ^,  "{", "}", "",    "", "",    "", "", "0", "1", "2", "3", ".", "\\"]
+    - [VOLD, "", "", "", "", "",    "", "", "", VOLU]
+
+  Function:
+    - ["",   F11, F12, F13, F14, F15,    "",      "",      "",      "",      "",      ""]
+    - ["",   F6,  F7,  F8,  F9,  F10,    RM_TOGG, RM_SATU, RM_HUEU, RM_VALU, RM_NEXT, ""]
+    - ["",   F1,  F2,  F3,  F4,  F5,     "",      "",      "",      "", "",      RM_SATD, RM_HUED, RM_VALD, RM_PREV, ""]
+    - [RM_PREV, "", "", "", "", "",    "", "", "", RM_NEXT]
