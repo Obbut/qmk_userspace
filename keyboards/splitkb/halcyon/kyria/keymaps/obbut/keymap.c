@@ -17,12 +17,15 @@ enum layers {
 // Aerospace window manager modifier (Cmd+Ctrl+Opt)
 #define AEROSPACE LCTL(LGUI(KC_RALT))
 
+// macOS screenshot (Cmd+Ctrl+Shift+4)
+#define SCREENSHOT LGUI(LCTL(LSFT(KC_4)))
+
 // clang-format off
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_DEFAULT] = LAYOUT_split_3x6_5_hlc(
      KC_TAB  , KC_Q ,  KC_W   ,  KC_F  ,   KC_P ,   KC_B ,                                        KC_J,   KC_L ,  KC_U ,   KC_Y ,KC_SCLN, KC_BSPC,
      KC_ESC  , KC_A ,  KC_R   ,  KC_S  ,   KC_T ,   KC_G ,                                        KC_M,   KC_N ,  KC_E ,   KC_I ,  KC_O , KC_QUOT,
-     KC_LSFT , KC_Z ,  KC_X   ,  KC_C  ,   KC_D ,   KC_V , KC_NO  , KC_NO  ,     FKEYS  , KC_NO  , KC_K,   KC_H ,KC_COMM, KC_DOT ,KC_SLSH, KC_ENT ,
+     KC_LSFT , KC_Z ,  KC_X   ,  KC_C  ,   KC_D ,   KC_V , KC_LOPT, SCREENSHOT,  FKEYS  , KC_NO  , KC_K,   KC_H ,KC_COMM, KC_DOT ,KC_SLSH, KC_ENT ,
                                 KC_NO  , KC_LCTL, KC_LGUI, AEROSPACE, KC_SPC,     KC_NO  , KC_SPC , RAISE , LOWER  , KC_NO  ,
      KC_NO  , KC_NO,  KC_NO, KC_NO, KC_NO,                                                                KC_NO  , KC_NO, KC_NO, KC_NO, KC_NO
     ),
