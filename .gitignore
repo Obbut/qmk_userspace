@@ -1,0 +1,17 @@
+# Build outputs
+*.uf2
+*.hex
+*.bin
+
+# QMK build artifacts
+.build/
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Claude
+.claude/
