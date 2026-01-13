@@ -1,4 +1,4 @@
-.PHONY: all left right clean flash-left flash-right
+.PHONY: all left right clean flash-left flash-right draw
 
 KEYBOARD = splitkb/halcyon/kyria/rev4
 KEYMAP = obbut
@@ -19,3 +19,6 @@ flash-right:
 
 clean:
 	rm -f *.uf2 *.hex *.bin
+
+draw:
+	./draw-keymap.sh

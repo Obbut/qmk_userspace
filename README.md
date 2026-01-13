@@ -24,11 +24,18 @@ make clean        # Remove compiled firmware files
 
 ## Keymap
 
+![Keymap visualization](images/keymap.svg)
+
 4-layer Colemak-DH layout:
 - **Default**: Colemak-DH base layer
 - **Lower**: Navigation (arrows, delete)
 - **Raise**: Symbols and numpad
 - **Function**: F-keys (F1-F15) and RGB controls
+
+To regenerate the keymap image after editing `keymap.yaml`:
+```bash
+make draw
+```
 
 ## Attribution
 
