@@ -3,11 +3,11 @@
     "build_targets": [
         ["splitkb/halcyon/kyria/rev4", "obbut", {
             "HLC_CIRQUE_TRACKPAD": "1",
-            "TARGET": "kyria_rev4_obbut_cirque"
+            "TARGET": "kyria_rev4_obbut_left_cirque"
         }],
         ["splitkb/halcyon/kyria/rev4", "obbut", {
             "HLC_ENCODER": "1",
-            "TARGET": "kyria_rev4_obbut_encoder"
+            "TARGET": "kyria_rev4_obbut_right_encoder"
         }]
     ]
 }
