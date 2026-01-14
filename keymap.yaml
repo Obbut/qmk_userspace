@@ -11,14 +11,14 @@ layers:
 
   Lower:
     - ["", "", "", "", "", "",    "", "", "", "", DEL, BSPC]
-    - ["", "", "", "", "", "",    LEFT, DOWN, UP, RGHT, "", ""]
+    - ["", "", "", "", "", "",    {t: LEFT, type: rgb-magenta}, {t: DOWN, type: rgb-magenta}, {t: UP, type: rgb-magenta}, {t: RGHT, type: rgb-magenta}, "", ""]
     - ["", "", "", "", "", "",    "", "",    "", "", "", "", "", "", "", ""]
     - ["", "", "", "", "",    "", "", "", "", ""]
 
   Raise:
-    - ["`", "!", "@", "[", "]", "",    "", "7", "8", "9", "-", ""]
-    - ["",  "#", $,  "(", ")", ":",    "", "4", "5", "6", +, "="]
-    - ["",  "%", ^,  "{", "}", "",    "", "",    "", "", "0", "1", "2", "3", ".", "\\"]
+    - [{t: "`", type: rgb-yellow}, {t: "!", type: rgb-yellow}, {t: "@", type: rgb-yellow}, {t: "[", type: rgb-yellow}, {t: "]", type: rgb-yellow}, "",    "", {t: "7", type: rgb-blue}, {t: "8", type: rgb-blue}, {t: "9", type: rgb-blue}, {t: "-", type: rgb-yellow}, ""]
+    - ["", {t: "#", type: rgb-yellow}, {t: $, type: rgb-yellow}, {t: "(", type: rgb-yellow}, {t: ")", type: rgb-yellow}, {t: ":", type: rgb-yellow},    "", {t: "4", type: rgb-blue}, {t: "5", type: rgb-blue}, {t: "6", type: rgb-blue}, {t: +, type: rgb-yellow}, {t: "=", type: rgb-yellow}]
+    - ["", {t: "%", type: rgb-yellow}, {t: ^, type: rgb-yellow}, {t: "{", type: rgb-yellow}, {t: "}", type: rgb-yellow}, "",    "", "",    "", "", {t: "0", type: rgb-blue}, {t: "1", type: rgb-blue}, {t: "2", type: rgb-blue}, {t: "3", type: rgb-blue}, {t: ".", type: rgb-yellow}, {t: "\\", type: rgb-yellow}]
     - ["", "", "", "", "",    "", "", "", "", ""]
 
   Function:
