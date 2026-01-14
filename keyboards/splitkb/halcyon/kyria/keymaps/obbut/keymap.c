@@ -63,3 +63,41 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
     [_FUNCTION] = { ENCODER_CCW_CW(RM_PREV, RM_NEXT),  ENCODER_CCW_CW(RM_PREV, RM_NEXT),  ENCODER_CCW_CW(RM_PREV, RM_NEXT),  ENCODER_CCW_CW(RM_PREV, RM_NEXT)  },
 };
 #endif
+
+#if defined(RGB_MATRIX_ENABLE)
+bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
+    if (get_highest_layer(layer_state) == _RAISE) {
+        // Turn off all LEDs first
+        for (uint8_t i = led_min; i < led_max; i++) {
+            rgb_matrix_set_color(i, RGB_OFF);
+        }
+
+        // Highlight keys based on what's mapped on the Raise layer
+        for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
+            for (uint8_t col = 0; col < MATRIX_COLS; col++) {
+                uint8_t led_index = g_led_config.matrix_co[row][col];
+                if (led_index >= led_min && led_index < led_max && led_index != NO_LED) {
+                    keypos_t pos = {.row = row, .col = col};
+                    uint16_t keycode = keymap_key_to_keycode(_RAISE, pos);
+
+                    // Number keys: blue
+                    if (keycode >= KC_1 && keycode <= KC_0) {
+                        rgb_matrix_set_color(led_index, 0, 0, 255);
+                    }
+                    // Symbol keys: yellow
+                    else if (keycode == KC_GRV || keycode == KC_EXLM || keycode == KC_AT ||
+                             keycode == KC_HASH || keycode == KC_DLR || keycode == KC_PERC ||
+                             keycode == KC_CIRC || keycode == KC_LBRC || keycode == KC_RBRC ||
+                             keycode == KC_LPRN || keycode == KC_RPRN || keycode == KC_LCBR ||
+                             keycode == KC_RCBR || keycode == KC_COLN || keycode == KC_MINS ||
+                             keycode == KC_PLUS || keycode == KC_EQL || keycode == KC_DOT ||
+                             keycode == KC_BSLS) {
+                        rgb_matrix_set_color(led_index, 255, 255, 0);
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
+#endif
