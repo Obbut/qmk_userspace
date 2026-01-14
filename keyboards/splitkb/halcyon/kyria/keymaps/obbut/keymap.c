@@ -1,5 +1,6 @@
 #include QMK_KEYBOARD_H
 #include "transactions.h"
+#include "os_detection.h"
 
 enum layers {
     _DEFAULT = 0,
@@ -92,6 +93,11 @@ void housekeeping_task_user(void) {
     }
 }
 
+// Check if we're running on Windows
+static inline bool is_windows(void) {
+    return detected_host_os() == OS_WINDOWS;
+}
+
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     // When pressing RGB control keys on Function layer, enable preview mode
     if (record->event.pressed && get_highest_layer(layer_state) == _FUNCTION) {
@@ -109,6 +115,27 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
                 break;
         }
     }
+
+    // Swap Ctrl and Cmd on Windows
+    if (is_windows()) {
+        switch (keycode) {
+            case KC_LCTL:
+                if (record->event.pressed) {
+                    register_code(KC_LGUI);
+                } else {
+                    unregister_code(KC_LGUI);
+                }
+                return false;
+            case KC_LGUI:
+                if (record->event.pressed) {
+                    register_code(KC_LCTL);
+                } else {
+                    unregister_code(KC_LCTL);
+                }
+                return false;
+        }
+    }
+
     return true;
 }
 
@@ -188,6 +215,10 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
             rgb_matrix_set_color(i, RGB_OFF);
         }
 
+        // Determine which key to highlight based on OS (the "primary" modifier)
+        // macOS: Command (KC_LGUI), Windows: Control (KC_LCTL)
+        uint16_t os_indicator_key = is_windows() ? KC_LCTL : KC_LGUI;
+
         // Highlight keys based on what's mapped on the Function layer
         for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
             for (uint8_t col = 0; col < MATRIX_COLS; col++) {
@@ -195,6 +226,7 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
                 if (led_index >= led_min && led_index < led_max && led_index != NO_LED) {
                     keypos_t pos = {.row = row, .col = col};
                     uint16_t keycode = keymap_key_to_keycode(_FUNCTION, pos);
+                    uint16_t default_keycode = keymap_key_to_keycode(_DEFAULT, pos);
 
                     // F-keys: cyan
                     if (keycode >= KC_F1 && keycode <= KC_F15) {
@@ -213,6 +245,10 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
                     // Boot keys: red
                     else if (keycode == QK_BOOT) {
                         rgb_matrix_set_color(led_index, 255, 68, 68);
+                    }
+                    // OS indicator: white on primary modifier key
+                    else if (default_keycode == os_indicator_key) {
+                        rgb_matrix_set_color(led_index, 255, 255, 255);
                     }
                 }
             }
