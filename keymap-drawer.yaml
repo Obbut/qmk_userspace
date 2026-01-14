@@ -32,6 +32,10 @@ draw_config:
     .rgb-magenta > rect { stroke: #ff00ff; stroke-width: 2.5; }
     .rgb-blue > rect { stroke: #4488ff; stroke-width: 2.5; }
     .rgb-yellow > rect { stroke: #ffaa00; stroke-width: 2.5; }
+    .rgb-cyan > rect { stroke: #00dddd; stroke-width: 2.5; }
+    .rgb-green > rect { stroke: #44dd44; stroke-width: 2.5; }
+    .rgb-green-dark > rect { stroke: #228822; stroke-width: 2.5; }
+    .rgb-red > rect { stroke: #ff4444; stroke-width: 2.5; }
 
 parse_config:
   mark_alternate_layer_activators: true

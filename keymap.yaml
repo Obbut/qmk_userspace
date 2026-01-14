@@ -22,7 +22,7 @@ layers:
     - ["", "", "", "", "",    "", "", "", "", ""]
 
   Function:
-    - ["",   F11, F12, F13, F14, F15,    "",      "",      "",      "",      "",      ""]
-    - [Boot, F6,  F7,  F8,  F9,  F10,    RGB,     Sat+,    Hue+,    Brt+,    Next,    Boot]
-    - ["",   F1,  F2,  F3,  F4,  F5,     "",      "",      "",      "",      "",      Sat-,    Hue-,    Brt-,    Prev,    ""]
+    - ["", {t: F11, type: rgb-cyan}, {t: F12, type: rgb-cyan}, {t: F13, type: rgb-cyan}, {t: F14, type: rgb-cyan}, {t: F15, type: rgb-cyan},    "", "", "", "", "", ""]
+    - [{t: Boot, type: rgb-red}, {t: F6, type: rgb-cyan}, {t: F7, type: rgb-cyan}, {t: F8, type: rgb-cyan}, {t: F9, type: rgb-cyan}, {t: F10, type: rgb-cyan},    {t: RGB, type: rgb-green}, {t: Sat+, type: rgb-green}, {t: Hue+, type: rgb-green}, {t: Brt+, type: rgb-green}, {t: Next, type: rgb-green}, {t: Boot, type: rgb-red}]
+    - ["", {t: F1, type: rgb-cyan}, {t: F2, type: rgb-cyan}, {t: F3, type: rgb-cyan}, {t: F4, type: rgb-cyan}, {t: F5, type: rgb-cyan},     "", "",    "", "", "", {t: Sat-, type: rgb-green-dark}, {t: Hue-, type: rgb-green-dark}, {t: Brt-, type: rgb-green-dark}, {t: Prev, type: rgb-green-dark}, ""]
     - ["", "", "", "", "",    "", "", "", "", ""]
