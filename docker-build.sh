@@ -16,6 +16,79 @@ if ! docker image inspect "$IMAGE_NAME" &>/dev/null; then
     docker build -t "$IMAGE_NAME" -f "$SCRIPT_DIR/Dockerfile.qmk" "$SCRIPT_DIR"
 fi
 
+# Find the RPI-RP2 bootloader drive (cross-platform)
+find_bootloader_drive() {
+    # macOS
+    if [[ -d "/Volumes/RPI-RP2" ]]; then
+        echo "/Volumes/RPI-RP2"
+        return 0
+    fi
+
+    # Linux (common mount points)
+    for base in "/media/$USER" "/run/media/$USER" "/mnt"; do
+        if [[ -d "$base/RPI-RP2" ]]; then
+            echo "$base/RPI-RP2"
+            return 0
+        fi
+    done
+
+    # Windows (Git Bash/MSYS) - use PowerShell to find drive letter
+    if command -v powershell.exe &>/dev/null; then
+        local drive
+        drive=$(powershell.exe -NoProfile -Command '(Get-Volume | Where-Object { $_.FileSystemLabel -eq "RPI-RP2" }).DriveLetter' 2>/dev/null | tr -d '\r\n')
+        if [[ -n "$drive" ]]; then
+            echo "/$(echo "$drive" | tr '[:upper:]' '[:lower:]')"
+            return 0
+        fi
+    fi
+
+    return 1
+}
+
+# Wait for bootloader drive and flash firmware
+flash_firmware() {
+    local uf2_file="$1"
+    local side="$2"
+
+    if [[ ! -f "$SCRIPT_DIR/$uf2_file" ]]; then
+        echo "Error: Firmware file not found: $uf2_file"
+        echo "Run build first."
+        exit 1
+    fi
+
+    echo ""
+    echo "Waiting for bootloader drive..."
+    if [[ "$side" == "left" ]]; then
+        echo "Put the LEFT half in bootloader mode: Fn + Esc"
+    else
+        echo "Put the RIGHT half in bootloader mode: Fn + '"
+    fi
+    echo ""
+
+    local timeout=60
+    local elapsed=0
+    local drive=""
+
+    while [[ $elapsed -lt $timeout ]]; do
+        drive=$(find_bootloader_drive)
+        if [[ -n "$drive" ]]; then
+            echo "Found bootloader drive: $drive"
+            echo "Copying $uf2_file..."
+            cp "$SCRIPT_DIR/$uf2_file" "$drive/"
+            echo "Firmware flashed successfully!"
+            return 0
+        fi
+        sleep 1
+        elapsed=$((elapsed + 1))
+        if [[ $((elapsed % 5)) -eq 0 ]]; then
+            echo "Waiting... ($elapsed seconds)"
+        fi
+    done
+
+    echo "Error: Timeout waiting for bootloader drive"
+    exit 1
+}
+
 build_left() {
     echo "Building left half (Cirque trackpad)..."
     docker run --rm \
@@ -51,6 +124,14 @@ case "${1:-all}" in
         build_left
         build_right
         ;;
+    flash-left)
+        build_left
+        flash_firmware "kyria_rev4_obbut_left_cirque.uf2" "left"
+        ;;
+    flash-right)
+        build_right
+        flash_firmware "kyria_rev4_obbut_right_encoder.uf2" "right"
+        ;;
     clean)
         rm -f "$SCRIPT_DIR"/*.uf2 "$SCRIPT_DIR"/*.hex "$SCRIPT_DIR"/*.bin
         echo "Cleaned build artifacts"
@@ -60,12 +141,14 @@ case "${1:-all}" in
         docker build -t "$IMAGE_NAME" -f "$SCRIPT_DIR/Dockerfile.qmk" "$SCRIPT_DIR"
         ;;
     *)
-        echo "Usage: $0 [left|right|all|clean|rebuild-image]"
+        echo "Usage: $0 [left|right|all|flash-left|flash-right|clean|rebuild-image]"
         echo ""
         echo "Commands:"
         echo "  left          - Build left half firmware (Cirque trackpad)"
         echo "  right         - Build right half firmware (encoder)"
         echo "  all           - Build both halves (default)"
+        echo "  flash-left    - Build and flash left half"
+        echo "  flash-right   - Build and flash right half"
         echo "  clean         - Remove build artifacts"
         echo "  rebuild-image - Force rebuild the Docker image"
         exit 1
