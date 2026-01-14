@@ -1,7 +1,5 @@
-// Copyright 2024 Robbert Brandsma
-// SPDX-License-Identifier: GPL-2.0-or-later
-
 #include QMK_KEYBOARD_H
+#include "transactions.h"
 
 enum layers {
     _DEFAULT = 0,
@@ -64,9 +62,72 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
 };
 #endif
 
+// Track if RGB controls were used on Function layer (to show actual RGB effect)
+static bool rgb_preview_mode = false;
+
+// Handler for receiving RGB preview mode sync from master
+void rgb_preview_sync_handler(uint8_t in_buflen, const void* in_data, uint8_t out_buflen, void* out_data) {
+    if (in_buflen == sizeof(rgb_preview_mode)) {
+        memcpy(&rgb_preview_mode, in_data, sizeof(rgb_preview_mode));
+    }
+}
+
+void keyboard_post_init_user(void) {
+    // Register the sync handler for RGB preview mode
+    transaction_register_rpc(USER_SYNC_RGB_PREVIEW, rgb_preview_sync_handler);
+}
+
+void housekeeping_task_user(void) {
+    if (is_keyboard_master()) {
+        static bool last_rgb_preview_mode = false;
+        static uint32_t last_sync = 0;
+
+        // Sync when state changes or every 500ms
+        if (rgb_preview_mode != last_rgb_preview_mode || timer_elapsed32(last_sync) > 500) {
+            if (transaction_rpc_send(USER_SYNC_RGB_PREVIEW, sizeof(rgb_preview_mode), &rgb_preview_mode)) {
+                last_rgb_preview_mode = rgb_preview_mode;
+                last_sync = timer_read32();
+            }
+        }
+    }
+}
+
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    // When pressing RGB control keys on Function layer, enable preview mode
+    if (record->event.pressed && get_highest_layer(layer_state) == _FUNCTION) {
+        switch (keycode) {
+            case RM_TOGG:
+            case RM_NEXT:
+            case RM_PREV:
+            case RM_HUEU:
+            case RM_HUED:
+            case RM_SATU:
+            case RM_SATD:
+            case RM_VALU:
+            case RM_VALD:
+                rgb_preview_mode = true;
+                break;
+        }
+    }
+    return true;
+}
+
+layer_state_t layer_state_set_user(layer_state_t state) {
+    // Reset preview mode when leaving Function layer
+    if (get_highest_layer(state) != _FUNCTION) {
+        rgb_preview_mode = false;
+    }
+    return state;
+}
+
 #if defined(RGB_MATRIX_ENABLE)
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     uint8_t layer = get_highest_layer(layer_state);
+
+    // Skip Function layer indicators if in preview mode
+    if (layer == _FUNCTION && rgb_preview_mode) {
+        return false;
+    }
 
     if (layer == _LOWER) {
         // Turn off all LEDs first
