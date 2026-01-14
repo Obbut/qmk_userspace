@@ -142,12 +142,12 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
                     // RGB controls increase: bright green
                     else if (keycode == RM_TOGG || keycode == RM_NEXT ||
                              keycode == RM_HUEU || keycode == RM_SATU || keycode == RM_VALU) {
-                        rgb_matrix_set_color(led_index, 68, 220, 68);
+                        rgb_matrix_set_color(led_index, 0, 255, 0);
                     }
                     // RGB controls decrease: dark green
                     else if (keycode == RM_PREV || keycode == RM_HUED ||
                              keycode == RM_SATD || keycode == RM_VALD) {
-                        rgb_matrix_set_color(led_index, 34, 136, 34);
+                        rgb_matrix_set_color(led_index, 0, 50, 0);
                     }
                     // Boot keys: red
                     else if (keycode == QK_BOOT) {
