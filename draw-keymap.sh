@@ -14,11 +14,18 @@ if ! docker image inspect "$IMAGE_NAME" &>/dev/null; then
   docker build -t "$IMAGE_NAME" .
 fi
 
-echo "Drawing SVG from keymap.yaml..."
-docker run --rm \
-  -v "$(pwd):/workdir" \
-  -w /workdir \
-  "$IMAGE_NAME" \
-  keymap -c keymap-drawer.yaml draw keymap.yaml -o "$OUTPUT_DIR/keymap.svg"
+# Layer names (must match keymap.yaml)
+LAYERS=("Default" "Lower" "Raise" "Function")
 
-echo "Generated $OUTPUT_DIR/keymap.svg"
+# Draw each layer separately
+for layer in "${LAYERS[@]}"; do
+  lowercase=$(echo "$layer" | tr '[:upper:]' '[:lower:]')
+  echo "Drawing $layer layer..."
+  docker run --rm \
+    -v "$(pwd):/workdir" \
+    -w /workdir \
+    "$IMAGE_NAME" \
+    keymap -c keymap-drawer.yaml draw keymap.yaml -s "$layer" -o "$OUTPUT_DIR/keymap-$lowercase.svg"
+done
+
+echo "Generated layer images in $OUTPUT_DIR/"
