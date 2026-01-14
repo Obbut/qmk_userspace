@@ -85,22 +85,27 @@ When discussing keys, you can refer to them by their keycap label:
 
 ## RGB Layer Indicators
 
-The keyboard has per-layer RGB backlighting:
-- **Lower layer**: Arrow keys highlighted in magenta
-- **Raise layer**: Number keys in blue, symbol keys in yellow
-- All other keys turn off on these layers for visibility
+The keyboard has per-layer RGB backlighting (all other keys turn off for visibility):
+
+- **Lower layer**: Arrow keys in magenta
+- **Raise layer**: Numbers in blue, symbols in yellow
+- **Function layer**: F-keys in cyan, RGB controls in green (dark green for decrease), Boot keys in red
 
 ### Keeping RGB in Sync
 
 RGB indicators are defined in **two places** that must stay in sync:
 
 1. **`keymap.c`** - The actual RGB code in `rgb_matrix_indicators_advanced_user()`
-2. **`keymap.yaml`** - Glow effects via `type` field on keys (e.g., `{t: LEFT, type: rgb-magenta}`)
+2. **`keymap.yaml`** - Border colors via `type` field on keys (e.g., `{t: LEFT, type: rgb-magenta}`)
 
-The glow styles are defined in `keymap-drawer.yaml` under `svg_style`:
-- `rgb-magenta` - Magenta glow for movement keys
-- `rgb-blue` - Blue glow for number keys
-- `rgb-yellow` - Yellow glow for symbol keys
+The border styles are defined in `keymap-drawer.yaml` under `svg_style`:
+- `rgb-magenta` - Magenta for movement keys
+- `rgb-blue` - Blue for number keys
+- `rgb-yellow` - Yellow for symbol keys
+- `rgb-cyan` - Cyan for F-keys
+- `rgb-green` - Green for RGB increase controls
+- `rgb-green-dark` - Dark green for RGB decrease controls
+- `rgb-red` - Red for Boot keys
 
 **When changing RGB indicators:**
 1. Update the logic in `keymap.c` (`rgb_matrix_indicators_advanced_user`)

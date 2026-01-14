@@ -121,6 +121,41 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
                 }
             }
         }
+    } else if (layer == _FUNCTION) {
+        // Turn off all LEDs first
+        for (uint8_t i = led_min; i < led_max; i++) {
+            rgb_matrix_set_color(i, RGB_OFF);
+        }
+
+        // Highlight keys based on what's mapped on the Function layer
+        for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
+            for (uint8_t col = 0; col < MATRIX_COLS; col++) {
+                uint8_t led_index = g_led_config.matrix_co[row][col];
+                if (led_index >= led_min && led_index < led_max && led_index != NO_LED) {
+                    keypos_t pos = {.row = row, .col = col};
+                    uint16_t keycode = keymap_key_to_keycode(_FUNCTION, pos);
+
+                    // F-keys: cyan
+                    if (keycode >= KC_F1 && keycode <= KC_F15) {
+                        rgb_matrix_set_color(led_index, 0, 220, 220);
+                    }
+                    // RGB controls increase: bright green
+                    else if (keycode == RM_TOGG || keycode == RM_NEXT ||
+                             keycode == RM_HUEU || keycode == RM_SATU || keycode == RM_VALU) {
+                        rgb_matrix_set_color(led_index, 68, 220, 68);
+                    }
+                    // RGB controls decrease: dark green
+                    else if (keycode == RM_PREV || keycode == RM_HUED ||
+                             keycode == RM_SATD || keycode == RM_VALD) {
+                        rgb_matrix_set_color(led_index, 34, 136, 34);
+                    }
+                    // Boot keys: red
+                    else if (keycode == QK_BOOT) {
+                        rgb_matrix_set_color(led_index, 255, 68, 68);
+                    }
+                }
+            }
+        }
     }
     return false;
 }
