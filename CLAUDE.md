@@ -10,14 +10,39 @@ This project has two keymap definitions that must stay in sync:
 **When changing the keymap:**
 1. Update `keymap.c` with the firmware changes
 2. Update `keymap.yaml` to match (this is manually maintained, not auto-generated)
-3. Run `make draw` to regenerate `images/keymap.svg`
-4. Commit all three files together
+3. Run `./draw-keymap.sh` (or `./build.ps1 draw` on Windows) to regenerate `images/*.svg`
+4. Commit all files together
 
 ## Build Commands
 
-- `make left` / `make right` - Compile firmware for each half
+All builds use Docker - no local QMK installation required. Just need Docker Desktop.
+
+### Bash (macOS/Linux/Git Bash on Windows)
+- `./docker-build.sh left` / `./docker-build.sh right` - Compile firmware for each half
+- `./docker-build.sh all` - Compile both halves
+- `./docker-build.sh clean` - Remove build artifacts
+- `./draw-keymap.sh` - Regenerate keymap SVGs
+
+### PowerShell (Windows)
+- `./build.ps1 left` / `./build.ps1 right` - Compile firmware for each half
+- `./build.ps1 flash-left` / `./build.ps1 flash-right` - Build and flash firmware
+- `./build.ps1 draw` - Regenerate keymap SVGs
+
+### Makefile (macOS with native QMK)
+- `make left` / `make right` - Compile firmware (requires local QMK CLI)
 - `make flash-left` / `make flash-right` - Flash firmware
-- `make draw` - Regenerate keymap SVG (requires Docker)
+- `make draw` - Regenerate keymap SVGs
+
+## Setup
+
+**Only requirement: Docker Desktop**
+
+The build scripts automatically:
+1. Build a Docker image with QMK firmware and toolchain (first run takes ~2-3 minutes)
+2. Mount this userspace as an overlay
+3. Compile and output `.uf2` files to this directory
+
+No need to install QMK CLI, Python, or ARM toolchains locally.
 
 ## Flashing
 
@@ -28,12 +53,18 @@ This project has two keymap definitions that must stay in sync:
 - **Fn + '** → Bootloader for right half
 
 ### Flashing Workflow
-1. Run `make flash-left` or `make flash-right` - the command will wait for the bootloader
-2. Put the keyboard half into bootloader mode (the command can be started first!)
-3. The flash will complete automatically when the drive appears
-4. Repeat for the other half if needed
 
-**Tip:** You can start the flash command before the keyboard is in bootloader mode. QMK will wait for the drive to appear, so you have time to press the boot key combo after starting the command.
+**Windows (PowerShell):**
+1. Run `./build.ps1 flash-left` or `./build.ps1 flash-right`
+2. Put the keyboard in bootloader mode when prompted
+3. The script will auto-detect the drive and copy the firmware
+
+**macOS/Manual:**
+1. Build firmware: `./docker-build.sh left` or `./docker-build.sh right`
+2. Put keyboard in bootloader mode (appears as `RPI-RP2` drive)
+3. Copy the `.uf2` file to the drive (e.g., `kyria_rev4_obbut_left_cirque.uf2`)
+
+**Tip:** You can start the flash command before the keyboard is in bootloader mode. The script will wait for the drive to appear.
 
 ## Hardware
 
@@ -110,4 +141,4 @@ The border styles are defined in `keymap-drawer.yaml` under `svg_style`:
 **When changing RGB indicators:**
 1. Update the logic in `keymap.c` (`rgb_matrix_indicators_advanced_user`)
 2. Update the `type` fields in `keymap.yaml` for affected keys
-3. Run `make draw` to regenerate the SVG
+3. Run `./docker-build.sh` then `./draw-keymap.sh` (or `./build.ps1 draw` on Windows) to regenerate the SVGs
