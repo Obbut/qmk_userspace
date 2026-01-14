@@ -19,6 +19,7 @@ All builds use Docker - no local QMK installation required. Just need Docker Des
 
 ### Bash (macOS/Linux/Git Bash on Windows)
 - `./docker-build.sh left` / `./docker-build.sh right` - Compile firmware for each half
+- `./docker-build.sh flash-left` / `./docker-build.sh flash-right` - Build and flash firmware
 - `./docker-build.sh all` - Compile both halves
 - `./docker-build.sh clean` - Remove build artifacts
 - `./draw-keymap.sh` - Regenerate keymap SVGs
@@ -54,17 +55,18 @@ No need to install QMK CLI, Python, or ARM toolchains locally.
 
 ### Flashing Workflow
 
-**Windows (PowerShell):**
-1. Run `./build.ps1 flash-left` or `./build.ps1 flash-right`
+**Automatic (recommended):**
+1. Run `./docker-build.sh flash-left` or `./docker-build.sh flash-right` (bash)
+   - Or `./build.ps1 flash-left` / `./build.ps1 flash-right` (PowerShell)
 2. Put the keyboard in bootloader mode when prompted
-3. The script will auto-detect the drive and copy the firmware
+3. The script auto-detects the `RPI-RP2` drive and copies the firmware
 
-**macOS/Manual:**
+**Manual:**
 1. Build firmware: `./docker-build.sh left` or `./docker-build.sh right`
 2. Put keyboard in bootloader mode (appears as `RPI-RP2` drive)
 3. Copy the `.uf2` file to the drive (e.g., `kyria_rev4_obbut_left_cirque.uf2`)
 
-**Tip:** You can start the flash command before the keyboard is in bootloader mode. The script will wait for the drive to appear.
+**Tip:** You can start the flash command before the keyboard is in bootloader mode. The script will wait up to 60 seconds for the drive to appear.
 
 ## Hardware
 
