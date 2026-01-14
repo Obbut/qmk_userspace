@@ -24,15 +24,35 @@ make clean        # Remove compiled firmware files
 
 ## Keymap
 
-![Keymap visualization](images/keymap.svg)
+4-layer Colemak-DH layout with per-layer RGB indicators.
 
-4-layer Colemak-DH layout:
-- **Default**: Colemak-DH base layer
-- **Lower**: Navigation (arrows, delete)
-- **Raise**: Symbols and numpad
-- **Function**: F-keys (F1-F15) and RGB controls
+### Default Layer
 
-To regenerate the keymap image after editing `keymap.yaml`:
+Colemak-DH base layer with home row optimized for comfortable typing.
+
+![Default layer](images/keymap-default.svg)
+
+### Lower Layer
+
+Navigation with arrow keys. Highlighted keys show RGB indicators (magenta).
+
+![Lower layer](images/keymap-lower.svg)
+
+### Raise Layer
+
+Symbols and numpad. RGB indicators: blue for numbers, yellow for symbols.
+
+![Raise layer](images/keymap-raise.svg)
+
+### Function Layer
+
+F-keys, RGB controls, and bootloader. RGB indicators: cyan for F-keys, green for RGB controls, red for boot.
+
+![Function layer](images/keymap-function.svg)
+
+---
+
+To regenerate the keymap images after editing `keymap.yaml`:
 ```bash
 make draw
 ```
