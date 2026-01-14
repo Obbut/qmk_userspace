@@ -19,6 +19,22 @@ This project has two keymap definitions that must stay in sync:
 - `make flash-left` / `make flash-right` - Flash firmware
 - `make draw` - Regenerate keymap SVG (requires Docker)
 
+## Flashing
+
+**Important:** Each half must be flashed separately. The halves run independent firmware.
+
+### Boot Keys
+- **Fn + Esc** → Bootloader for left half
+- **Fn + '** → Bootloader for right half
+
+### Flashing Workflow
+1. Run `make flash-left` or `make flash-right` - the command will wait for the bootloader
+2. Put the keyboard half into bootloader mode (the command can be started first!)
+3. The flash will complete automatically when the drive appears
+4. Repeat for the other half if needed
+
+**Tip:** You can start the flash command before the keyboard is in bootloader mode. QMK will wait for the drive to appear, so you have time to press the boot key combo after starting the command.
+
 ## Hardware
 
 - Kyria Rev4 (Halcyon series) split keyboard
@@ -59,3 +75,17 @@ When discussing keys, you can refer to them by their keycap label:
 - **Square** = Right thumb row 4, outermost
 - **Raise↑** = Right thumb row 4, 3rd from left
 - **Lower↓** = Right thumb row 4, 4th from left
+
+## Layers
+
+1. **Default** - Colemak-DH base layer
+2. **Lower** - Navigation (arrow keys)
+3. **Raise** - Symbols and numpad
+4. **Function** - F-keys (F1-F15), RGB controls, Boot keys
+
+## RGB Layer Indicators
+
+The keyboard has per-layer RGB backlighting:
+- **Lower layer**: Arrow keys highlighted in magenta
+- **Raise layer**: Number keys in blue, symbol keys in yellow
+- All other keys turn off on these layers for visibility
