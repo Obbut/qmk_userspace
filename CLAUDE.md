@@ -89,3 +89,20 @@ The keyboard has per-layer RGB backlighting:
 - **Lower layer**: Arrow keys highlighted in magenta
 - **Raise layer**: Number keys in blue, symbol keys in yellow
 - All other keys turn off on these layers for visibility
+
+### Keeping RGB in Sync
+
+RGB indicators are defined in **two places** that must stay in sync:
+
+1. **`keymap.c`** - The actual RGB code in `rgb_matrix_indicators_advanced_user()`
+2. **`keymap.yaml`** - Glow effects via `type` field on keys (e.g., `{t: LEFT, type: rgb-magenta}`)
+
+The glow styles are defined in `keymap-drawer.yaml` under `svg_style`:
+- `rgb-magenta` - Magenta glow for movement keys
+- `rgb-blue` - Blue glow for number keys
+- `rgb-yellow` - Yellow glow for symbol keys
+
+**When changing RGB indicators:**
+1. Update the logic in `keymap.c` (`rgb_matrix_indicators_advanced_user`)
+2. Update the `type` fields in `keymap.yaml` for affected keys
+3. Run `make draw` to regenerate the SVG
