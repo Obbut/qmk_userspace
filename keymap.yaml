@@ -23,6 +23,6 @@ layers:
 
   Function:
     - ["",   F11, F12, F13, F14, F15,    "",      "",      "",      "",      "",      ""]
-    - ["",   F6,  F7,  F8,  F9,  F10,    RGB,     Sat+,    Hue+,    Brt+,    Next,    ""]
+    - [Boot, F6,  F7,  F8,  F9,  F10,    RGB,     Sat+,    Hue+,    Brt+,    Next,    Boot]
     - ["",   F1,  F2,  F3,  F4,  F5,     "",      "",      "",      "",      "",      Sat-,    Hue-,    Brt-,    Prev,    ""]
     - ["", "", "", "", "",    "", "", "", "", ""]

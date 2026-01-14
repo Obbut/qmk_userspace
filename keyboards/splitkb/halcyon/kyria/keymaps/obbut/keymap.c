@@ -48,7 +48,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     [_FUNCTION] = LAYOUT_split_3x6_5_hlc(
       _______,  KC_F11,  KC_F12,  KC_F13,  KC_F14,  KC_F15,                                     _______, _______, _______, _______, _______, _______,
-      _______,  KC_F6 ,  KC_F7 ,  KC_F8 ,  KC_F9 ,  KC_F10,                                     RM_TOGG, RM_SATU, RM_HUEU, RM_VALU, RM_NEXT, _______,
+      QK_BOOT,  KC_F6 ,  KC_F7 ,  KC_F8 ,  KC_F9 ,  KC_F10,                                     RM_TOGG, RM_SATU, RM_HUEU, RM_VALU, RM_NEXT, QK_BOOT,
       _______,  KC_F1 ,  KC_F2 ,  KC_F3 ,  KC_F4 ,  KC_F5 , _______, _______, _______, _______, _______, RM_SATD, RM_HUED, RM_VALD, RM_PREV, _______,
                                  _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
      _______, _______,  _______, _______, _______,                                                       _______, _______, _______, _______, _______
