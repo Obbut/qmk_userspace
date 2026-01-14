@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# Disable MINGW path conversion for Docker volume mounts on Windows
+export MSYS_NO_PATHCONV=1
+
 cd "$(dirname "$0")"
 
 OUTPUT_DIR="images"

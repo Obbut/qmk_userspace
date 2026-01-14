@@ -1,0 +1,16 @@
+# QMK Firmware build environment with qmk_firmware included
+# This allows compilation without local QMK installation
+
+FROM ghcr.io/qmk/qmk_cli
+
+# Clone QMK firmware (shallow clone to save space)
+RUN git clone --depth 1 https://github.com/qmk/qmk_firmware.git /qmk_firmware
+
+# Initialize submodules needed for the build
+WORKDIR /qmk_firmware
+RUN qmk git-submodule
+
+# Set up for userspace overlay
+ENV QMK_USERSPACE=/qmk_userspace
+
+WORKDIR /qmk_firmware
