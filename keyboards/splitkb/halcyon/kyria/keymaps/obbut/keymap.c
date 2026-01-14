@@ -66,7 +66,31 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
 
 #if defined(RGB_MATRIX_ENABLE)
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
-    if (get_highest_layer(layer_state) == _RAISE) {
+    uint8_t layer = get_highest_layer(layer_state);
+
+    if (layer == _LOWER) {
+        // Turn off all LEDs first
+        for (uint8_t i = led_min; i < led_max; i++) {
+            rgb_matrix_set_color(i, RGB_OFF);
+        }
+
+        // Highlight movement keys on Lower layer
+        for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
+            for (uint8_t col = 0; col < MATRIX_COLS; col++) {
+                uint8_t led_index = g_led_config.matrix_co[row][col];
+                if (led_index >= led_min && led_index < led_max && led_index != NO_LED) {
+                    keypos_t pos = {.row = row, .col = col};
+                    uint16_t keycode = keymap_key_to_keycode(_LOWER, pos);
+
+                    // Arrow keys: magenta
+                    if (keycode == KC_LEFT || keycode == KC_DOWN ||
+                        keycode == KC_UP || keycode == KC_RGHT) {
+                        rgb_matrix_set_color(led_index, 255, 0, 255);
+                    }
+                }
+            }
+        }
+    } else if (layer == _RAISE) {
         // Turn off all LEDs first
         for (uint8_t i = led_min; i < led_max; i++) {
             rgb_matrix_set_color(i, RGB_OFF);
