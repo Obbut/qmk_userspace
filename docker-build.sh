@@ -75,7 +75,7 @@ flash_firmware() {
     local drive=""
 
     while [[ $elapsed -lt $timeout ]]; do
-        drive=$(find_bootloader_drive)
+        drive=$(find_bootloader_drive || true)
         if [[ -n "$drive" ]]; then
             echo "Found bootloader drive: $drive"
             echo "Copying $uf2_file..."
