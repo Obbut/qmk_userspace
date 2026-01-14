@@ -9,6 +9,10 @@ export MSYS_NO_PATHCONV=1
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 IMAGE_NAME="qmk-userspace-builder"
+BUILD_CACHE="$SCRIPT_DIR/.docker-build-cache"
+
+# Create build cache directory
+mkdir -p "$BUILD_CACHE"
 
 # Build Docker image if needed
 if ! docker image inspect "$IMAGE_NAME" &>/dev/null; then
@@ -35,7 +39,8 @@ find_bootloader_drive() {
     # Windows (Git Bash/MSYS) - use PowerShell to find drive letter
     if command -v powershell.exe &>/dev/null; then
         local drive
-        drive=$(powershell.exe -NoProfile -Command '(Get-Volume | Where-Object { $_.FileSystemLabel -eq "RPI-RP2" }).DriveLetter' 2>/dev/null | tr -d '\r\n')
+        # Use a script block to avoid bash escaping issues with $_
+        drive=$(powershell.exe -NoProfile -Command 'Get-Volume | Where-Object FileSystemLabel -eq "RPI-RP2" | Select-Object -ExpandProperty DriveLetter' 2>/dev/null | tr -d '\r\n')
         if [[ -n "$drive" ]]; then
             echo "/$(echo "$drive" | tr '[:upper:]' '[:lower:]')"
             return 0
@@ -93,6 +98,7 @@ build_left() {
     echo "Building left half (Cirque trackpad)..."
     docker run --rm \
         -v "$SCRIPT_DIR:/qmk_userspace" \
+        -v "$BUILD_CACHE:/qmk_firmware/.build" \
         -e QMK_USERSPACE=/qmk_userspace \
         -e SKIP_GIT=1 \
         -e SKIP_VERSION=1 \
@@ -105,6 +111,7 @@ build_right() {
     echo "Building right half (Encoder)..."
     docker run --rm \
         -v "$SCRIPT_DIR:/qmk_userspace" \
+        -v "$BUILD_CACHE:/qmk_firmware/.build" \
         -e QMK_USERSPACE=/qmk_userspace \
         -e SKIP_GIT=1 \
         -e SKIP_VERSION=1 \
