@@ -28,10 +28,10 @@ draw_config:
     rect.held { fill: #a8d8ea; }
     text.tap { font-size: 12px; fill: #333333; }
     text.hold { font-size: 10px; fill: #666666; }
-    /* RGB layer indicator glows */
-    rect.rgb-magenta { filter: drop-shadow(0 0 6px #ff00ff) drop-shadow(0 0 3px #ff00ff); }
-    rect.rgb-blue { filter: drop-shadow(0 0 6px #4488ff) drop-shadow(0 0 3px #4488ff); }
-    rect.rgb-yellow { filter: drop-shadow(0 0 6px #ffcc00) drop-shadow(0 0 3px #ffcc00); }
+    /* RGB layer indicator borders */
+    .rgb-magenta > rect { stroke: #ff00ff; stroke-width: 2.5; }
+    .rgb-blue > rect { stroke: #4488ff; stroke-width: 2.5; }
+    .rgb-yellow > rect { stroke: #ffaa00; stroke-width: 2.5; }
 
 parse_config:
   mark_alternate_layer_activators: true
