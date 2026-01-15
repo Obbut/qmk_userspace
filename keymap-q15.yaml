@@ -1,0 +1,40 @@
+# Keychron Q15 Max keymap for keymap-drawer
+
+layout:
+  qmk_info_json: q15-layout.json
+
+layers:
+  Mac Base:
+    - [Mute, "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", BSPC, Play]
+    - [Tab, Q, W, E, R, T, Y, U, I, O, P, "[", "]", "\\"]
+    - [Esc, A, S, D, F, G, H, J, K, L, ";", "'", Enter]
+    - [Shift, Z, X, C, V, B, N, M, ",", ".", "/", Shift, Up, Del]
+    - ["", Ctrl, Opt, Cmd, Space, Space, {t: Fn, h: MO(2)}, {t: Fn2, h: MO(4)}, Left, Down, Right]
+
+  Win Base:
+    - [Mute, "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", BSPC, Play]
+    - [Tab, Q, W, E, R, T, Y, U, I, O, P, "[", "]", "\\"]
+    - [Esc, A, S, D, F, G, H, J, K, L, ";", "'", Enter]
+    - [Shift, Z, X, C, V, B, N, M, ",", ".", "/", Shift, Up, Del]
+    - ["", Ctrl, Win, Alt, Space, Space, {t: Fn, h: MO(3)}, {t: Fn2, h: MO(4)}, Left, Down, Right]
+
+  Mac Fn:
+    - [{t: RGB, type: rgb-green}, Bright-, Bright+, Mission, Launchpad, {t: RGB-, type: rgb-green-dark}, {t: RGB+, type: rgb-green}, Prev, Play, Next, Mute, Vol-, Vol+, ""]
+    - [{t: Boot, type: rgb-red}, {t: BT1, type: rgb-cyan}, {t: BT2, type: rgb-cyan}, {t: BT3, type: rgb-cyan}, {t: 2.4G, type: rgb-cyan}, "", "", "", "", "", "", "", "", ""]
+    - ["", "", "", "", "", "", "", "", "", "", "", "", ""]
+    - ["", "", "", "", "", "", "", "", "", "", "", "", "", ""]
+    - ["", "", "", "", "", "", "", "", "", "", ""]
+
+  Win Fn:
+    - [{t: RGB, type: rgb-green}, Bright-, Bright+, Task, File, {t: RGB-, type: rgb-green-dark}, {t: RGB+, type: rgb-green}, Prev, Play, Next, Mute, Vol-, Vol+, ""]
+    - [{t: Boot, type: rgb-red}, {t: BT1, type: rgb-cyan}, {t: BT2, type: rgb-cyan}, {t: BT3, type: rgb-cyan}, {t: 2.4G, type: rgb-cyan}, "", "", "", "", "", "", "", "", ""]
+    - ["", "", "", "", "", "", "", "", "", "", "", "", ""]
+    - ["", "", "", "", "", "", "", "", "", "", "", "", "", ""]
+    - ["", "", "", "", "", "", "", "", "", "", ""]
+
+  Common Fn:
+    - ["", {t: F1, type: rgb-cyan}, {t: F2, type: rgb-cyan}, {t: F3, type: rgb-cyan}, {t: F4, type: rgb-cyan}, {t: F5, type: rgb-cyan}, {t: F6, type: rgb-cyan}, {t: F7, type: rgb-cyan}, {t: F8, type: rgb-cyan}, {t: F9, type: rgb-cyan}, {t: F10, type: rgb-cyan}, {t: F11, type: rgb-cyan}, {t: F12, type: rgb-cyan}, ""]
+    - ["", "", "", "", "", "", "", "", "", "", "", "", "", ""]
+    - ["", "", "", "", "", "", "", "", "", "", "", "", ""]
+    - ["", "", "", "", "", {t: Battery, type: rgb-blue}, "", "", "", "", "", "", {t: RGB+, type: rgb-green}, ""]
+    - ["", "", "", "", "", "", "", "", {t: Spd-, type: rgb-green-dark}, {t: RGB-, type: rgb-green-dark}, {t: Spd+, type: rgb-green}]

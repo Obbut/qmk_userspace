@@ -1,0 +1,22 @@
+# Keychron QMK Firmware build environment
+# Uses Keychron's wireless_playground branch for Bluetooth/2.4GHz support
+
+FROM ghcr.io/qmk/qmk_cli
+
+# Clone Keychron's fork with wireless support (shallow clone to save space)
+RUN git clone --depth 1 -b wireless_playground \
+    https://github.com/Keychron/qmk_firmware.git /qmk_firmware
+
+# Initialize submodules needed for the build
+WORKDIR /qmk_firmware
+
+# Install Keychron's specific Python requirements
+RUN pip install -r requirements.txt
+
+# Initialize git submodules
+RUN qmk git-submodule
+
+# Set up for userspace overlay
+ENV QMK_USERSPACE=/qmk_userspace
+
+WORKDIR /qmk_firmware

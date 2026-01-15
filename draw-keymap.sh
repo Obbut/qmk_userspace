@@ -17,18 +17,32 @@ if ! docker image inspect "$IMAGE_NAME" &>/dev/null; then
   docker build -t "$IMAGE_NAME" .
 fi
 
-# Layer names (must match keymap.yaml)
-LAYERS=("Default" "Lower" "Raise" "Function")
+# Draw a keymap
+# Usage: draw_keymap <yaml_file> <output_prefix> <layer1> [layer2] ...
+draw_keymap() {
+  local yaml_file="$1"
+  local output_prefix="$2"
+  shift 2
+  local layers=("$@")
 
-# Draw each layer separately
-for layer in "${LAYERS[@]}"; do
-  lowercase=$(echo "$layer" | tr '[:upper:]' '[:lower:]')
-  echo "Drawing $layer layer..."
-  docker run --rm \
-    -v "$(pwd):/workdir" \
-    -w /workdir \
-    "$IMAGE_NAME" \
-    keymap -c keymap-drawer.yaml draw keymap.yaml -s "$layer" -o "$OUTPUT_DIR/keymap-$lowercase.svg"
-done
+  echo "Drawing $yaml_file..."
+  for layer in "${layers[@]}"; do
+    lowercase=$(echo "$layer" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
+    echo "  - $layer layer..."
+    docker run --rm \
+      -v "$(pwd):/workdir" \
+      -w /workdir \
+      "$IMAGE_NAME" \
+      keymap -c keymap-drawer.yaml draw "$yaml_file" -s "$layer" -o "$OUTPUT_DIR/$output_prefix-$lowercase.svg"
+  done
+}
 
+# Kyria layers
+draw_keymap "keymap-kyria.yaml" "kyria" "Default" "Lower" "Raise" "Function"
+
+# Q15 Max layers
+draw_keymap "keymap-q15.yaml" "q15" "Mac Base" "Win Base" "Mac Fn" "Win Fn" "Common Fn"
+
+echo ""
 echo "Generated layer images in $OUTPUT_DIR/"
+ls -la "$OUTPUT_DIR"/*.svg 2>/dev/null || true

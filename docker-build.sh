@@ -9,16 +9,29 @@ export MSYS_NO_PATHCONV=1
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 IMAGE_NAME="qmk-userspace-builder"
+KEYCHRON_IMAGE_NAME="qmk-keychron-builder"
 BUILD_CACHE="$SCRIPT_DIR/.docker-build-cache"
+KEYCHRON_BUILD_CACHE="$SCRIPT_DIR/.docker-build-cache-keychron"
 
-# Create build cache directory
+# Create build cache directories
 mkdir -p "$BUILD_CACHE"
+mkdir -p "$KEYCHRON_BUILD_CACHE"
 
-# Build Docker image if needed
-if ! docker image inspect "$IMAGE_NAME" &>/dev/null; then
-    echo "Building QMK Docker image (this takes a few minutes on first run)..."
-    docker build -t "$IMAGE_NAME" -f "$SCRIPT_DIR/Dockerfile.qmk" "$SCRIPT_DIR"
-fi
+# Build mainline QMK Docker image if needed
+build_qmk_image() {
+    if ! docker image inspect "$IMAGE_NAME" &>/dev/null; then
+        echo "Building QMK Docker image (this takes a few minutes on first run)..."
+        docker build -t "$IMAGE_NAME" -f "$SCRIPT_DIR/Dockerfile.qmk" "$SCRIPT_DIR"
+    fi
+}
+
+# Build Keychron QMK Docker image if needed
+build_keychron_image() {
+    if ! docker image inspect "$KEYCHRON_IMAGE_NAME" &>/dev/null; then
+        echo "Building Keychron QMK Docker image (this takes a few minutes on first run)..."
+        docker build -t "$KEYCHRON_IMAGE_NAME" -f "$SCRIPT_DIR/Dockerfile.keychron" "$SCRIPT_DIR"
+    fi
+}
 
 # Find the RPI-RP2 bootloader drive (cross-platform)
 find_bootloader_drive() {
@@ -94,7 +107,81 @@ flash_firmware() {
     exit 1
 }
 
+# Check if STM32 DFU device is present (for Q15 Max)
+check_dfu_device() {
+    if command -v powershell.exe &>/dev/null; then
+        # Windows: Check for STM32 DFU device via PowerShell
+        local result
+        result=$(powershell.exe -NoProfile -Command '
+            $device = Get-PnpDevice -Class USB -Status OK 2>$null | Where-Object { $_.InstanceId -match "VID_0483&PID_DF11" }
+            if ($device) { "found" } else { "not_found" }
+        ' 2>/dev/null | tr -d '\r\n')
+        [[ "$result" == "found" ]]
+    elif command -v lsusb &>/dev/null; then
+        # Linux/macOS: Check via lsusb
+        lsusb -d 0483:df11 &>/dev/null
+    else
+        return 1
+    fi
+}
+
+# Flash Q15 Max via DFU
+flash_q15_dfu() {
+    local bin_file="$1"
+
+    if [[ ! -f "$SCRIPT_DIR/$bin_file" ]]; then
+        echo "Error: Firmware file not found: $bin_file"
+        echo "Run build first."
+        exit 1
+    fi
+
+    echo ""
+    echo "Waiting for Q15 Max in DFU mode..."
+    echo "To enter DFU mode:"
+    echo "  1. Set mode switch to 'Cable' (wired)"
+    echo "  2. Unplug the keyboard"
+    echo "  3. Hold the reset button (under the left spacebar)"
+    echo "  4. While holding reset, plug in USB"
+    echo "  5. Release reset after 1-2 seconds"
+    echo ""
+
+    local timeout=60
+    local elapsed=0
+
+    while [[ $elapsed -lt $timeout ]]; do
+        if check_dfu_device; then
+            echo "Found STM32 DFU device!"
+            echo "Flashing $bin_file..."
+
+            if command -v dfu-util &>/dev/null; then
+                dfu-util -a 0 -d 0483:df11 -s 0x08000000:leave -D "$SCRIPT_DIR/$bin_file"
+                echo "Firmware flashed successfully!"
+                return 0
+            elif command -v dfu-util.exe &>/dev/null; then
+                dfu-util.exe -a 0 -d 0483:df11 -s 0x08000000:leave -D "$SCRIPT_DIR/$bin_file"
+                echo "Firmware flashed successfully!"
+                return 0
+            else
+                echo "Error: dfu-util not found."
+                echo "Please install dfu-util and add it to your PATH."
+                echo "Download from: https://dfu-util.sourceforge.net/releases/"
+                echo "Or install QMK MSYS which includes dfu-util."
+                exit 1
+            fi
+        fi
+        sleep 1
+        elapsed=$((elapsed + 1))
+        if [[ $((elapsed % 5)) -eq 0 ]]; then
+            echo "Waiting... ($elapsed seconds)"
+        fi
+    done
+
+    echo "Error: Timeout waiting for DFU device"
+    exit 1
+}
+
 build_left() {
+    build_qmk_image
     echo "Building left half (Cirque trackpad)..."
     docker run --rm \
         -v "$SCRIPT_DIR:/qmk_userspace" \
@@ -108,6 +195,7 @@ build_left() {
 }
 
 build_right() {
+    build_qmk_image
     echo "Building right half (Encoder)..."
     docker run --rm \
         -v "$SCRIPT_DIR:/qmk_userspace" \
@@ -118,6 +206,17 @@ build_right() {
         "$IMAGE_NAME" \
         sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/kyria/rev4 -km obbut -e HLC_ENCODER=1 -e TARGET=kyria_rev4_obbut_right_encoder'
     echo "Build complete: kyria_rev4_obbut_right_encoder.uf2"
+}
+
+build_q15() {
+    build_keychron_image
+    echo "Building Keychron Q15 Max..."
+    docker run --rm \
+        -v "$SCRIPT_DIR:/qmk_userspace" \
+        -v "$KEYCHRON_BUILD_CACHE:/qmk_firmware/.build" \
+        "$KEYCHRON_IMAGE_NAME" \
+        sh -c 'export QMK_USERSPACE=/qmk_userspace && cd /qmk_firmware && make keychron/q15_max/ansi_encoder:obbut'
+    echo "Build complete: keychron_q15_max_ansi_encoder_obbut.bin"
 }
 
 case "${1:-all}" in
@@ -139,25 +238,45 @@ case "${1:-all}" in
         build_right
         flash_firmware "kyria_rev4_obbut_right_encoder.uf2" "right"
         ;;
+    q15)
+        build_q15
+        ;;
+    flash-q15)
+        build_q15
+        flash_q15_dfu "keychron_q15_max_ansi_encoder_obbut.bin"
+        ;;
     clean)
         rm -f "$SCRIPT_DIR"/*.uf2 "$SCRIPT_DIR"/*.hex "$SCRIPT_DIR"/*.bin
         echo "Cleaned build artifacts"
         ;;
     rebuild-image)
+        echo "Rebuilding QMK Docker image..."
         docker rmi "$IMAGE_NAME" 2>/dev/null || true
         docker build -t "$IMAGE_NAME" -f "$SCRIPT_DIR/Dockerfile.qmk" "$SCRIPT_DIR"
         ;;
+    rebuild-keychron-image)
+        echo "Rebuilding Keychron QMK Docker image..."
+        docker rmi "$KEYCHRON_IMAGE_NAME" 2>/dev/null || true
+        docker build -t "$KEYCHRON_IMAGE_NAME" -f "$SCRIPT_DIR/Dockerfile.keychron" "$SCRIPT_DIR"
+        ;;
     *)
-        echo "Usage: $0 [left|right|all|flash-left|flash-right|clean|rebuild-image]"
+        echo "Usage: $0 [command]"
         echo ""
-        echo "Commands:"
-        echo "  left          - Build left half firmware (Cirque trackpad)"
-        echo "  right         - Build right half firmware (encoder)"
-        echo "  all           - Build both halves (default)"
-        echo "  flash-left    - Build and flash left half"
-        echo "  flash-right   - Build and flash right half"
-        echo "  clean         - Remove build artifacts"
-        echo "  rebuild-image - Force rebuild the Docker image"
+        echo "Kyria (Halcyon) commands:"
+        echo "  left             - Build left half firmware (Cirque trackpad)"
+        echo "  right            - Build right half firmware (encoder)"
+        echo "  all              - Build both Kyria halves (default)"
+        echo "  flash-left       - Build and flash left half"
+        echo "  flash-right      - Build and flash right half"
+        echo ""
+        echo "Keychron Q15 Max commands:"
+        echo "  q15              - Build Q15 Max firmware"
+        echo "  flash-q15        - Build and flash Q15 Max (requires dfu-util)"
+        echo ""
+        echo "Maintenance:"
+        echo "  clean            - Remove build artifacts"
+        echo "  rebuild-image    - Force rebuild the QMK Docker image"
+        echo "  rebuild-keychron-image - Force rebuild the Keychron Docker image"
         exit 1
         ;;
 esac
