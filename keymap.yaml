@@ -6,8 +6,8 @@ layers:
   Default:
     - [TAB,  Q, W, F, P, B,    J, L, U,   Y, ";",  BSPC]
     - [ESC,  A, R, S, T, G,    M, N, E,   I, O,    "'"]
-    - [LSFT, Z, X, C, D, V,    OPT, "Screenshot",    Fn, "", K, H, ",", ".", /,  ENT]
-    - ["", LCTL, LGUI, Aerospace, SPC,    "", SPC, {t: Raise, h: MO(2)}, {t: Lower, h: MO(1)}, ""]
+    - [LSFT, Z, X, C, D, V,    OPT, Click,    Fn, "", K, H, ",", ".", /,  ENT]
+    - [Screenshot, LCTL, LGUI, Aerospace, SPC,    "", SPC, {t: Raise, h: MO(2)}, {t: Lower, h: MO(1)}, ""]
 
   Lower:
     - ["", "", "", "", "", "",    "", "", "", "", DEL, BSPC]
