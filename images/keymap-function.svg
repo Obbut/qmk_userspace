@@ -18,6 +18,7 @@ text.hold { font-size: 10px; fill: #666666; }
 .rgb-green > rect { stroke: #44dd44; stroke-width: 2.5; }
 .rgb-green-dark > rect { stroke: #228822; stroke-width: 2.5; }
 .rgb-red > rect { stroke: #ff4444; stroke-width: 2.5; }
+.rgb-orange > rect { stroke: #ff8000; stroke-width: 2.5; }
 </style>
 <g transform="translate(30, 0)" class="layer-Function">
 <text x="0" y="28" class="label" id="Function">Function:</text>

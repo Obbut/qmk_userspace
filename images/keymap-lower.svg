@@ -18,6 +18,7 @@ text.hold { font-size: 10px; fill: #666666; }
 .rgb-green > rect { stroke: #44dd44; stroke-width: 2.5; }
 .rgb-green-dark > rect { stroke: #228822; stroke-width: 2.5; }
 .rgb-red > rect { stroke: #ff4444; stroke-width: 2.5; }
+.rgb-orange > rect { stroke: #ff8000; stroke-width: 2.5; }
 </style>
 <g transform="translate(30, 0)" class="layer-Lower">
 <text x="0" y="28" class="label" id="Lower">Lower:</text>
@@ -52,13 +53,13 @@ text.hold { font-size: 10px; fill: #666666; }
 <g transform="translate(812, 42)" class="key keypos-9">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
 </g>
-<g transform="translate(868, 70)" class="key keypos-10">
-<rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">DEL</text>
+<g transform="translate(868, 70)" class="key rgb-orange keypos-10">
+<rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key rgb-orange"/>
+<text x="0" y="0" class="key rgb-orange tap">DEL</text>
 </g>
-<g transform="translate(924, 70)" class="key keypos-11">
-<rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">BSPC</text>
+<g transform="translate(924, 70)" class="key rgb-orange keypos-11">
+<rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key rgb-orange"/>
+<text x="0" y="0" class="key rgb-orange tap">BSPC</text>
 </g>
 <g transform="translate(28, 126)" class="key keypos-12">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
