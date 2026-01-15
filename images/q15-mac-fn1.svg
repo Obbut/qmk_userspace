@@ -20,8 +20,8 @@ text.hold { font-size: 10px; fill: #666666; }
 .rgb-red > rect { stroke: #ff4444; stroke-width: 2.5; }
 .rgb-orange > rect { stroke: #ff8000; stroke-width: 2.5; }
 </style>
-<g transform="translate(30, 0)" class="layer-Win Fn">
-<text x="0" y="28" class="label" id="Win-Fn">Win Fn:</text>
+<g transform="translate(30, 0)" class="layer-Mac Fn1">
+<text x="0" y="28" class="label" id="Mac-Fn1">Mac Fn1:</text>
 <g transform="translate(0, 56)">
 <g transform="translate(28, 28)" class="key rgb-green keypos-0">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key rgb-green"/>
@@ -41,11 +41,11 @@ text.hold { font-size: 10px; fill: #666666; }
 </g>
 <g transform="translate(196, 28)" class="key keypos-3">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">Task</text>
+<text x="0" y="0" class="key tap"><tspan style="font-size: 67%">Missi…</tspan></text>
 </g>
 <g transform="translate(252, 28)" class="key keypos-4">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">File</text>
+<text x="0" y="0" class="key tap"><tspan style="font-size: 67%">Launc…</tspan></text>
 </g>
 <g transform="translate(308, 28)" class="key rgb-green-dark keypos-5">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key rgb-green-dark"/>

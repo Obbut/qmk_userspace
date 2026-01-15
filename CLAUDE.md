@@ -216,16 +216,16 @@ Row 0: [Enc] [1] [2] [3] [4] [5] [6] [7] [8] [9] [0] [-] [⌫] [Enc]
 Row 1: [Tab] [Q] [W] [E] [R] [T] [Y] [U] [I] [O] [P] [{] [}] [|]
 Row 2: [Esc] [A] [S] [D] [F] [G] [H] [J] [K] [L] [:] ['] [Enter 2u]
 Row 3: [Shft][Z] [X] [C] [V] [B] [N] [M] [<] [>] [?] [Shft][↑][Del]
-Row 4: [   ][Ctrl][Opt][Cmd][Spc 1.25u][Spc 1.75u][Fn1][Fn2][←][↓][→]
+Row 4: [   ][   ][Ctrl][Opt][Cmd 1.25u][Spc 1.75u][Fn1][Fn2][←][↓][→]
 ```
 
 ## Layers
 
 1. **MAC_BASE** - macOS QWERTY base layer
 2. **WIN_BASE** - Windows QWERTY base layer
-3. **MAC_FN** - macOS function layer (media, RGB, Bluetooth)
-4. **WIN_FN** - Windows function layer (media, RGB, Bluetooth)
-5. **COM_FN** - Common function layer (F-keys, battery level)
+3. **MAC_FN** (Fn1) - macOS function layer (media, RGB, Bluetooth)
+4. **WIN_FN** (Fn1) - Windows function layer (media, RGB, Bluetooth)
+5. **COM_FN** (Fn2) - Common function layer (F-keys, battery level)
 
 ## Keychron-Specific Features
 

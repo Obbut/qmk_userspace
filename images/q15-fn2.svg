@@ -20,8 +20,8 @@ text.hold { font-size: 10px; fill: #666666; }
 .rgb-red > rect { stroke: #ff4444; stroke-width: 2.5; }
 .rgb-orange > rect { stroke: #ff8000; stroke-width: 2.5; }
 </style>
-<g transform="translate(30, 0)" class="layer-Common Fn">
-<text x="0" y="28" class="label" id="Common-Fn">Common Fn:</text>
+<g transform="translate(30, 0)" class="layer-Fn2">
+<text x="0" y="28" class="label" id="Fn2">Fn2:</text>
 <g transform="translate(0, 56)">
 <g transform="translate(28, 28)" class="key keypos-0">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
