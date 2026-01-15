@@ -175,6 +175,10 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
                         keycode == KC_UP || keycode == KC_RGHT) {
                         rgb_matrix_set_color(led_index, 255, 0, 255);
                     }
+                    // Delete/Backspace: orange
+                    else if (keycode == KC_DEL || keycode == KC_BSPC) {
+                        rgb_matrix_set_color(led_index, 255, 128, 0);
+                    }
                 }
             }
         }

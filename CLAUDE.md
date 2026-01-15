@@ -120,7 +120,7 @@ When discussing keys, you can refer to them by their keycap label:
 
 The keyboard has per-layer RGB backlighting (all other keys turn off for visibility):
 
-- **Lower layer**: Arrow keys in magenta
+- **Lower layer**: Arrow keys in magenta, Delete/Backspace in orange
 - **Raise layer**: Numbers in blue, symbols in yellow
 - **Function layer**: F-keys in cyan, RGB controls in green (dark green for decrease), Boot keys in red
 
@@ -139,6 +139,7 @@ The border styles are defined in `keymap-drawer.yaml` under `svg_style`:
 - `rgb-green` - Green for RGB increase controls
 - `rgb-green-dark` - Dark green for RGB decrease controls
 - `rgb-red` - Red for Boot keys
+- `rgb-orange` - Orange for Delete/Backspace keys
 
 **When changing RGB indicators:**
 1. Update the logic in `keymap.c` (`rgb_matrix_indicators_advanced_user`)
