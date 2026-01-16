@@ -25,6 +25,9 @@ enum layers {
     COM_FN,
 };
 
+// Aerospace window manager modifier (Cmd+Ctrl+Opt)
+#define AEROSPACE LCTL(LGUI(KC_RALT))
+
 // clang-format off
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [MAC_BASE] = LAYOUT_ansi_66(
@@ -32,24 +35,24 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_TAB,   KC_Q,     KC_W,     KC_E,     KC_R,     KC_T,     KC_Y,     KC_U,     KC_I,     KC_O,     KC_P,     KC_LBRC,  KC_RBRC,  KC_BSLS,
         KC_ESC,   KC_A,     KC_S,     KC_D,     KC_F,     KC_G,     KC_H,     KC_J,     KC_K,     KC_L,     KC_SCLN,  KC_QUOT,            KC_ENT,
         KC_LSFT,  KC_Z,     KC_X,     KC_C,     KC_V,     KC_B,     KC_N,     KC_M,     KC_COMM,  KC_DOT,   KC_SLSH,  KC_RSFT,  KC_UP,    KC_DEL,
-        XXXXXXX,  XXXXXXX,  KC_LCTL,  KC_LOPT,       KC_LCMD,            KC_SPC,       MO(MAC_FN),MO(COM_FN),KC_LEFT, KC_DOWN,  KC_RGHT),
+        KC_LCTL,  KC_LOPT,  AEROSPACE,KC_LCMD,       KC_SPC,             KC_SPC,       MO(MAC_FN),MO(COM_FN),KC_LEFT, KC_DOWN,  KC_RGHT),
 
     [WIN_BASE] = LAYOUT_ansi_66(
         KC_PSCR,  KC_1,     KC_2,     KC_3,     KC_4,     KC_5,     KC_6,     KC_7,     KC_8,     KC_9,     KC_0,     KC_MINS,  KC_BSPC,  KC_MPLY,
         KC_TAB,   KC_Q,     KC_W,     KC_E,     KC_R,     KC_T,     KC_Y,     KC_U,     KC_I,     KC_O,     KC_P,     KC_LBRC,  KC_RBRC,  KC_BSLS,
         KC_ESC,   KC_A,     KC_S,     KC_D,     KC_F,     KC_G,     KC_H,     KC_J,     KC_K,     KC_L,     KC_SCLN,  KC_QUOT,            KC_ENT,
         KC_LSFT,  KC_Z,     KC_X,     KC_C,     KC_V,     KC_B,     KC_N,     KC_M,     KC_COMM,  KC_DOT,   KC_SLSH,  KC_RSFT,  KC_UP,    KC_DEL,
-        XXXXXXX,  XXXXXXX,  KC_LCTL,  KC_LGUI,       KC_LALT,            KC_SPC,       MO(WIN_FN),MO(COM_FN),KC_LEFT, KC_DOWN,  KC_RGHT),
+        KC_LCTL,  KC_LALT,  XXXXXXX,  KC_LGUI,       KC_SPC,             KC_SPC,       MO(WIN_FN),MO(COM_FN),KC_LEFT, KC_DOWN,  KC_RGHT),
 
     [MAC_FN] = LAYOUT_ansi_66(
-        RGB_TOG,  KC_BRID,  KC_BRIU,  KC_MCTRL, KC_LPAD,  RGB_VAD,  RGB_VAI,  KC_MPRV,  KC_MPLY,  KC_MNXT,  KC_MUTE,  KC_VOLD,  KC_VOLU,  _______,
+        RGB_TOG,  KC_BRID,  KC_BRIU,  KC_MCTRL, KC_LPAD,  RGB_VAD,  RGB_VAI,  KC_MPRV,  KC_MPLY,  KC_MNXT,  KC_MUTE,  KC_VOLD,  KC_EQL,   _______,
         QK_BOOT,  BT_HST1,  BT_HST2,  BT_HST3,  P2P4G,    _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,
         _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,            _______,
         _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,
         _______,  _______,  _______,  _______,       _______,            _______,      _______,  _______,  _______,  _______,  _______),
 
     [WIN_FN] = LAYOUT_ansi_66(
-        RGB_TOG,  KC_BRID,  KC_BRIU,  KC_TASK,  KC_FILE,  RGB_VAD,  RGB_VAI,  KC_MPRV,  KC_MPLY,  KC_MNXT,  KC_MUTE,  KC_VOLD,  KC_VOLU,  _______,
+        RGB_TOG,  KC_BRID,  KC_BRIU,  KC_TASK,  KC_FILE,  RGB_VAD,  RGB_VAI,  KC_MPRV,  KC_MPLY,  KC_MNXT,  KC_MUTE,  KC_VOLD,  KC_EQL,   _______,
         QK_BOOT,  BT_HST1,  BT_HST2,  BT_HST3,  P2P4G,    _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,
         _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,            _______,
         _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,
@@ -80,3 +83,58 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     }
     return true;
 }
+
+#if defined(RGB_MATRIX_ENABLE)
+bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
+    uint8_t layer = get_highest_layer(layer_state);
+
+    // Only show indicators on function layers
+    if (layer != MAC_FN && layer != WIN_FN && layer != COM_FN) {
+        return false;
+    }
+
+    // Turn off all LEDs first
+    for (uint8_t i = led_min; i < led_max; i++) {
+        rgb_matrix_set_color(i, RGB_OFF);
+    }
+
+    // Highlight keys based on what's mapped on the current layer
+    for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
+        for (uint8_t col = 0; col < MATRIX_COLS; col++) {
+            uint8_t led_index = g_led_config.matrix_co[row][col];
+            if (led_index >= led_min && led_index < led_max && led_index != NO_LED) {
+                keypos_t pos = {.row = row, .col = col};
+                uint16_t keycode = keymap_key_to_keycode(layer, pos);
+
+                // F-keys: cyan
+                if (keycode >= KC_F1 && keycode <= KC_F12) {
+                    rgb_matrix_set_color(led_index, 0, 220, 220);
+                }
+                // Boot key: red
+                else if (keycode == QK_BOOT) {
+                    rgb_matrix_set_color(led_index, 255, 68, 68);
+                }
+                // Bluetooth/wireless keys: cyan
+                else if (keycode == BT_HST1 || keycode == BT_HST2 ||
+                         keycode == BT_HST3 || keycode == P2P4G) {
+                    rgb_matrix_set_color(led_index, 0, 220, 220);
+                }
+                // Battery level: blue
+                else if (keycode == BAT_LVL) {
+                    rgb_matrix_set_color(led_index, 0, 0, 255);
+                }
+                // RGB controls increase: bright green
+                else if (keycode == RGB_TOG || keycode == RGB_VAI ||
+                         keycode == RGB_SPI) {
+                    rgb_matrix_set_color(led_index, 0, 255, 0);
+                }
+                // RGB controls decrease: dark green
+                else if (keycode == RGB_VAD || keycode == RGB_SPD) {
+                    rgb_matrix_set_color(led_index, 0, 50, 0);
+                }
+            }
+        }
+    }
+    return false;
+}
+#endif

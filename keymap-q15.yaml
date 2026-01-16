@@ -9,24 +9,24 @@ layers:
     - [Tab, Q, W, E, R, T, Y, U, I, O, P, "[", "]", "\\"]
     - [Esc, A, S, D, F, G, H, J, K, L, ";", "'", Enter]
     - [Shift, Z, X, C, V, B, N, M, ",", ".", "/", Shift, Up, Del]
-    - ["", "", Ctrl, Opt, Cmd, Space, {t: Fn1, h: MO(2)}, {t: Fn2, h: MO(4)}, Left, Down, Right]
+    - [Ctrl, Opt, Aero, Cmd, Space, Space, {t: Fn1, h: MO(2)}, {t: Fn2, h: MO(4)}, Left, Down, Right]
 
   Win Base:
     - [PrtSc, "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", BSPC, Play]
     - [Tab, Q, W, E, R, T, Y, U, I, O, P, "[", "]", "\\"]
     - [Esc, A, S, D, F, G, H, J, K, L, ";", "'", Enter]
     - [Shift, Z, X, C, V, B, N, M, ",", ".", "/", Shift, Up, Del]
-    - ["", "", Ctrl, Win, Alt, Space, {t: Fn1, h: MO(3)}, {t: Fn2, h: MO(4)}, Left, Down, Right]
+    - [Ctrl, Alt, "", Win, Space, Space, {t: Fn1, h: MO(3)}, {t: Fn2, h: MO(4)}, Left, Down, Right]
 
   Mac Fn1:
-    - [{t: RGB, type: rgb-green}, Bright-, Bright+, Mission, Launchpad, {t: RGB-, type: rgb-green-dark}, {t: RGB+, type: rgb-green}, Prev, Play, Next, Mute, Vol-, Vol+, ""]
+    - [{t: RGB, type: rgb-green}, Bright-, Bright+, Mission, Launchpad, {t: RGB-, type: rgb-green-dark}, {t: RGB+, type: rgb-green}, Prev, Play, Next, Mute, Vol-, "=", ""]
     - [{t: Boot, type: rgb-red}, {t: BT1, type: rgb-cyan}, {t: BT2, type: rgb-cyan}, {t: BT3, type: rgb-cyan}, {t: 2.4G, type: rgb-cyan}, "", "", "", "", "", "", "", "", ""]
     - ["", "", "", "", "", "", "", "", "", "", "", "", ""]
     - ["", "", "", "", "", "", "", "", "", "", "", "", "", ""]
     - ["", "", "", "", "", "", "", "", "", "", ""]
 
   Win Fn1:
-    - [{t: RGB, type: rgb-green}, Bright-, Bright+, Task, File, {t: RGB-, type: rgb-green-dark}, {t: RGB+, type: rgb-green}, Prev, Play, Next, Mute, Vol-, Vol+, ""]
+    - [{t: RGB, type: rgb-green}, Bright-, Bright+, Task, File, {t: RGB-, type: rgb-green-dark}, {t: RGB+, type: rgb-green}, Prev, Play, Next, Mute, Vol-, "=", ""]
     - [{t: Boot, type: rgb-red}, {t: BT1, type: rgb-cyan}, {t: BT2, type: rgb-cyan}, {t: BT3, type: rgb-cyan}, {t: 2.4G, type: rgb-cyan}, "", "", "", "", "", "", "", "", ""]
     - ["", "", "", "", "", "", "", "", "", "", "", "", ""]
     - ["", "", "", "", "", "", "", "", "", "", "", "", "", ""]
