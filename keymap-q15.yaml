@@ -16,7 +16,7 @@ layers:
     - [Tab, Q, W, E, R, T, Y, U, I, O, P, "[", "]", "\\"]
     - [Esc, A, S, D, F, G, H, J, K, L, ";", "'", Enter]
     - [Shift, Z, X, C, V, B, N, M, ",", ".", "/", Shift, Up, Del]
-    - [Ctrl, Alt, "", Win, Space, Space, {t: Fn1, h: MO(3)}, {t: Fn2, h: MO(4)}, Left, Down, Right]
+    - [Ctrl, Win, "", Alt, Space, Space, {t: Fn1, h: MO(3)}, {t: Fn2, h: MO(4)}, Left, Down, Right]
 
   Mac Fn1:
     - [{t: RGB, type: rgb-green}, Bright-, Bright+, Mission, Launchpad, {t: RGB-, type: rgb-green-dark}, {t: RGB+, type: rgb-green}, Prev, Play, Next, Mute, Vol-, "=", ""]
