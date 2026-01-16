@@ -6,6 +6,7 @@
 # QMK build artifacts
 .build/
 .docker-build-cache/
+.docker-build-cache-keychron/
 
 # macOS
 .DS_Store
