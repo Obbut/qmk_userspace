@@ -113,7 +113,7 @@ check_dfu_device() {
         # Windows: Check for STM32 DFU device via PowerShell
         local result
         result=$(powershell.exe -NoProfile -Command '
-            $device = Get-PnpDevice -Class USB -Status OK 2>$null | Where-Object { $_.InstanceId -match "VID_0483&PID_DF11" }
+            $device = Get-PnpDevice -Status OK 2>$null | Where-Object { $_.InstanceId -match "VID_0483&PID_DF11" }
             if ($device) { "found" } else { "not_found" }
         ' 2>/dev/null | tr -d '\r\n')
         [[ "$result" == "found" ]]
