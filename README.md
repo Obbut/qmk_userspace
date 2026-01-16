@@ -30,25 +30,25 @@ make clean        # Remove compiled firmware files
 
 Colemak-DH base layer with home row optimized for comfortable typing.
 
-![Default layer](images/keymap-default.svg)
+![Default layer](images/kyria-default.svg)
 
 ### Lower Layer
 
 Navigation with arrow keys. Highlighted keys show RGB indicators (magenta).
 
-![Lower layer](images/keymap-lower.svg)
+![Lower layer](images/kyria-lower.svg)
 
 ### Raise Layer
 
 Symbols and numpad. RGB indicators: blue for numbers, yellow for symbols.
 
-![Raise layer](images/keymap-raise.svg)
+![Raise layer](images/kyria-raise.svg)
 
 ### Function Layer
 
 F-keys, RGB controls, and bootloader. RGB indicators: cyan for F-keys, green for RGB controls, red for boot.
 
-![Function layer](images/keymap-function.svg)
+![Function layer](images/kyria-function.svg)
 
 ---
 
