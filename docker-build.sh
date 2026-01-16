@@ -140,12 +140,8 @@ flash_q15_dfu() {
 
     echo ""
     echo "Waiting for Q15 Max in DFU mode..."
-    echo "To enter DFU mode:"
-    echo "  1. Set mode switch to 'Cable' (wired)"
-    echo "  2. Unplug the keyboard"
-    echo "  3. Hold the reset button (under the left spacebar)"
-    echo "  4. While holding reset, plug in USB"
-    echo "  5. Release reset after 1-2 seconds"
+    echo "To enter DFU mode: Press Fn + Tab"
+    echo "(Or hold Tab while plugging in USB)"
     echo ""
 
     local timeout=60

@@ -190,11 +190,8 @@ Before first flash, install:
 **With custom firmware (Fn + Tab):**
 - Press **Fn + Tab** to enter DFU mode directly
 
-**With stock firmware or as fallback:**
-1. Set the mode switch to "Cable" (wired mode)
-2. Unplug the keyboard
-3. Hold **Esc** while plugging in USB
-4. Release after the keyboard enters DFU mode
+**Fallback:**
+- Hold **Tab** while plugging in USB
 
 ### Flashing Workflow
 
