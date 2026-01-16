@@ -117,8 +117,11 @@ check_dfu_device() {
             if ($device) { "found" } else { "not_found" }
         ' 2>/dev/null | tr -d '\r\n')
         [[ "$result" == "found" ]]
+    elif command -v dfu-util &>/dev/null; then
+        # macOS/Linux: Check via dfu-util (more reliable than lsusb)
+        dfu-util --list 2>/dev/null | grep -q "0483:df11"
     elif command -v lsusb &>/dev/null; then
-        # Linux/macOS: Check via lsusb
+        # Linux fallback: Check via lsusb
         lsusb -d 0483:df11 &>/dev/null
     else
         return 1
