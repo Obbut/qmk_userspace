@@ -9,14 +9,14 @@ layers:
     - [Tab, Q, W, E, R, T, Y, U, I, O, P, "[", "]", "\\"]
     - [Esc, A, S, D, F, G, H, J, K, L, ";", "'", Enter]
     - [Shift, Z, X, C, V, B, N, M, ",", ".", "/", Shift, Up, Del]
-    - [Ctrl, Opt, Aero, Cmd, Space, Space, {t: Fn1, h: MO(2)}, {t: Fn2, h: MO(4)}, Left, Down, Right]
+    - [Ctrl, Opt, Aero, Cmd, Space, {t: Space, h: Raise}, {t: Fn1, h: MO(2)}, {t: Fn2, h: MO(4)}, Left, Down, Right]
 
   Win Base:
     - [PrtSc, "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", BSPC, Play]
     - [Tab, Q, W, E, R, T, Y, U, I, O, P, "[", "]", "\\"]
     - [Esc, A, S, D, F, G, H, J, K, L, ";", "'", Enter]
     - [Shift, Z, X, C, V, B, N, M, ",", ".", "/", Shift, Up, Del]
-    - [Ctrl, Win, "", Alt, Space, Space, {t: Fn1, h: MO(3)}, {t: Fn2, h: MO(4)}, Left, Down, Right]
+    - [Ctrl, Win, "", Alt, Space, {t: Space, h: Raise}, {t: Fn1, h: MO(3)}, {t: Fn2, h: MO(4)}, Left, Down, Right]
 
   Mac Fn1:
     - [{t: RGB, type: rgb-green}, Bright-, Bright+, Mission, Launchpad, {t: RGB-, type: rgb-green-dark}, {t: RGB+, type: rgb-green}, Prev, Play, Next, Mute, Vol-, "=", ""]
@@ -38,3 +38,10 @@ layers:
     - ["", "", "", "", "", "", "", "", "", "", "", "", ""]
     - ["", "", "", "", "", {t: Battery, type: rgb-blue}, "", "", "", "", "", "", {t: RGB+, type: rgb-green}, ""]
     - ["", "", "", "", "", "", "", "", {t: Spd-, type: rgb-green-dark}, {t: RGB-, type: rgb-green-dark}, {t: Spd+, type: rgb-green}]
+
+  Raise:
+    - ["", "", "", "", "", "", "", "", "", "", "", "", "", ""]
+    - [{t: "`", type: rgb-yellow}, {t: "!", type: rgb-yellow}, {t: "@", type: rgb-yellow}, {t: "[", type: rgb-yellow}, {t: "]", type: rgb-yellow}, "", "", {t: "7", type: rgb-blue}, {t: "8", type: rgb-blue}, {t: "9", type: rgb-blue}, {t: "-", type: rgb-yellow}, "", "", ""]
+    - ["", "", {t: "#", type: rgb-yellow}, {t: "$", type: rgb-yellow}, {t: "(", type: rgb-yellow}, {t: ")", type: rgb-yellow}, "", {t: "4", type: rgb-blue}, {t: "5", type: rgb-blue}, {t: "6", type: rgb-blue}, {t: "+", type: rgb-yellow}, {t: "=", type: rgb-yellow}, ""]
+    - ["", "", {t: "%", type: rgb-yellow}, {t: "^", type: rgb-yellow}, {t: "{", type: rgb-yellow}, {t: "}", type: rgb-yellow}, {t: "0", type: rgb-blue}, {t: "1", type: rgb-blue}, {t: "2", type: rgb-blue}, {t: "3", type: rgb-blue}, {t: ".", type: rgb-yellow}, {t: "\\", type: rgb-yellow}, "", ""]
+    - ["", "", "", "", "", "", "", "", "", "", ""]
