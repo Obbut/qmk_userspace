@@ -41,7 +41,7 @@ draw_keymap() {
 draw_keymap "keymap-kyria.yaml" "kyria" "Default" "Lower" "Raise" "Function"
 
 # Q15 Max layers
-draw_keymap "keymap-q15.yaml" "q15" "Mac Base" "Win Base" "Mac Fn1" "Win Fn1" "Fn2"
+draw_keymap "keymap-q15.yaml" "q15" "Mac Base" "Win Base" "Mac Fn1" "Win Fn1" "Fn2" "Raise"
 
 echo ""
 echo "Generated layer images in $OUTPUT_DIR/"
