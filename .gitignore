@@ -15,5 +15,8 @@
 .vscode/
 .idea/
 
-# Claude
-.claude/
+# Claude Code - ignore local/personal files only
+.claude/**/*.local.*
+.claude/CLAUDE.local.md
+.claude/plans/
+.claude/cache/
