@@ -6,15 +6,111 @@ permissions:
   contents: write
 
 jobs:
-  build:
-    name: 'QMK Userspace Build'
-    uses: qmk/.github/.github/workflows/qmk_userspace_build.yml@main
-    with:
-      qmk_repo: qmk/qmk_firmware
-      qmk_ref: master
+  build-kyria:
+    name: 'Build Kyria Rev4'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout userspace
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t qmk-builder -f Dockerfile.qmk .
+
+      - name: Build left half (Cirque trackpad)
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}:/qmk_userspace" \
+            -e QMK_USERSPACE=/qmk_userspace \
+            -e SKIP_GIT=1 \
+            -e SKIP_VERSION=1 \
+            qmk-builder \
+            sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/kyria/rev4 -km obbut -e HLC_CIRQUE_TRACKPAD=1 -e TARGET=kyria_rev4_obbut_left_cirque'
+
+      - name: Build right half (Encoder)
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}:/qmk_userspace" \
+            -e QMK_USERSPACE=/qmk_userspace \
+            -e SKIP_GIT=1 \
+            -e SKIP_VERSION=1 \
+            qmk-builder \
+            sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/kyria/rev4 -km obbut -e HLC_ENCODER=1 -e TARGET=kyria_rev4_obbut_right_encoder'
+
+      - name: Upload Kyria firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: kyria-firmware
+          path: |
+            kyria_rev4_obbut_left_cirque.uf2
+            kyria_rev4_obbut_right_encoder.uf2
+          retention-days: 1
+
+  build-q15:
+    name: 'Build Q15 Max'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout userspace
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t qmk-keychron-builder -f Dockerfile.keychron .
+
+      - name: Build Q15 Max firmware
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}:/qmk_userspace" \
+            -e QMK_USERSPACE=/qmk_userspace \
+            qmk-keychron-builder \
+            sh -c 'cd /qmk_firmware && make keychron/q15_max/ansi_encoder:obbut'
+
+      - name: Upload Q15 Max firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: q15-max-firmware
+          path: keychron_q15_max_ansi_encoder_obbut.bin
+          retention-days: 1
 
   publish:
-    name: 'QMK Userspace Publish'
-    uses: qmk/.github/.github/workflows/qmk_userspace_publish.yml@main
-    if: always() && !cancelled()
-    needs: build
+    name: 'Publish Release'
+    runs-on: ubuntu-latest
+    needs: [build-kyria, build-q15]
+
+    steps:
+      - name: Download Kyria firmware
+        uses: actions/download-artifact@v4
+        with:
+          name: kyria-firmware
+
+      - name: Download Q15 Max firmware
+        uses: actions/download-artifact@v4
+        with:
+          name: q15-max-firmware
+
+      - name: Delete existing release
+        run: gh release delete latest --yes --cleanup-tag || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+
+      - name: Create release
+        run: |
+          gh release create latest \
+            --title "Latest Firmware" \
+            --notes "Automatically built firmware binaries.
+
+          **Kyria Rev4 (Halcyon)**
+          - \`kyria_rev4_obbut_left_cirque.uf2\` - Left half with Cirque trackpad
+          - \`kyria_rev4_obbut_right_encoder.uf2\` - Right half with encoder
+
+          **Keychron Q15 Max**
+          - \`keychron_q15_max_ansi_encoder_obbut.bin\` - ANSI encoder variant
+
+          Built from commit ${{ github.sha }}" \
+            kyria_rev4_obbut_left_cirque.uf2 \
+            kyria_rev4_obbut_right_encoder.uf2 \
+            keychron_q15_max_ansi_encoder_obbut.bin
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
