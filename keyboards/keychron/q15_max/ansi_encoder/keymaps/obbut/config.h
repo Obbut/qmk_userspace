@@ -2,6 +2,6 @@
 
 #pragma once
 
-// Fix layer-tap delay: immediately activate hold when another key is pressed
-// This makes LT(_RAISE, KC_SPC) more responsive for fast typing
-#define HOLD_ON_OTHER_KEY_PRESS
+// Fix layer-tap delay: activate hold when another key is tapped while holding
+// Less aggressive than HOLD_ON_OTHER_KEY_PRESS - rolling presses still produce tap
+#define PERMISSIVE_HOLD
