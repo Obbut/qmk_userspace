@@ -74,7 +74,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     [_RAISE] = LAYOUT_ansi_66(
         _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,  _______,
-        KC_GRV,   KC_EXLM,  KC_AT,    KC_LBRC,  KC_RBRC,  _______,  _______,  KC_7,     KC_8,     KC_9,     KC_MINS,  _______,  _______,  _______,
+        KC_GRV,   KC_EXLM,  KC_AT,    KC_LBRC,  KC_RBRC,  _______,  KC_COLN,  KC_7,     KC_8,     KC_9,     KC_MINS,  _______,  _______,  _______,
         _______,  _______,  KC_HASH,  KC_DLR,   KC_LPRN,  KC_RPRN,  _______,  KC_4,     KC_5,     KC_6,     KC_PLUS,  KC_EQL,             _______,
         _______,  _______,  KC_PERC,  KC_CIRC,  KC_LCBR,  KC_RCBR,  KC_0,     KC_1,     KC_2,     KC_3,     KC_DOT,   KC_BSLS,  _______,  _______,
         _______,  _______,  _______,  _______,       _______,            _______,      _______,  _______,  _______,  _______,  _______),
@@ -131,8 +131,9 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
                              keycode == KC_HASH || keycode == KC_DLR || keycode == KC_PERC ||
                              keycode == KC_CIRC || keycode == KC_LBRC || keycode == KC_RBRC ||
                              keycode == KC_LPRN || keycode == KC_RPRN || keycode == KC_LCBR ||
-                             keycode == KC_RCBR || keycode == KC_MINS || keycode == KC_PLUS ||
-                             keycode == KC_EQL || keycode == KC_DOT || keycode == KC_BSLS) {
+                             keycode == KC_RCBR || keycode == KC_COLN || keycode == KC_MINS ||
+                             keycode == KC_PLUS || keycode == KC_EQL || keycode == KC_DOT ||
+                             keycode == KC_BSLS) {
                         rgb_matrix_set_color(led_index, 255, 255, 0);
                     }
                 } else {
