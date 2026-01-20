@@ -1,6 +1,6 @@
 ---
 name: update-keymap
-description: Update QMK keymaps for Kyria or Q15 Max keyboards. Use this skill for ANY keymap changes including adding keys, changing layers, modifying RGB indicators, or reorganizing layouts. Handles building, flashing, SVG generation, and git commits.
+description: "MANDATORY: You MUST invoke this skill IMMEDIATELY for ANY keymap task - adding keys, changing layers, RGB indicators, layouts, building, or flashing. Do NOT edit keymap files manually. ALWAYS use this skill first."
 ---
 
 # Update Keymap
