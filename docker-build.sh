@@ -188,6 +188,7 @@ build_kyria_left() {
         -e QMK_USERSPACE=/qmk_userspace \
         -e SKIP_GIT=1 \
         -e SKIP_VERSION=1 \
+        -e MAKEFLAGS="-j$(nproc)" \
         "$IMAGE_NAME" \
         sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/kyria/rev4 -km obbut -e HLC_CIRQUE_TRACKPAD=1 -e TARGET=kyria_rev4_obbut_left_cirque'
     echo "Build complete: kyria_rev4_obbut_left_cirque.uf2"
@@ -202,6 +203,7 @@ build_kyria_right() {
         -e QMK_USERSPACE=/qmk_userspace \
         -e SKIP_GIT=1 \
         -e SKIP_VERSION=1 \
+        -e MAKEFLAGS="-j$(nproc)" \
         "$IMAGE_NAME" \
         sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/kyria/rev4 -km obbut -e HLC_ENCODER=1 -e TARGET=kyria_rev4_obbut_right_encoder'
     echo "Build complete: kyria_rev4_obbut_right_encoder.uf2"
@@ -216,6 +218,7 @@ build_elora_left() {
         -e QMK_USERSPACE=/qmk_userspace \
         -e SKIP_GIT=1 \
         -e SKIP_VERSION=1 \
+        -e MAKEFLAGS="-j$(nproc)" \
         "$IMAGE_NAME" \
         sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/elora/rev2 -km obbut -e HLC_NONE=1 -e TARGET=elora_rev2_obbut_left'
     echo "Build complete: elora_rev2_obbut_left.uf2"
@@ -230,6 +233,7 @@ build_elora_right() {
         -e QMK_USERSPACE=/qmk_userspace \
         -e SKIP_GIT=1 \
         -e SKIP_VERSION=1 \
+        -e MAKEFLAGS="-j$(nproc)" \
         "$IMAGE_NAME" \
         sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/elora/rev2 -km obbut -e HLC_ENCODER=1 -e TARGET=elora_rev2_obbut_right_encoder'
     echo "Build complete: elora_rev2_obbut_right_encoder.uf2"
@@ -241,6 +245,7 @@ build_q15() {
     docker run --rm \
         -v "$SCRIPT_DIR:/qmk_userspace" \
         -v "$KEYCHRON_BUILD_CACHE:/qmk_firmware/.build" \
+        -e MAKEFLAGS="-j$(nproc)" \
         "$KEYCHRON_IMAGE_NAME" \
         sh -c 'export QMK_USERSPACE=/qmk_userspace && cd /qmk_firmware && make keychron/q15_max/ansi_encoder:obbut'
     echo "Build complete: keychron_q15_max_ansi_encoder_obbut.bin"
