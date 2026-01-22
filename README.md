@@ -5,46 +5,6 @@ Personal QMK firmware for three keyboards:
 - **Elora Rev2** (Halcyon series) - Split ergonomic with Colemak-DH + number row
 - **Keychron Q15 Max** - Ortholinear with Bluetooth/2.4GHz wireless
 
-## Build Commands
-
-All builds use Docker - no local QMK installation required.
-
-### Kyria Rev4
-
-```bash
-./docker-build.sh kyria-left         # Build left half (Cirque trackpad)
-./docker-build.sh kyria-right        # Build right half (encoder)
-./docker-build.sh kyria-all          # Build both halves
-./docker-build.sh flash-kyria-left   # Build and flash left half
-./docker-build.sh flash-kyria-right  # Build and flash right half
-```
-
-### Elora Rev2
-
-```bash
-./docker-build.sh elora-left         # Build left half (no module)
-./docker-build.sh elora-right        # Build right half (encoder)
-./docker-build.sh elora-all          # Build both halves
-./docker-build.sh flash-elora-left   # Build and flash left half
-./docker-build.sh flash-elora-right  # Build and flash right half
-```
-
-### Keychron Q15 Max
-
-```bash
-./docker-build.sh q15          # Build Q15 Max firmware
-./docker-build.sh flash-q15    # Build and flash Q15 Max
-```
-
-### Common
-
-```bash
-./docker-build.sh clean        # Remove build artifacts
-./draw-keymap.sh               # Regenerate keymap SVGs
-```
-
----
-
 ## Kyria Rev4 (Halcyon)
 
 Split ergonomic keyboard with asymmetric modules:
@@ -175,6 +135,46 @@ Media controls, RGB, and Bluetooth device switching.
 F-keys and battery level indicator.
 
 ![Fn2 layer](images/q15-fn2.svg)
+
+---
+
+## Build Commands
+
+All builds use Docker - no local QMK installation required.
+
+### Kyria Rev4
+
+```bash
+./docker-build.sh kyria-left         # Build left half (Cirque trackpad)
+./docker-build.sh kyria-right        # Build right half (encoder)
+./docker-build.sh kyria-all          # Build both halves
+./docker-build.sh flash-kyria-left   # Build and flash left half
+./docker-build.sh flash-kyria-right  # Build and flash right half
+```
+
+### Elora Rev2
+
+```bash
+./docker-build.sh elora-left         # Build left half (no module)
+./docker-build.sh elora-right        # Build right half (encoder)
+./docker-build.sh elora-all          # Build both halves
+./docker-build.sh flash-elora-left   # Build and flash left half
+./docker-build.sh flash-elora-right  # Build and flash right half
+```
+
+### Keychron Q15 Max
+
+```bash
+./docker-build.sh q15          # Build Q15 Max firmware
+./docker-build.sh flash-q15    # Build and flash Q15 Max
+```
+
+### Common
+
+```bash
+./docker-build.sh clean        # Remove build artifacts
+./draw-keymap.sh               # Regenerate keymap SVGs
+```
 
 ---
 
