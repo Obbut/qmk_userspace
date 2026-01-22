@@ -61,9 +61,18 @@ bool obbut_process_record(uint16_t keycode, keyrecord_t *record) {
         }
     }
 
-    // Swap Ctrl and Cmd on Windows
+    // Swap keys on Windows
     if (is_windows()) {
         switch (keycode) {
+            // Screenshot: send Print Screen instead of macOS shortcut
+            case SCREENSHOT:
+                if (record->event.pressed) {
+                    register_code(KC_PSCR);
+                } else {
+                    unregister_code(KC_PSCR);
+                }
+                return false;
+            // Swap Ctrl and Cmd
             case KC_LCTL:
                 if (record->event.pressed) {
                     register_code(KC_LGUI);
