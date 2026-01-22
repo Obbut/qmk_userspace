@@ -64,6 +64,14 @@ bool obbut_process_record(uint16_t keycode, keyrecord_t *record) {
     // Swap keys on Windows
     if (is_windows()) {
         switch (keycode) {
+#if defined(KEYBOARD_splitkb_halcyon_elora_rev2)
+            // Elora only: Heart key (MS_BTN1) toggles QWERTY layer
+            case MS_BTN1:
+                if (record->event.pressed) {
+                    layer_invert(_QWERTY);
+                }
+                return false;
+#endif
             // Screenshot: send Print Screen instead of macOS shortcut
             case SCREENSHOT:
                 if (record->event.pressed) {
@@ -206,9 +214,34 @@ bool obbut_rgb_matrix_indicators(uint8_t led_min, uint8_t led_max) {
                     else if (keycode == QK_BOOT) {
                         rgb_matrix_set_color(led_index, 255, 68, 68);
                     }
+                    // QWERTY toggle key: purple
+                    else if (keycode == TG_QWERTY) {
+                        rgb_matrix_set_color(led_index, 148, 0, 211);
+                    }
                     // OS indicator: white on primary modifier key
                     else if (default_keycode == os_indicator_key) {
                         rgb_matrix_set_color(led_index, 255, 255, 255);
+                    }
+                }
+            }
+        }
+    } else if (layer == _QWERTY) {
+        // Keep normal RGB effect running, only override gaming-critical keys
+        // (No "turn off all LEDs" step - let the effect show through)
+
+        for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
+            for (uint8_t col = 0; col < MATRIX_COLS; col++) {
+                uint8_t led_index = g_led_config.matrix_co[row][col];
+                if (led_index >= led_min && led_index < led_max && led_index != NO_LED) {
+                    keypos_t pos = {.row = row, .col = col};
+                    uint16_t keycode = keymap_key_to_keycode(_QWERTY, pos);
+
+                    // WASD keys + left thumb cluster: bright purple
+                    if (keycode == KC_W || keycode == KC_A ||
+                        keycode == KC_S || keycode == KC_D ||
+                        keycode == KC_LCTL || keycode == KC_LALT ||
+                        keycode == KC_SPC) {
+                        rgb_matrix_set_color(led_index, 148, 0, 211);
                     }
                 }
             }

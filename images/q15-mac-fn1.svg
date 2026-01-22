@@ -19,6 +19,7 @@ text.hold { font-size: 10px; fill: #666666; }
 .rgb-green-dark > rect { stroke: #228822; stroke-width: 2.5; }
 .rgb-red > rect { stroke: #ff4444; stroke-width: 2.5; }
 .rgb-orange > rect { stroke: #ff8000; stroke-width: 2.5; }
+.rgb-purple > rect { stroke: #9400d3; stroke-width: 2.5; }
 </style>
 <g transform="translate(30, 0)" class="layer-Mac Fn1">
 <text x="0" y="28" class="label" id="Mac-Fn1">Mac Fn1:</text>

@@ -7,8 +7,15 @@ layers:
     - ["`", "1", "2", "3", "4", "5",    "6", "7", "8", "9", "0", "-"]
     - [TAB,  Q, W, F, P, B,    J, L, U,   Y, ";",  BSPC]
     - [ESC,  A, R, S, T, G,    M, N, E,   I, O,    "'"]
-    - [LSFT, Z, X, C, D, V,    OPT, Click,    Fn, "", K, H, ",", ".", /,  ENT]
+    - [LSFT, Z, X, C, D, V,    OPT, {t: QWERTY, h: "Win", type: rgb-purple},    Fn, "", K, H, ",", ".", /,  ENT]
     - [Screenshot, LCTL, LGUI, Aerospace, SPC,    "", SPC, {t: Raise, h: MO(2)}, {t: Lower, h: MO(1)}, ""]
+
+  QWERTY:
+    - ["`", "1", "2", "3", "4", "5",    "6", "7", "8", "9", "0", "-"]
+    - [TAB, Q, {t: W, type: rgb-purple}, E, R, T,    Y, U, I, O, P, BSPC]
+    - [ESC, {t: A, type: rgb-purple}, {t: S, type: rgb-purple}, {t: D, type: rgb-purple}, F, G,    H, J, K, L, ";", "'"]
+    - [LSFT, Z, X, C, V, B,    OPT, {t: Default, h: "Win", type: rgb-purple},    Fn, "", N, M, ",", ".", /, ENT]
+    - [{t: LCTL, type: rgb-purple}, {t: LALT, type: rgb-purple}, {t: SPC, type: rgb-purple}, {t: SPC, type: rgb-purple}, {t: SPC, type: rgb-purple},    "", {t: SPC, type: rgb-purple}, {t: Raise, h: MO(2)}, {t: Lower, h: MO(1)}, ""]
 
   Lower:
     - ["", "", "", "", "", "",    "", "", "", "", "", ""]
@@ -28,5 +35,5 @@ layers:
     - ["", "", "", "", "", "",    "", "", "", "", "", ""]
     - ["", {t: F11, type: rgb-cyan}, {t: F12, type: rgb-cyan}, {t: F13, type: rgb-cyan}, {t: F14, type: rgb-cyan}, {t: F15, type: rgb-cyan},    "", "", "", "", "", ""]
     - [{t: Boot, type: rgb-red}, {t: F6, type: rgb-cyan}, {t: F7, type: rgb-cyan}, {t: F8, type: rgb-cyan}, {t: F9, type: rgb-cyan}, {t: F10, type: rgb-cyan},    {t: RGB, type: rgb-green}, {t: Sat+, type: rgb-green}, {t: Hue+, type: rgb-green}, {t: Brt+, type: rgb-green}, {t: Next, type: rgb-green}, {t: Boot, type: rgb-red}]
-    - ["", {t: F1, type: rgb-cyan}, {t: F2, type: rgb-cyan}, {t: F3, type: rgb-cyan}, {t: F4, type: rgb-cyan}, {t: F5, type: rgb-cyan},     "", "",    "", "", "", {t: Sat-, type: rgb-green-dark}, {t: Hue-, type: rgb-green-dark}, {t: Brt-, type: rgb-green-dark}, {t: Prev, type: rgb-green-dark}, ""]
+    - ["", {t: F1, type: rgb-cyan}, {t: F2, type: rgb-cyan}, {t: F3, type: rgb-cyan}, {t: F4, type: rgb-cyan}, {t: F5, type: rgb-cyan},     "", {t: QWERTY, type: rgb-purple},    "", "", "", {t: Sat-, type: rgb-green-dark}, {t: Hue-, type: rgb-green-dark}, {t: Brt-, type: rgb-green-dark}, {t: Prev, type: rgb-green-dark}, ""]
     - ["", "", "", "", "",    "", "", "", "", ""]
