@@ -1,8 +1,24 @@
 # Project Notes for AI Agents
 
-This repo contains QMK keymaps for two keyboards:
+This repo contains QMK keymaps for three keyboards:
 - **Kyria Rev4** (Halcyon series) - Split ergonomic keyboard
+- **Elora Rev2** (Halcyon series) - Split ergonomic keyboard with number row
 - **Keychron Q15 Max** - Ortholinear with Bluetooth/2.4GHz wireless
+
+## Code Sharing: Kyria and Elora
+
+The Kyria and Elora share code via `users/obbut_halcyon/`:
+- **`obbut_halcyon.h`** - Shared definitions, layer enum, row macros
+- **`obbut_halcyon.c`** - Shared logic (RGB indicators, OS detection, split sync)
+- **`config.h`** - Shared config (RGB timeout, split transaction ID)
+
+The Elora is essentially the Kyria with an additional number row. All layers, RGB indicators, and settings are kept in sync through the shared code.
+
+**When changing Kyria or Elora keymaps:**
+1. Update the shared code in `users/obbut_halcyon/` for common changes
+2. Update keyboard-specific `keymap.c` only for layout differences
+3. Update both `keymap-kyria.yaml` and `keymap-elora.yaml` for visualization
+4. Run `./draw-keymap.sh` to regenerate SVGs
 
 ## Keymap Synchronization
 
@@ -11,6 +27,10 @@ Each keyboard has keymap definitions that must stay in sync:
 ### Kyria
 1. **`keyboards/splitkb/halcyon/kyria/keymaps/obbut/keymap.c`** - QMK firmware keymap
 2. **`keymap-kyria.yaml`** - Manual YAML for keymap-drawer visualization
+
+### Elora
+1. **`keyboards/splitkb/halcyon/elora/keymaps/obbut/keymap.c`** - QMK firmware keymap
+2. **`keymap-elora.yaml`** - Manual YAML for keymap-drawer visualization
 
 ### Q15 Max
 1. **`keyboards/keychron/q15_max/ansi_encoder/keymaps/obbut/keymap.c`** - QMK firmware keymap
@@ -27,9 +47,14 @@ Each keyboard has keymap definitions that must stay in sync:
 All builds use Docker - no local QMK installation required. Just need Docker Desktop.
 
 ### Kyria (Bash)
-- `./docker-build.sh left` / `./docker-build.sh right` - Compile firmware for each half
-- `./docker-build.sh flash-left` / `./docker-build.sh flash-right` - Build and flash firmware
-- `./docker-build.sh all` - Compile both halves
+- `./docker-build.sh kyria-left` / `./docker-build.sh kyria-right` - Compile firmware for each half
+- `./docker-build.sh flash-kyria-left` / `./docker-build.sh flash-kyria-right` - Build and flash firmware
+- `./docker-build.sh kyria-all` - Compile both halves
+
+### Elora (Bash)
+- `./docker-build.sh elora-left` / `./docker-build.sh elora-right` - Compile firmware for each half
+- `./docker-build.sh flash-elora-left` / `./docker-build.sh flash-elora-right` - Build and flash firmware
+- `./docker-build.sh elora-all` - Compile both halves
 
 ### Q15 Max (Bash)
 - `./docker-build.sh q15` - Compile Q15 Max firmware
@@ -37,12 +62,7 @@ All builds use Docker - no local QMK installation required. Just need Docker Des
 
 ### Common
 - `./docker-build.sh clean` - Remove build artifacts
-- `./draw-keymap.sh` - Regenerate keymap SVGs for both keyboards
-
-### PowerShell (Windows)
-- `./build.ps1 left` / `./build.ps1 right` - Compile Kyria firmware
-- `./build.ps1 flash-left` / `./build.ps1 flash-right` - Build and flash Kyria
-- `./build.ps1 draw` - Regenerate keymap SVGs
+- `./draw-keymap.sh` - Regenerate keymap SVGs for all keyboards
 
 ## Setup
 
@@ -77,12 +97,12 @@ No need to install QMK CLI, Python, or ARM toolchains locally.
 ### Flashing Workflow
 
 **Automatic (recommended):**
-1. Run `./docker-build.sh flash-left` or `./docker-build.sh flash-right`
+1. Run `./docker-build.sh flash-kyria-left` or `./docker-build.sh flash-kyria-right`
 2. Put the keyboard in bootloader mode when prompted
 3. The script auto-detects the `RPI-RP2` drive and copies the firmware
 
 **Manual:**
-1. Build firmware: `./docker-build.sh left` or `./docker-build.sh right`
+1. Build firmware: `./docker-build.sh kyria-left` or `./docker-build.sh kyria-right`
 2. Put keyboard in bootloader mode (appears as `RPI-RP2` drive)
 3. Copy the `.uf2` file to the drive (e.g., `kyria_rev4_obbut_left_cirque.uf2`)
 
@@ -139,10 +159,10 @@ The keyboard has per-layer RGB backlighting (all other keys turn off for visibil
 
 ### Keeping RGB in Sync
 
-RGB indicators are defined in **two places** that must stay in sync:
+RGB indicators are defined in the shared code (`users/obbut_halcyon/obbut_halcyon.c`) and the YAML files for visualization:
 
-1. **`keymap.c`** - The actual RGB code in `rgb_matrix_indicators_advanced_user()`
-2. **`keymap-kyria.yaml`** - Border colors via `type` field on keys (e.g., `{t: LEFT, type: rgb-magenta}`)
+1. **`obbut_halcyon.c`** - The actual RGB code in `obbut_rgb_matrix_indicators()`
+2. **`keymap-kyria.yaml`** / **`keymap-elora.yaml`** - Border colors via `type` field on keys
 
 The border styles are defined in `keymap-drawer.yaml` under `svg_style`:
 - `rgb-magenta` - Magenta for movement keys
@@ -155,9 +175,63 @@ The border styles are defined in `keymap-drawer.yaml` under `svg_style`:
 - `rgb-orange` - Orange for Delete/Backspace keys
 
 **When changing RGB indicators:**
-1. Update the logic in `keymap.c` (`rgb_matrix_indicators_advanced_user`)
-2. Update the `type` fields in `keymap-kyria.yaml` for affected keys
+1. Update the logic in `users/obbut_halcyon/obbut_halcyon.c`
+2. Update the `type` fields in both YAML files for affected keys
 3. Run `./docker-build.sh` then `./draw-keymap.sh` to regenerate the SVGs
+
+---
+
+# Elora Rev2 (Halcyon)
+
+## Hardware
+
+- Elora Rev2 (Halcyon series) split keyboard
+- Same as Kyria but with an additional number row
+- Left half: No module
+- Right half: Encoder module
+- Each half needs different firmware due to asymmetric modules
+
+## Flashing
+
+**Important:** Each half must be flashed separately. The halves run independent firmware.
+
+### Boot Keys
+- **Fn + Esc** → Bootloader for left half
+- **Fn + '** → Bootloader for right half
+
+### Flashing Workflow
+
+**Automatic (recommended):**
+1. Run `./docker-build.sh flash-elora-left` or `./docker-build.sh flash-elora-right`
+2. Put the keyboard in bootloader mode when prompted
+3. The script auto-detects the `RPI-RP2` drive and copies the firmware
+
+**Manual:**
+1. Build firmware: `./docker-build.sh elora-left` or `./docker-build.sh elora-right`
+2. Put keyboard in bootloader mode (appears as `RPI-RP2` drive)
+3. Copy the `.uf2` file to the drive (e.g., `elora_rev2_obbut_left.uf2`)
+
+## Physical Layout
+
+```
+Row 0 (number): [`]  [1]  [2]  [3]  [4]  [5]       [6]  [7]  [8]  [9]  [0]  [-]
+Row 1:          [Tab] [Q]  [W]  [F]  [P]  [B]       [J]  [L]  [U]  [Y]  [;]  [Bksp]
+Row 2:          [Esc] [A]  [R]  [S]  [T]  [G]       [M]  [N]  [E]  [I]  [O]  [']
+Row 3:          [Sft] [Z]  [X]  [C]  [D]  [V]       [K]  [H]  [,]  [.]  [/]  [Ent]
+Thumb:          [Screenshot] [Ctrl] [Cmd] [Aerospace] [Spc]   [Spc] [Raise] [Lower]
+```
+
+## Layers
+
+Same as Kyria (shared code):
+1. **Default** - Colemak-DH base layer with number row (`~ 1 2 3 4 5 | 6 7 8 9 0 -`)
+2. **Lower** - Navigation (arrow keys), number row transparent
+3. **Raise** - Symbols and numpad, number row transparent (direct access to numbers)
+4. **Function** - F-keys (F1-F15), RGB controls, Boot keys, number row transparent
+
+## RGB Layer Indicators
+
+Same as Kyria (shared code). See Kyria section above.
 
 ---
 

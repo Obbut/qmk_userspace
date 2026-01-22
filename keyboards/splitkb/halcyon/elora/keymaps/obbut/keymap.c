@@ -1,4 +1,4 @@
-// Kyria Rev4 keymap for Obbut
+// Elora Rev2 keymap for Obbut
 // Uses shared code from users/obbut_halcyon/
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -7,6 +7,7 @@
 // clang-format off
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [_DEFAULT] = LAYOUT_wrapper(
+        DEFAULT_NUM_L,                                             DEFAULT_NUM_R,
         DEFAULT_L1,                                                DEFAULT_R1,
         DEFAULT_L2,                                                DEFAULT_R2,
         DEFAULT_L3, KC_LOPT, MS_BTN1,          FKEYS,   KC_NO,     DEFAULT_R3,
@@ -15,6 +16,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
 
     [_LOWER] = LAYOUT_wrapper(
+        LOWER_NUM_L,                                               LOWER_NUM_R,
         LOWER_L1,                                                  LOWER_R1,
         LOWER_L2,                                                  LOWER_R2,
         LOWER_L3,   _______, _______,          _______, _______,   LOWER_R3,
@@ -23,6 +25,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
 
     [_RAISE] = LAYOUT_wrapper(
+        RAISE_NUM_L,                                               RAISE_NUM_R,
         RAISE_L1,                                                  RAISE_R1,
         RAISE_L2,                                                  RAISE_R2,
         RAISE_L3,   _______, _______,          _______, _______,   RAISE_R3,
@@ -31,6 +34,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
 
     [_FUNCTION] = LAYOUT_wrapper(
+        FUNC_NUM_L,                                                FUNC_NUM_R,
         FUNC_L1,                                                   FUNC_R1,
         FUNC_L2,                                                   FUNC_R2,
         FUNC_L3,    _______, _______,          _______, _______,   FUNC_R3,
