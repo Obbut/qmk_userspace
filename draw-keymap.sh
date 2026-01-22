@@ -40,6 +40,9 @@ draw_keymap() {
 # Kyria layers
 draw_keymap "keymap-kyria.yaml" "kyria" "Default" "Lower" "Raise" "Function"
 
+# Elora layers
+draw_keymap "keymap-elora.yaml" "elora" "Default" "Lower" "Raise" "Function"
+
 # Q15 Max layers
 draw_keymap "keymap-q15.yaml" "q15" "Mac Base" "Win Base" "Mac Fn1" "Win Fn1" "Fn2" "Raise"
 

@@ -179,9 +179,9 @@ flash_q15_dfu() {
     exit 1
 }
 
-build_left() {
+build_kyria_left() {
     build_qmk_image
-    echo "Building left half (Cirque trackpad)..."
+    echo "Building Kyria left half (Cirque trackpad)..."
     docker run --rm \
         -v "$SCRIPT_DIR:/qmk_userspace" \
         -v "$BUILD_CACHE:/qmk_firmware/.build" \
@@ -193,9 +193,9 @@ build_left() {
     echo "Build complete: kyria_rev4_obbut_left_cirque.uf2"
 }
 
-build_right() {
+build_kyria_right() {
     build_qmk_image
-    echo "Building right half (Encoder)..."
+    echo "Building Kyria right half (Encoder)..."
     docker run --rm \
         -v "$SCRIPT_DIR:/qmk_userspace" \
         -v "$BUILD_CACHE:/qmk_firmware/.build" \
@@ -205,6 +205,34 @@ build_right() {
         "$IMAGE_NAME" \
         sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/kyria/rev4 -km obbut -e HLC_ENCODER=1 -e TARGET=kyria_rev4_obbut_right_encoder'
     echo "Build complete: kyria_rev4_obbut_right_encoder.uf2"
+}
+
+build_elora_left() {
+    build_qmk_image
+    echo "Building Elora left half (no module)..."
+    docker run --rm \
+        -v "$SCRIPT_DIR:/qmk_userspace" \
+        -v "$BUILD_CACHE:/qmk_firmware/.build" \
+        -e QMK_USERSPACE=/qmk_userspace \
+        -e SKIP_GIT=1 \
+        -e SKIP_VERSION=1 \
+        "$IMAGE_NAME" \
+        sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/elora/rev2 -km obbut -e HLC_NONE=1 -e TARGET=elora_rev2_obbut_left'
+    echo "Build complete: elora_rev2_obbut_left.uf2"
+}
+
+build_elora_right() {
+    build_qmk_image
+    echo "Building Elora right half (Encoder)..."
+    docker run --rm \
+        -v "$SCRIPT_DIR:/qmk_userspace" \
+        -v "$BUILD_CACHE:/qmk_firmware/.build" \
+        -e QMK_USERSPACE=/qmk_userspace \
+        -e SKIP_GIT=1 \
+        -e SKIP_VERSION=1 \
+        "$IMAGE_NAME" \
+        sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/elora/rev2 -km obbut -e HLC_ENCODER=1 -e TARGET=elora_rev2_obbut_right_encoder'
+    echo "Build complete: elora_rev2_obbut_right_encoder.uf2"
 }
 
 build_q15() {
@@ -218,24 +246,42 @@ build_q15() {
     echo "Build complete: keychron_q15_max_ansi_encoder_obbut.bin"
 }
 
-case "${1:-all}" in
-    left)
-        build_left
+case "${1:-help}" in
+    kyria-left)
+        build_kyria_left
         ;;
-    right)
-        build_right
+    kyria-right)
+        build_kyria_right
         ;;
-    all)
-        build_left
-        build_right
+    kyria-all)
+        build_kyria_left
+        build_kyria_right
         ;;
-    flash-left)
-        build_left
+    flash-kyria-left)
+        build_kyria_left
         flash_firmware "kyria_rev4_obbut_left_cirque.uf2" "left"
         ;;
-    flash-right)
-        build_right
+    flash-kyria-right)
+        build_kyria_right
         flash_firmware "kyria_rev4_obbut_right_encoder.uf2" "right"
+        ;;
+    elora-left)
+        build_elora_left
+        ;;
+    elora-right)
+        build_elora_right
+        ;;
+    elora-all)
+        build_elora_left
+        build_elora_right
+        ;;
+    flash-elora-left)
+        build_elora_left
+        flash_firmware "elora_rev2_obbut_left.uf2" "left"
+        ;;
+    flash-elora-right)
+        build_elora_right
+        flash_firmware "elora_rev2_obbut_right_encoder.uf2" "right"
         ;;
     q15)
         build_q15
@@ -261,20 +307,27 @@ case "${1:-all}" in
     *)
         echo "Usage: $0 [command]"
         echo ""
-        echo "Kyria (Halcyon) commands:"
-        echo "  left             - Build left half firmware (Cirque trackpad)"
-        echo "  right            - Build right half firmware (encoder)"
-        echo "  all              - Build both Kyria halves (default)"
-        echo "  flash-left       - Build and flash left half"
-        echo "  flash-right      - Build and flash right half"
+        echo "Kyria Rev4 (Halcyon) commands:"
+        echo "  kyria-left         - Build left half (Cirque trackpad)"
+        echo "  kyria-right        - Build right half (encoder)"
+        echo "  kyria-all          - Build both Kyria halves"
+        echo "  flash-kyria-left   - Build and flash left half"
+        echo "  flash-kyria-right  - Build and flash right half"
+        echo ""
+        echo "Elora Rev2 (Halcyon) commands:"
+        echo "  elora-left         - Build left half (no module)"
+        echo "  elora-right        - Build right half (encoder)"
+        echo "  elora-all          - Build both Elora halves"
+        echo "  flash-elora-left   - Build and flash left half"
+        echo "  flash-elora-right  - Build and flash right half"
         echo ""
         echo "Keychron Q15 Max commands:"
-        echo "  q15              - Build Q15 Max firmware"
-        echo "  flash-q15        - Build and flash Q15 Max (requires dfu-util)"
+        echo "  q15                - Build Q15 Max firmware"
+        echo "  flash-q15          - Build and flash Q15 Max (requires dfu-util)"
         echo ""
         echo "Maintenance:"
-        echo "  clean            - Remove build artifacts"
-        echo "  rebuild-image    - Force rebuild the QMK Docker image"
+        echo "  clean              - Remove build artifacts"
+        echo "  rebuild-image      - Force rebuild the QMK Docker image"
         echo "  rebuild-keychron-image - Force rebuild the Keychron Docker image"
         exit 1
         ;;

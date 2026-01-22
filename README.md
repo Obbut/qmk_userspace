@@ -1,7 +1,8 @@
 # QMK Userspace
 
-Personal QMK firmware for two keyboards:
+Personal QMK firmware for three keyboards:
 - **Kyria Rev4** (Halcyon series) - Split ergonomic with Colemak-DH
+- **Elora Rev2** (Halcyon series) - Split ergonomic with Colemak-DH + number row
 - **Keychron Q15 Max** - Ortholinear with Bluetooth/2.4GHz wireless
 
 ## Build Commands
@@ -11,11 +12,21 @@ All builds use Docker - no local QMK installation required.
 ### Kyria Rev4
 
 ```bash
-./docker-build.sh left         # Build left half (Cirque trackpad)
-./docker-build.sh right        # Build right half (encoder)
-./docker-build.sh all          # Build both halves
-./docker-build.sh flash-left   # Build and flash left half
-./docker-build.sh flash-right  # Build and flash right half
+./docker-build.sh kyria-left         # Build left half (Cirque trackpad)
+./docker-build.sh kyria-right        # Build right half (encoder)
+./docker-build.sh kyria-all          # Build both halves
+./docker-build.sh flash-kyria-left   # Build and flash left half
+./docker-build.sh flash-kyria-right  # Build and flash right half
+```
+
+### Elora Rev2
+
+```bash
+./docker-build.sh elora-left         # Build left half (no module)
+./docker-build.sh elora-right        # Build right half (encoder)
+./docker-build.sh elora-all          # Build both halves
+./docker-build.sh flash-elora-left   # Build and flash left half
+./docker-build.sh flash-elora-right  # Build and flash right half
 ```
 
 ### Keychron Q15 Max
@@ -78,6 +89,52 @@ F-keys, RGB controls, and bootloader. RGB indicators: cyan for F-keys, green for
 
 ---
 
+## Elora Rev2 (Halcyon)
+
+Split ergonomic keyboard with number row:
+- **Left half**: No module
+- **Right half**: Encoder module
+
+The Elora shares code with the Kyria - all layers and settings are identical except for the additional number row.
+
+### Flashing
+
+Each half must be flashed separately:
+
+1. Enter bootloader: **Fn + Esc** (left) or **Fn + '** (right)
+2. Run `./docker-build.sh flash-elora-left` or `./docker-build.sh flash-elora-right`
+3. Or copy the `.uf2` file to the mounted `RPI-RP2` drive
+
+### Keymap
+
+4-layer Colemak-DH layout with number row and per-layer RGB indicators.
+
+#### Default Layer
+
+Colemak-DH base layer with number row (`~ 1 2 3 4 5 | 6 7 8 9 0 -`).
+
+![Default layer](images/elora-default.svg)
+
+#### Lower Layer
+
+Navigation with arrow keys. Number row is transparent.
+
+![Lower layer](images/elora-lower.svg)
+
+#### Raise Layer
+
+Symbols and numpad. Number row is transparent (direct access to base layer numbers).
+
+![Raise layer](images/elora-raise.svg)
+
+#### Function Layer
+
+F-keys, RGB controls, and bootloader. Number row is transparent.
+
+![Function layer](images/elora-function.svg)
+
+---
+
 ## Keychron Q15 Max
 
 Ortholinear keyboard with:
@@ -127,12 +184,13 @@ This repository contains files from [splitkb/qmk_userspace](https://github.com/s
 
 ### Copied Files
 
-The following files were copied from splitkb/qmk_userspace at revision [`f3800fa54450d2a51c2e14f04aa254fd94b3ae02`](https://github.com/splitkb/qmk_userspace/tree/f3800fa54450d2a51c2e14f04aa254fd94b3ae02):
+The following files were copied from splitkb/qmk_userspace:
 
 | Path | Description |
 |------|-------------|
 | `LICENSE` | GPL v2 license |
 | `keyboards/splitkb/halcyon/kyria/` | Kyria Rev4 Halcyon keyboard definition |
+| `keyboards/splitkb/halcyon/elora/` | Elora Rev2 Halcyon keyboard definition |
 | `users/halcyon_modules/` | Halcyon module support code (Cirque, encoder, display) |
 | `.github/workflows/build_binaries.yaml` | GitHub Actions build workflow |
 
