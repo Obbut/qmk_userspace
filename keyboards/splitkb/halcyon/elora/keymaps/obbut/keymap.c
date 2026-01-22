@@ -15,6 +15,15 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         DEFAULT_MODULE_L,                                          DEFAULT_MODULE_R
     ),
 
+    [_QWERTY] = LAYOUT_wrapper(
+        QWERTY_NUM_L,                                              QWERTY_NUM_R,
+        QWERTY_L1,                                                 QWERTY_R1,
+        QWERTY_L2,                                                 QWERTY_R2,
+        QWERTY_L3,  KC_LOPT, MS_BTN1,          FKEYS,   KC_NO,     QWERTY_R3,
+                    QWERTY_THUMB_L,                                QWERTY_THUMB_R,
+        QWERTY_MODULE_L,                                           QWERTY_MODULE_R
+    ),
+
     [_LOWER] = LAYOUT_wrapper(
         LOWER_NUM_L,                                               LOWER_NUM_R,
         LOWER_L1,                                                  LOWER_R1,
@@ -37,7 +46,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         FUNC_NUM_L,                                                FUNC_NUM_R,
         FUNC_L1,                                                   FUNC_R1,
         FUNC_L2,                                                   FUNC_R2,
-        FUNC_L3,    _______, _______,          _______, _______,   FUNC_R3,
+        FUNC_L3,    _______, TG_QWERTY,        _______, _______,   FUNC_R3,
                     FUNC_THUMB_L,                                  FUNC_THUMB_R,
         FUNC_MODULE_L,                                             FUNC_MODULE_R
     ),
@@ -47,6 +56,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 #if defined(ENCODER_MAP_ENABLE)
 const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
     [_DEFAULT]  = { ENCODER_MAP_DEFAULT,  ENCODER_MAP_DEFAULT,  ENCODER_MAP_DEFAULT,  ENCODER_MAP_DEFAULT  },
+    [_QWERTY]   = { ENCODER_MAP_QWERTY,   ENCODER_MAP_QWERTY,   ENCODER_MAP_QWERTY,   ENCODER_MAP_QWERTY   },
     [_LOWER]    = { ENCODER_MAP_LOWER,    ENCODER_MAP_LOWER,    ENCODER_MAP_LOWER,    ENCODER_MAP_LOWER    },
     [_RAISE]    = { ENCODER_MAP_RAISE,    ENCODER_MAP_RAISE,    ENCODER_MAP_RAISE,    ENCODER_MAP_RAISE    },
     [_FUNCTION] = { ENCODER_MAP_FUNCTION, ENCODER_MAP_FUNCTION, ENCODER_MAP_FUNCTION, ENCODER_MAP_FUNCTION },

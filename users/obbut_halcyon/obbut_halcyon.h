@@ -11,6 +11,7 @@
 
 enum layers {
     _DEFAULT = 0,
+    _QWERTY,
     _LOWER,
     _RAISE,
     _FUNCTION,
@@ -19,6 +20,7 @@ enum layers {
 #define LOWER    MO(_LOWER)
 #define RAISE    MO(_RAISE)
 #define FKEYS    MO(_FUNCTION)
+#define TG_QWERTY  TG(_QWERTY)
 
 // ============== CUSTOM KEYCODES ==============
 
@@ -57,6 +59,28 @@ enum layers {
 // Number row (Elora only)
 #define DEFAULT_NUM_L   KC_GRV,  KC_1,    KC_2,    KC_3,    KC_4,    KC_5
 #define DEFAULT_NUM_R   KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_MINS
+
+// ----- QWERTY LAYER (Gaming) -----
+
+#define QWERTY_L1   KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T
+#define QWERTY_R1   KC_Y,    KC_U,    KC_I,    KC_O,    KC_P,    KC_BSPC
+
+#define QWERTY_L2   KC_ESC,  KC_A,    KC_S,    KC_D,    KC_F,    KC_G
+#define QWERTY_R2   KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT
+
+#define QWERTY_L3   KC_LSFT, KC_Z,    KC_X,    KC_C,    KC_V,    KC_B
+#define QWERTY_R3   KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH, KC_ENT
+
+// Thumb: Simplified left side for gaming (CTRL, ALT, then all spaces)
+#define QWERTY_THUMB_L   KC_LCTL, KC_LALT, KC_SPC, KC_SPC, KC_SPC
+#define QWERTY_THUMB_R   KC_NO,   KC_SPC,  RAISE,  LOWER,  KC_NO
+
+#define QWERTY_MODULE_L  KC_NO, KC_NO, KC_NO, KC_NO, KC_NO
+#define QWERTY_MODULE_R  KC_NO, KC_NO, KC_NO, KC_NO, KC_NO
+
+// Number row (Elora only) - same as default
+#define QWERTY_NUM_L   KC_GRV,  KC_1,    KC_2,    KC_3,    KC_4,    KC_5
+#define QWERTY_NUM_R   KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_MINS
 
 // ----- LOWER LAYER (Navigation) -----
 
@@ -125,6 +149,7 @@ enum layers {
 // Define encoder behavior per layer (same for all Halcyon keyboards)
 
 #define ENCODER_MAP_DEFAULT   ENCODER_CCW_CW(KC_VOLD, KC_VOLU)
+#define ENCODER_MAP_QWERTY    ENCODER_CCW_CW(KC_VOLD, KC_VOLU)
 #define ENCODER_MAP_LOWER     ENCODER_CCW_CW(KC_MPRV, KC_MNXT)
 #define ENCODER_MAP_RAISE     ENCODER_CCW_CW(KC_VOLD, KC_VOLU)
 #define ENCODER_MAP_FUNCTION  ENCODER_CCW_CW(RM_PREV, RM_NEXT)

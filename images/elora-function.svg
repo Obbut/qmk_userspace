@@ -19,6 +19,7 @@ text.hold { font-size: 10px; fill: #666666; }
 .rgb-green-dark > rect { stroke: #228822; stroke-width: 2.5; }
 .rgb-red > rect { stroke: #ff4444; stroke-width: 2.5; }
 .rgb-orange > rect { stroke: #ff8000; stroke-width: 2.5; }
+.rgb-purple > rect { stroke: #9400d3; stroke-width: 2.5; }
 </style>
 <g transform="translate(30, 0)" class="layer-Function">
 <text x="0" y="28" class="label" id="Function">Function:</text>
@@ -174,8 +175,9 @@ text.hold { font-size: 10px; fill: #666666; }
 <g transform="translate(369, 249) rotate(30.0)" class="key keypos-42">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
 </g>
-<g transform="translate(429, 295) rotate(45.0)" class="key keypos-43">
-<rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
+<g transform="translate(429, 295) rotate(45.0)" class="key rgb-purple keypos-43">
+<rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key rgb-purple"/>
+<text x="0" y="0" class="key rgb-purple tap"><tspan style="font-size: 67%">QWERTY</tspan></text>
 </g>
 <g transform="translate(523, 295) rotate(-45.0)" class="key keypos-44">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
