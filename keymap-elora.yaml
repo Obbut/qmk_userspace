@@ -1,5 +1,5 @@
 layout:
-  qmk_keyboard: splitkb/elora/rev1
+  qmk_info_json: elora-layout.json
   layout_name: LAYOUT_split_4x6_5
 
 layers:
