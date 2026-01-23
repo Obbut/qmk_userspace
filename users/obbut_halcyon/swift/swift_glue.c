@@ -88,80 +88,23 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
 }
 #endif
 
-// ============== GLUE FUNCTIONS FOR SWIFT ==============
-// These wrap QMK functions/macros so Swift can call them
+// ============== GLUE FUNCTIONS FOR MACROS ==============
+// Only for C macros and global variable access that Swift can't see directly.
+// All other QMK functions are called directly via the bridging header.
 
-// Keyboard state
-bool glue_is_keyboard_master(void) {
-    return is_keyboard_master();
-}
-
-os_variant_t glue_detected_host_os(void) {
-    return detected_host_os();
-}
-
+// get_highest_layer() is a macro: #define get_highest_layer(state) biton32(state)
 uint8_t glue_get_highest_layer(layer_state_t state) {
     return get_highest_layer(state);
 }
 
+// layer_state is a global variable
 layer_state_t glue_get_layer_state(void) {
     return layer_state;
 }
 
-// Layer control
-void glue_layer_invert(uint8_t layer) {
-    layer_invert(layer);
-}
-
-// Key sending
-void glue_tap_code(uint8_t keycode) {
-    tap_code(keycode);
-}
-
-void glue_tap_code16(uint16_t keycode) {
-    tap_code16(keycode);
-}
-
-void glue_register_code(uint8_t keycode) {
-    register_code(keycode);
-}
-
-void glue_unregister_code(uint8_t keycode) {
-    unregister_code(keycode);
-}
-
-void glue_register_code16(uint16_t keycode) {
-    register_code16(keycode);
-}
-
-void glue_unregister_code16(uint16_t keycode) {
-    unregister_code16(keycode);
-}
-
-// Timer functions
-uint32_t glue_timer_read32(void) {
-    return timer_read32();
-}
-
-uint32_t glue_timer_elapsed32(uint32_t t) {
-    return timer_elapsed32(t);
-}
-
-// RGB Matrix functions
 #if defined(RGB_MATRIX_ENABLE)
 
-void glue_rgb_matrix_set_color(uint8_t index, uint8_t r, uint8_t g, uint8_t b) {
-    rgb_matrix_set_color(index, r, g, b);
-}
-
-void glue_rgb_matrix_set_color_all(uint8_t r, uint8_t g, uint8_t b) {
-    rgb_matrix_set_color_all(r, g, b);
-}
-
-uint8_t glue_rgb_matrix_get_led_index(uint8_t row, uint8_t col) {
-    return g_led_config.matrix_co[row][col];
-}
-
+// MATRIX_ROWS and MATRIX_COLS are macros
 uint8_t glue_matrix_rows(void) {
     return MATRIX_ROWS;
 }
@@ -170,13 +113,19 @@ uint8_t glue_matrix_cols(void) {
     return MATRIX_COLS;
 }
 
+// g_led_config is a global struct
+uint8_t glue_rgb_matrix_get_led_index(uint8_t row, uint8_t col) {
+    return g_led_config.matrix_co[row][col];
+}
+
+// NO_LED is a macro
 bool glue_led_index_valid(uint8_t led_index, uint8_t led_min, uint8_t led_max) {
     return led_index >= led_min && led_index < led_max && led_index != NO_LED;
 }
 
 #endif
 
-// Keymap access
+// keymap_key_to_keycode takes keypos_t struct - easier to construct in C
 uint16_t glue_keymap_key_to_keycode(uint8_t layer, uint8_t row, uint8_t col) {
     keypos_t pos = {.row = row, .col = col};
     return keymap_key_to_keycode(layer, pos);

@@ -19,13 +19,14 @@ var lastRGBPreviewMode = false
 
 // MARK: - C Bridge Functions (imported via bridging header)
 
-// These are declared in BridgingHeader.h and implemented in QMK/ChibiOS
-// We use them via the C interop
+// QMK functions are imported directly via BridgingHeader.h which includes quantum.h
+// Glue functions are only used for C macros that Swift can't see
 
 /// Get the current highest active layer
 @inline(__always)
 func getCurrentLayer() -> Layer {
-    // Call the C wrapper from bridging header
+    // glue_get_highest_layer wraps the get_highest_layer() macro
+    // glue_get_layer_state wraps the layer_state global variable
     let layerValue = glue_get_highest_layer(glue_get_layer_state())
     return Layer(rawValue: layerValue)
 }
@@ -33,13 +34,15 @@ func getCurrentLayer() -> Layer {
 /// Check if the detected OS is Windows
 @inline(__always)
 func isWindows() -> Bool {
-    return glue_detected_host_os() == OS_WINDOWS
+    // detected_host_os() is a real function, called directly
+    return detected_host_os() == OS_WINDOWS
 }
 
 /// Check if this is the master half of a split keyboard
 @inline(__always)
 func isMaster() -> Bool {
-    return glue_is_keyboard_master()
+    // is_keyboard_master() is a real function, called directly
+    return is_keyboard_master()
 }
 
 // MARK: - Key Processing
@@ -90,7 +93,7 @@ func processWindowsKeySwap(keycode key: Keycode, event: KeyEvent) -> Bool {
     case .mouseButton1:
         if event.pressed {
             // Toggle QWERTY layer
-            glue_layer_invert(Layer.qwerty.rawValue)
+            layer_invert(Layer.qwerty.rawValue)
         }
         return false
     #endif
@@ -98,26 +101,26 @@ func processWindowsKeySwap(keycode key: Keycode, event: KeyEvent) -> Bool {
     // Screenshot: send Print Screen instead of macOS shortcut
     case .screenshot:
         if event.pressed {
-            glue_register_code(0x46)  // KC_PSCR
+            register_code(0x46)  // KC_PSCR
         } else {
-            glue_unregister_code(0x46)
+            unregister_code(0x46)
         }
         return false
 
     // Swap Ctrl and Cmd on Windows
     case .leftControl:
         if event.pressed {
-            glue_register_code(0xE3)  // KC_LGUI
+            register_code(0xE3)  // KC_LGUI
         } else {
-            glue_unregister_code(0xE3)
+            unregister_code(0xE3)
         }
         return false
 
     case .leftGui:
         if event.pressed {
-            glue_register_code(0xE0)  // KC_LCTL
+            register_code(0xE0)  // KC_LCTL
         } else {
-            glue_unregister_code(0xE0)
+            unregister_code(0xE0)
         }
         return false
 
@@ -147,10 +150,10 @@ func layerStateSet(state: UInt32) -> UInt32 {
 func housekeepingTask() {
     // Sync RGB preview mode to slave half
     if isMaster() {
-        let currentTime = glue_timer_read32()
+        let currentTime = timer_read32()
 
         // Sync when state changes or every 500ms
-        if rgbPreviewMode != lastRGBPreviewMode || glue_timer_elapsed32(lastRGBSyncTime) > 500 {
+        if rgbPreviewMode != lastRGBPreviewMode || timer_elapsed32(lastRGBSyncTime) > 500 {
             // Note: The actual sync is handled by the C glue layer
             // which accesses the rgb_preview_mode variable
             lastRGBPreviewMode = rgbPreviewMode
@@ -171,7 +174,7 @@ func keyboardInit() {
     #if RGB_MATRIX_ENABLE
     // Flash all LEDs cyan for 100ms
     for i: UInt8 in 0..<64 {
-        glue_rgb_matrix_set_color(i, 0, 220, 220)
+        rgb_matrix_set_color(Int32(i), 0, 220, 220)
     }
     // The main RGB effect will take over after a short delay
     #endif
