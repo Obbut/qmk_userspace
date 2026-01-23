@@ -192,14 +192,14 @@ func updateQWERTYLayerIndicators(ledMin: UInt8, ledMax: UInt8) -> Bool {
 @inline(__always)
 func clearLEDs(ledMin: UInt8, ledMax: UInt8) {
     for i in ledMin..<ledMax {
-        glue_rgb_matrix_set_color(i, 0, 0, 0)
+        rgb_matrix_set_color(Int32(i), 0, 0, 0)
     }
 }
 
 /// Set LED color
 @inline(__always)
 func setLEDColor(_ ledIndex: UInt8, _ color: RGB) {
-    glue_rgb_matrix_set_color(ledIndex, color.r, color.g, color.b)
+    rgb_matrix_set_color(Int32(ledIndex), color.r, color.g, color.b)
 }
 
 /// Check if keycode is a number key (0-9)
