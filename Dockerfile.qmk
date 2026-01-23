@@ -1,7 +1,88 @@
-# QMK Firmware build environment with qmk_firmware included
-# This allows compilation without local QMK installation
+# QMK Firmware build environment with Swift toolchain
+# Based on Ubuntu 22.04 for Swift compatibility
+# Includes: QMK CLI, ARM GCC toolchain, Swift 6.2.3
+# Supports both x86_64 and aarch64 Docker hosts
 
-FROM ghcr.io/qmk/qmk_cli
+FROM ubuntu:22.04
+
+# Prevent interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install base dependencies
+RUN apt-get update && apt-get install -y \
+    # Build essentials
+    build-essential \
+    git \
+    wget \
+    curl \
+    unzip \
+    xz-utils \
+    # Python for QMK
+    python3 \
+    python3-pip \
+    python3-venv \
+    # ARM toolchain dependencies
+    libusb-1.0-0-dev \
+    # Swift dependencies
+    binutils \
+    gnupg2 \
+    libc6-dev \
+    libcurl4-openssl-dev \
+    libedit2 \
+    libgcc-11-dev \
+    libncurses6 \
+    libpython3-dev \
+    libsqlite3-0 \
+    libstdc++-11-dev \
+    libxml2-dev \
+    libz3-dev \
+    pkg-config \
+    tzdata \
+    zlib1g-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install ARM GCC toolchain (cross-compiler for ARM bare-metal targets)
+# Detects host architecture and downloads the appropriate toolchain
+RUN ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then \
+        TOOLCHAIN_ARCH="x86_64"; \
+    elif [ "$ARCH" = "aarch64" ]; then \
+        TOOLCHAIN_ARCH="aarch64"; \
+    else \
+        echo "Unsupported architecture: $ARCH" && exit 1; \
+    fi && \
+    wget -q "https://developer.arm.com/-/media/Files/downloads/gnu/13.2.rel1/binrel/arm-gnu-toolchain-13.2.rel1-${TOOLCHAIN_ARCH}-arm-none-eabi.tar.xz" && \
+    tar xf "arm-gnu-toolchain-13.2.rel1-${TOOLCHAIN_ARCH}-arm-none-eabi.tar.xz" -C /opt && \
+    rm "arm-gnu-toolchain-13.2.rel1-${TOOLCHAIN_ARCH}-arm-none-eabi.tar.xz" && \
+    ln -s "/opt/arm-gnu-toolchain-13.2.Rel1-${TOOLCHAIN_ARCH}-arm-none-eabi" /opt/arm-gnu-toolchain
+
+ENV PATH="/opt/arm-gnu-toolchain/bin:${PATH}"
+
+# Install QMK CLI
+RUN python3 -m pip install --upgrade pip \
+    && pip3 install qmk
+
+# Install Swift 6.2.3 (stable release with Embedded Swift support)
+# Detects host architecture and downloads the appropriate toolchain
+# Swift tarball structure: swift-VERSION/usr/... so we extract to / with strip-components=1
+ARG SWIFT_VERSION=6.2.3
+RUN ARCH=$(uname -m) && \
+    if [ "$ARCH" = "x86_64" ]; then \
+        SWIFT_PLATFORM="ubuntu2204"; \
+        SWIFT_SUFFIX="ubuntu22.04"; \
+    elif [ "$ARCH" = "aarch64" ]; then \
+        SWIFT_PLATFORM="ubuntu2204-aarch64"; \
+        SWIFT_SUFFIX="ubuntu22.04-aarch64"; \
+    else \
+        echo "Unsupported architecture: $ARCH" && exit 1; \
+    fi && \
+    curl -fsSL "https://download.swift.org/swift-${SWIFT_VERSION}-release/${SWIFT_PLATFORM}/swift-${SWIFT_VERSION}-RELEASE/swift-${SWIFT_VERSION}-RELEASE-${SWIFT_SUFFIX}.tar.gz" \
+        | tar xz --strip-components=1 -C /
+
+# Verify installations
+RUN arm-none-eabi-gcc --version \
+    && swift --version \
+    && qmk --version
 
 # Clone QMK firmware (shallow clone to save space)
 RUN git clone --depth 1 https://github.com/qmk/qmk_firmware.git /qmk_firmware

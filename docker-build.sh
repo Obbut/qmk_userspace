@@ -13,6 +13,18 @@ KEYCHRON_IMAGE_NAME="qmk-keychron-builder"
 BUILD_CACHE="$SCRIPT_DIR/.docker-build-cache"
 KEYCHRON_BUILD_CACHE="$SCRIPT_DIR/.docker-build-cache-keychron"
 
+# Get number of CPU cores (cross-platform)
+get_nproc() {
+    if command -v nproc &>/dev/null; then
+        nproc
+    elif command -v sysctl &>/dev/null; then
+        sysctl -n hw.ncpu
+    else
+        echo 4  # fallback
+    fi
+}
+NPROC=$(get_nproc)
+
 # Create build cache directories
 mkdir -p "$BUILD_CACHE"
 mkdir -p "$KEYCHRON_BUILD_CACHE"
@@ -188,9 +200,64 @@ build_kyria_left() {
         -e QMK_USERSPACE=/qmk_userspace \
         -e SKIP_GIT=1 \
         -e SKIP_VERSION=1 \
-        -e MAKEFLAGS="-j$(nproc)" \
+        -e MAKEFLAGS="-j$NPROC" \
         "$IMAGE_NAME" \
-        sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/kyria/rev4 -km obbut -e HLC_CIRQUE_TRACKPAD=1 -e TARGET=kyria_rev4_obbut_left_cirque'
+        sh -c '
+            qmk config user.overlay_dir=/qmk_userspace
+
+            # Compile Swift sources first
+            echo "Compiling Swift sources..."
+            OBJ_DIR=".build/obj_kyria_rev4_obbut_left_cirque"
+            mkdir -p "$OBJ_DIR"
+
+            SWIFT_SRC_DIR="/qmk_userspace/users/obbut_halcyon/swift/Sources/KeymapDSL"
+            SWIFT_BRIDGING_HEADER="/qmk_userspace/users/obbut_halcyon/swift/BridgingHeader.h"
+
+            swiftc \
+                -target armv6m-none-none-eabi \
+                -enable-experimental-feature Embedded \
+                -wmo \
+                -Osize \
+                -Xcc -mcpu=cortex-m0plus \
+                -Xcc -mthumb \
+                -Xcc -DTHUMB_PRESENT \
+                -Xcc -fshort-enums \
+                -Xcc -ffunction-sections \
+                -Xcc -fdata-sections \
+                -Xcc -I/qmk_firmware/quantum \
+                -Xcc -I/qmk_firmware/quantum/keymap_extras \
+                -Xcc -I/qmk_firmware/quantum/send_string \
+                -Xcc -I/qmk_firmware/quantum/sequencer \
+                -Xcc -I/qmk_firmware/quantum/process_keycode \
+                -Xcc -I/qmk_firmware/platforms \
+                -Xcc -I/qmk_firmware/platforms/chibios \
+                -Xcc -I/qmk_firmware/tmk_core/protocol \
+                -Xcc -I/qmk_firmware/drivers \
+                -Xcc -I/qmk_firmware/lib/chibios/os/license \
+                -Xcc -I/qmk_firmware/lib/chibios/os/hal/include \
+                -Xcc -I/qmk_firmware/lib/chibios/os/hal/osal/rt-nil \
+                -Xcc -I/qmk_firmware/lib/chibios/os/rt/include \
+                -Xcc -I/qmk_firmware/lib/chibios/os/oslib/include \
+                -Xcc -I/qmk_firmware/lib/chibios/os/common/portability/GCC \
+                -Xcc -I/qmk_firmware/lib/chibios/os/common/ports/ARM-common \
+                -Xcc -I/qmk_firmware/lib/chibios/os/common/ports/ARMv6-M-RP2 \
+                -Xcc -I/qmk_firmware/lib/chibios-contrib/os/hal/include \
+                -Xcc -I/qmk_firmware/lib/pico-sdk/src/rp2_common/pico_platform_compiler/include \
+                -Xcc -I/qmk_firmware/lib/pico-sdk/src/rp2040/hardware_regs/include \
+                -Xcc -I/qmk_firmware/lib/pico-sdk/src/rp2_common/hardware_base/include \
+                -Xcc -I/qmk_firmware/lib/pico-sdk/src/common/pico_base_headers/include \
+                -Xcc -I/qmk_firmware/lib/pico-sdk/src/boards/include \
+                -D KYRIA_KEYBOARD \
+                -D RGB_MATRIX_ENABLE \
+                -import-bridging-header "$SWIFT_BRIDGING_HEADER" \
+                -c "$SWIFT_SRC_DIR"/*.swift \
+                -o "$OBJ_DIR/swift_keymap.o"
+
+            echo "Swift compilation complete"
+
+            # Now run QMK build
+            qmk compile -kb splitkb/halcyon/kyria/rev4 -km obbut -e HLC_CIRQUE_TRACKPAD=1 -e TARGET=kyria_rev4_obbut_left_cirque
+        '
     echo "Build complete: kyria_rev4_obbut_left_cirque.uf2"
 }
 
@@ -203,9 +270,64 @@ build_kyria_right() {
         -e QMK_USERSPACE=/qmk_userspace \
         -e SKIP_GIT=1 \
         -e SKIP_VERSION=1 \
-        -e MAKEFLAGS="-j$(nproc)" \
+        -e MAKEFLAGS="-j$NPROC" \
         "$IMAGE_NAME" \
-        sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/kyria/rev4 -km obbut -e HLC_ENCODER=1 -e TARGET=kyria_rev4_obbut_right_encoder'
+        sh -c '
+            qmk config user.overlay_dir=/qmk_userspace
+
+            # Compile Swift sources first
+            echo "Compiling Swift sources..."
+            OBJ_DIR=".build/obj_kyria_rev4_obbut_right_encoder"
+            mkdir -p "$OBJ_DIR"
+
+            SWIFT_SRC_DIR="/qmk_userspace/users/obbut_halcyon/swift/Sources/KeymapDSL"
+            SWIFT_BRIDGING_HEADER="/qmk_userspace/users/obbut_halcyon/swift/BridgingHeader.h"
+
+            swiftc \
+                -target armv6m-none-none-eabi \
+                -enable-experimental-feature Embedded \
+                -wmo \
+                -Osize \
+                -Xcc -mcpu=cortex-m0plus \
+                -Xcc -mthumb \
+                -Xcc -DTHUMB_PRESENT \
+                -Xcc -fshort-enums \
+                -Xcc -ffunction-sections \
+                -Xcc -fdata-sections \
+                -Xcc -I/qmk_firmware/quantum \
+                -Xcc -I/qmk_firmware/quantum/keymap_extras \
+                -Xcc -I/qmk_firmware/quantum/send_string \
+                -Xcc -I/qmk_firmware/quantum/sequencer \
+                -Xcc -I/qmk_firmware/quantum/process_keycode \
+                -Xcc -I/qmk_firmware/platforms \
+                -Xcc -I/qmk_firmware/platforms/chibios \
+                -Xcc -I/qmk_firmware/tmk_core/protocol \
+                -Xcc -I/qmk_firmware/drivers \
+                -Xcc -I/qmk_firmware/lib/chibios/os/license \
+                -Xcc -I/qmk_firmware/lib/chibios/os/hal/include \
+                -Xcc -I/qmk_firmware/lib/chibios/os/hal/osal/rt-nil \
+                -Xcc -I/qmk_firmware/lib/chibios/os/rt/include \
+                -Xcc -I/qmk_firmware/lib/chibios/os/oslib/include \
+                -Xcc -I/qmk_firmware/lib/chibios/os/common/portability/GCC \
+                -Xcc -I/qmk_firmware/lib/chibios/os/common/ports/ARM-common \
+                -Xcc -I/qmk_firmware/lib/chibios/os/common/ports/ARMv6-M-RP2 \
+                -Xcc -I/qmk_firmware/lib/chibios-contrib/os/hal/include \
+                -Xcc -I/qmk_firmware/lib/pico-sdk/src/rp2_common/pico_platform_compiler/include \
+                -Xcc -I/qmk_firmware/lib/pico-sdk/src/rp2040/hardware_regs/include \
+                -Xcc -I/qmk_firmware/lib/pico-sdk/src/rp2_common/hardware_base/include \
+                -Xcc -I/qmk_firmware/lib/pico-sdk/src/common/pico_base_headers/include \
+                -Xcc -I/qmk_firmware/lib/pico-sdk/src/boards/include \
+                -D KYRIA_KEYBOARD \
+                -D RGB_MATRIX_ENABLE \
+                -import-bridging-header "$SWIFT_BRIDGING_HEADER" \
+                -c "$SWIFT_SRC_DIR"/*.swift \
+                -o "$OBJ_DIR/swift_keymap.o"
+
+            echo "Swift compilation complete"
+
+            # Now run QMK build
+            qmk compile -kb splitkb/halcyon/kyria/rev4 -km obbut -e HLC_ENCODER=1 -e TARGET=kyria_rev4_obbut_right_encoder
+        '
     echo "Build complete: kyria_rev4_obbut_right_encoder.uf2"
 }
 
@@ -218,9 +340,64 @@ build_elora_left() {
         -e QMK_USERSPACE=/qmk_userspace \
         -e SKIP_GIT=1 \
         -e SKIP_VERSION=1 \
-        -e MAKEFLAGS="-j$(nproc)" \
+        -e MAKEFLAGS="-j$NPROC" \
         "$IMAGE_NAME" \
-        sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/elora/rev2 -km obbut -e HLC_NONE=1 -e TARGET=elora_rev2_obbut_left'
+        sh -c '
+            qmk config user.overlay_dir=/qmk_userspace
+
+            # Compile Swift sources first
+            echo "Compiling Swift sources..."
+            OBJ_DIR=".build/obj_elora_rev2_obbut_left"
+            mkdir -p "$OBJ_DIR"
+
+            SWIFT_SRC_DIR="/qmk_userspace/users/obbut_halcyon/swift/Sources/KeymapDSL"
+            SWIFT_BRIDGING_HEADER="/qmk_userspace/users/obbut_halcyon/swift/BridgingHeader.h"
+
+            swiftc \
+                -target armv6m-none-none-eabi \
+                -enable-experimental-feature Embedded \
+                -wmo \
+                -Osize \
+                -Xcc -mcpu=cortex-m0plus \
+                -Xcc -mthumb \
+                -Xcc -DTHUMB_PRESENT \
+                -Xcc -fshort-enums \
+                -Xcc -ffunction-sections \
+                -Xcc -fdata-sections \
+                -Xcc -I/qmk_firmware/quantum \
+                -Xcc -I/qmk_firmware/quantum/keymap_extras \
+                -Xcc -I/qmk_firmware/quantum/send_string \
+                -Xcc -I/qmk_firmware/quantum/sequencer \
+                -Xcc -I/qmk_firmware/quantum/process_keycode \
+                -Xcc -I/qmk_firmware/platforms \
+                -Xcc -I/qmk_firmware/platforms/chibios \
+                -Xcc -I/qmk_firmware/tmk_core/protocol \
+                -Xcc -I/qmk_firmware/drivers \
+                -Xcc -I/qmk_firmware/lib/chibios/os/license \
+                -Xcc -I/qmk_firmware/lib/chibios/os/hal/include \
+                -Xcc -I/qmk_firmware/lib/chibios/os/hal/osal/rt-nil \
+                -Xcc -I/qmk_firmware/lib/chibios/os/rt/include \
+                -Xcc -I/qmk_firmware/lib/chibios/os/oslib/include \
+                -Xcc -I/qmk_firmware/lib/chibios/os/common/portability/GCC \
+                -Xcc -I/qmk_firmware/lib/chibios/os/common/ports/ARM-common \
+                -Xcc -I/qmk_firmware/lib/chibios/os/common/ports/ARMv6-M-RP2 \
+                -Xcc -I/qmk_firmware/lib/chibios-contrib/os/hal/include \
+                -Xcc -I/qmk_firmware/lib/pico-sdk/src/rp2_common/pico_platform_compiler/include \
+                -Xcc -I/qmk_firmware/lib/pico-sdk/src/rp2040/hardware_regs/include \
+                -Xcc -I/qmk_firmware/lib/pico-sdk/src/rp2_common/hardware_base/include \
+                -Xcc -I/qmk_firmware/lib/pico-sdk/src/common/pico_base_headers/include \
+                -Xcc -I/qmk_firmware/lib/pico-sdk/src/boards/include \
+                -D ELORA_KEYBOARD \
+                -D RGB_MATRIX_ENABLE \
+                -import-bridging-header "$SWIFT_BRIDGING_HEADER" \
+                -c "$SWIFT_SRC_DIR"/*.swift \
+                -o "$OBJ_DIR/swift_keymap.o"
+
+            echo "Swift compilation complete"
+
+            # Now run QMK build
+            qmk compile -kb splitkb/halcyon/elora/rev2 -km obbut -e HLC_NONE=1 -e TARGET=elora_rev2_obbut_left
+        '
     echo "Build complete: elora_rev2_obbut_left.uf2"
 }
 
@@ -233,9 +410,64 @@ build_elora_right() {
         -e QMK_USERSPACE=/qmk_userspace \
         -e SKIP_GIT=1 \
         -e SKIP_VERSION=1 \
-        -e MAKEFLAGS="-j$(nproc)" \
+        -e MAKEFLAGS="-j$NPROC" \
         "$IMAGE_NAME" \
-        sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/elora/rev2 -km obbut -e HLC_ENCODER=1 -e TARGET=elora_rev2_obbut_right_encoder'
+        sh -c '
+            qmk config user.overlay_dir=/qmk_userspace
+
+            # Compile Swift sources first
+            echo "Compiling Swift sources..."
+            OBJ_DIR=".build/obj_elora_rev2_obbut_right_encoder"
+            mkdir -p "$OBJ_DIR"
+
+            SWIFT_SRC_DIR="/qmk_userspace/users/obbut_halcyon/swift/Sources/KeymapDSL"
+            SWIFT_BRIDGING_HEADER="/qmk_userspace/users/obbut_halcyon/swift/BridgingHeader.h"
+
+            swiftc \
+                -target armv6m-none-none-eabi \
+                -enable-experimental-feature Embedded \
+                -wmo \
+                -Osize \
+                -Xcc -mcpu=cortex-m0plus \
+                -Xcc -mthumb \
+                -Xcc -DTHUMB_PRESENT \
+                -Xcc -fshort-enums \
+                -Xcc -ffunction-sections \
+                -Xcc -fdata-sections \
+                -Xcc -I/qmk_firmware/quantum \
+                -Xcc -I/qmk_firmware/quantum/keymap_extras \
+                -Xcc -I/qmk_firmware/quantum/send_string \
+                -Xcc -I/qmk_firmware/quantum/sequencer \
+                -Xcc -I/qmk_firmware/quantum/process_keycode \
+                -Xcc -I/qmk_firmware/platforms \
+                -Xcc -I/qmk_firmware/platforms/chibios \
+                -Xcc -I/qmk_firmware/tmk_core/protocol \
+                -Xcc -I/qmk_firmware/drivers \
+                -Xcc -I/qmk_firmware/lib/chibios/os/license \
+                -Xcc -I/qmk_firmware/lib/chibios/os/hal/include \
+                -Xcc -I/qmk_firmware/lib/chibios/os/hal/osal/rt-nil \
+                -Xcc -I/qmk_firmware/lib/chibios/os/rt/include \
+                -Xcc -I/qmk_firmware/lib/chibios/os/oslib/include \
+                -Xcc -I/qmk_firmware/lib/chibios/os/common/portability/GCC \
+                -Xcc -I/qmk_firmware/lib/chibios/os/common/ports/ARM-common \
+                -Xcc -I/qmk_firmware/lib/chibios/os/common/ports/ARMv6-M-RP2 \
+                -Xcc -I/qmk_firmware/lib/chibios-contrib/os/hal/include \
+                -Xcc -I/qmk_firmware/lib/pico-sdk/src/rp2_common/pico_platform_compiler/include \
+                -Xcc -I/qmk_firmware/lib/pico-sdk/src/rp2040/hardware_regs/include \
+                -Xcc -I/qmk_firmware/lib/pico-sdk/src/rp2_common/hardware_base/include \
+                -Xcc -I/qmk_firmware/lib/pico-sdk/src/common/pico_base_headers/include \
+                -Xcc -I/qmk_firmware/lib/pico-sdk/src/boards/include \
+                -D ELORA_KEYBOARD \
+                -D RGB_MATRIX_ENABLE \
+                -import-bridging-header "$SWIFT_BRIDGING_HEADER" \
+                -c "$SWIFT_SRC_DIR"/*.swift \
+                -o "$OBJ_DIR/swift_keymap.o"
+
+            echo "Swift compilation complete"
+
+            # Now run QMK build
+            qmk compile -kb splitkb/halcyon/elora/rev2 -km obbut -e HLC_ENCODER=1 -e TARGET=elora_rev2_obbut_right_encoder
+        '
     echo "Build complete: elora_rev2_obbut_right_encoder.uf2"
 }
 
@@ -245,7 +477,7 @@ build_q15() {
     docker run --rm \
         -v "$SCRIPT_DIR:/qmk_userspace" \
         -v "$KEYCHRON_BUILD_CACHE:/qmk_firmware/.build" \
-        -e MAKEFLAGS="-j$(nproc)" \
+        -e MAKEFLAGS="-j$NPROC" \
         "$KEYCHRON_IMAGE_NAME" \
         sh -c 'export QMK_USERSPACE=/qmk_userspace && cd /qmk_firmware && make keychron/q15_max/ansi_encoder:obbut'
     echo "Build complete: keychron_q15_max_ansi_encoder_obbut.bin"

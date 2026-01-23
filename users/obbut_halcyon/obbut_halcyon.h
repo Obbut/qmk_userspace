@@ -168,12 +168,5 @@ enum layers {
 #endif
 
 // ============== SHARED FUNCTION DECLARATIONS ==============
-
-void obbut_keyboard_post_init(void);
-void obbut_housekeeping_task(void);
-bool obbut_process_record(uint16_t keycode, keyrecord_t *record);
-layer_state_t obbut_layer_state_set(layer_state_t state);
-
-#if defined(RGB_MATRIX_ENABLE)
-bool obbut_rgb_matrix_indicators(uint8_t led_min, uint8_t led_max);
-#endif
+// Note: QMK callbacks are now handled by swift_glue.c which delegates to Swift.
+// See users/obbut_halcyon/swift/ for the Swift implementation.

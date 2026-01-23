@@ -1,5 +1,5 @@
 // Elora Rev2 keymap for Obbut
-// Uses shared code from users/obbut_halcyon/
+// Keymaps defined in C, all logic handled by Swift via swift_glue.c
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "obbut_halcyon.h"
@@ -63,27 +63,5 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
 };
 #endif
 
-// ============== QMK CALLBACKS ==============
-// Delegate to shared functions
-
-void keyboard_post_init_user(void) {
-    obbut_keyboard_post_init();
-}
-
-void housekeeping_task_user(void) {
-    obbut_housekeeping_task();
-}
-
-bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    return obbut_process_record(keycode, record);
-}
-
-layer_state_t layer_state_set_user(layer_state_t state) {
-    return obbut_layer_state_set(state);
-}
-
-#if defined(RGB_MATRIX_ENABLE)
-bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
-    return obbut_rgb_matrix_indicators(led_min, led_max);
-}
-#endif
+// Note: QMK callbacks are handled by swift_glue.c which delegates to Swift.
+// See users/obbut_halcyon/swift/ for the Swift implementation.
