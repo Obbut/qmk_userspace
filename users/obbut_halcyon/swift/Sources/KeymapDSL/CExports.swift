@@ -33,9 +33,9 @@ public func swiftProcessRecord(keycode: UInt16, pressed: Bool, row: UInt8, col: 
 // MARK: - Layer State
 
 /// Handle layer state changes
-/// Exported to C as: uint32_t swift_layer_state_set(uint32_t state)
+/// Exported to C as: layer_state_t swift_layer_state_set(layer_state_t state)
 @_cdecl("swift_layer_state_set")
-public func swiftLayerStateSet(state: UInt32) -> UInt32 {
+public func swiftLayerStateSet(state: layer_state_t) -> layer_state_t {
     return layerStateSet(state: state)
 }
 

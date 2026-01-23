@@ -133,11 +133,11 @@ func processWindowsKeySwap(keycode key: Keycode, event: KeyEvent) -> Bool {
 
 /// Handle layer state changes
 /// Returns the new layer state
-func layerStateSet(state: UInt32) -> UInt32 {
+func layerStateSet(state: layer_state_t) -> layer_state_t {
     let layer = Layer(rawValue: glue_get_highest_layer(state))
 
     // Reset preview mode when leaving Function layer
-    if layer != .function {
+    if layer != Layer.function {
         rgbPreviewMode = false
     }
 
