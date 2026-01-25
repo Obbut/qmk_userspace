@@ -177,3 +177,7 @@ layer_state_t obbut_layer_state_set(layer_state_t state);
 #if defined(RGB_MATRIX_ENABLE)
 bool obbut_rgb_matrix_indicators(uint8_t led_min, uint8_t led_max);
 #endif
+
+#ifdef POINTING_DEVICE_ENABLE
+report_mouse_t pointing_device_task_user(report_mouse_t mouse_report);
+#endif

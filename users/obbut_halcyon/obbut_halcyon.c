@@ -3,6 +3,18 @@
 
 #include "obbut_halcyon.h"
 
+// ============== DRAG SCROLL ON LOWER LAYER ==============
+
+#ifndef SCROLL_DIVISOR_H
+#define SCROLL_DIVISOR_H 4.0
+#endif
+#ifndef SCROLL_DIVISOR_V
+#define SCROLL_DIVISOR_V 4.0
+#endif
+
+static float scroll_accumulated_h = 0;
+static float scroll_accumulated_v = 0;
+
 // ============== RGB PREVIEW MODE ==============
 // Track if RGB controls were used on Function layer (to show actual RGB effect)
 
@@ -108,6 +120,32 @@ layer_state_t obbut_layer_state_set(layer_state_t state) {
     }
     return state;
 }
+
+// ============== POINTING DEVICE (TRACKPAD SCROLL) ==============
+
+#ifdef POINTING_DEVICE_ENABLE
+report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
+    // On Lower layer, convert mouse movement to scrolling
+    if (get_highest_layer(layer_state) == _LOWER) {
+        // Accumulate for smooth scrolling with fractional values
+        scroll_accumulated_h += (float)mouse_report.x / SCROLL_DIVISOR_H;
+        scroll_accumulated_v += (float)mouse_report.y / SCROLL_DIVISOR_V;
+
+        // Convert to scroll values
+        mouse_report.h = (int8_t)scroll_accumulated_h;
+        mouse_report.v = -(int8_t)scroll_accumulated_v;  // Negative for natural scroll direction
+
+        // Keep fractional remainder for next iteration
+        scroll_accumulated_h -= (int8_t)scroll_accumulated_h;
+        scroll_accumulated_v -= (int8_t)scroll_accumulated_v;
+
+        // Clear mouse movement (cursor shouldn't move while scrolling)
+        mouse_report.x = 0;
+        mouse_report.y = 0;
+    }
+    return mouse_report;
+}
+#endif
 
 // ============== RGB MATRIX INDICATORS ==============
 
