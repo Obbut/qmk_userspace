@@ -8,3 +8,7 @@
 
 // Turn off RGB after 5 minutes of inactivity (300000ms)
 #define RGB_MATRIX_TIMEOUT 300000
+
+// Scroll speed tuning for drag scroll on Lower layer (lower = faster)
+#define SCROLL_DIVISOR_H 8.0
+#define SCROLL_DIVISOR_V 8.0
