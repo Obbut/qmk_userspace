@@ -10,5 +10,8 @@
 #define RGB_MATRIX_TIMEOUT 300000
 
 // Scroll speed tuning for drag scroll on Lower layer (lower = faster)
-#define SCROLL_DIVISOR_H 8.0
-#define SCROLL_DIVISOR_V 8.0
+#define SCROLL_DIVISOR_H 32.0
+#define SCROLL_DIVISOR_V 32.0
+
+// Mouse cursor sensitivity (1.0 = default, lower = slower)
+#define MOUSE_SENSITIVITY 0.67
