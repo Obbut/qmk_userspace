@@ -97,7 +97,7 @@ enum layers {
 #define LOWER_THUMB_R   _______, _______, _______, _______, _______
 
 #define LOWER_MODULE_L  _______, _______, _______, _______, _______
-#define LOWER_MODULE_R  _______, _______, _______, _______, _______
+#define LOWER_MODULE_R  KC_MPLY, _______, _______, _______, _______
 
 // Number row transparent (Elora only)
 #define LOWER_NUM_L   _______, _______, _______, _______, _______, _______
@@ -148,10 +148,10 @@ enum layers {
 // ============== SHARED ENCODER MAPS ==============
 // Define encoder behavior per layer (same for all Halcyon keyboards)
 
-#define ENCODER_MAP_DEFAULT   ENCODER_CCW_CW(KC_VOLD, KC_VOLU)
-#define ENCODER_MAP_QWERTY    ENCODER_CCW_CW(KC_VOLD, KC_VOLU)
+#define ENCODER_MAP_DEFAULT   ENCODER_CCW_CW(KC_KB_VOLUME_DOWN, KC_KB_VOLUME_UP)
+#define ENCODER_MAP_QWERTY    ENCODER_CCW_CW(KC_KB_VOLUME_DOWN, KC_KB_VOLUME_UP)
 #define ENCODER_MAP_LOWER     ENCODER_CCW_CW(KC_MPRV, KC_MNXT)
-#define ENCODER_MAP_RAISE     ENCODER_CCW_CW(KC_VOLD, KC_VOLU)
+#define ENCODER_MAP_RAISE     ENCODER_CCW_CW(KC_KB_VOLUME_DOWN, KC_KB_VOLUME_UP)
 #define ENCODER_MAP_FUNCTION  ENCODER_CCW_CW(RM_PREV, RM_NEXT)
 
 // ============== LAYOUT WRAPPER MACROS ==============

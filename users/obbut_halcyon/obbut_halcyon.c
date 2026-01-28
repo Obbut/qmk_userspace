@@ -89,6 +89,21 @@ bool obbut_process_record(uint16_t keycode, keyrecord_t *record) {
                 }
                 return false;
 #endif
+            // Volume: use consumer codes on Windows (KB_VOLUME codes don't work reliably)
+            case KC_KB_VOLUME_UP:
+                if (record->event.pressed) {
+                    register_code(KC_VOLU);
+                } else {
+                    unregister_code(KC_VOLU);
+                }
+                return false;
+            case KC_KB_VOLUME_DOWN:
+                if (record->event.pressed) {
+                    register_code(KC_VOLD);
+                } else {
+                    unregister_code(KC_VOLD);
+                }
+                return false;
             // Screenshot: send Print Screen instead of macOS shortcut
             case SCREENSHOT:
                 if (record->event.pressed) {
