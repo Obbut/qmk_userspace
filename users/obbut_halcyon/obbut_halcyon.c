@@ -3,7 +3,7 @@
 
 #include "obbut_halcyon.h"
 
-// ============== DRAG SCROLL ON LOWER LAYER ==============
+// ============== POINTING DEVICE SETTINGS ==============
 
 #ifndef SCROLL_DIVISOR_H
 #define SCROLL_DIVISOR_H 4.0
@@ -11,9 +11,14 @@
 #ifndef SCROLL_DIVISOR_V
 #define SCROLL_DIVISOR_V 4.0
 #endif
+#ifndef MOUSE_SENSITIVITY
+#define MOUSE_SENSITIVITY 1.0
+#endif
 
 static float scroll_accumulated_h = 0;
 static float scroll_accumulated_v = 0;
+static float mouse_accumulated_x = 0;
+static float mouse_accumulated_y = 0;
 
 // ============== RGB PREVIEW MODE ==============
 // Track if RGB controls were used on Function layer (to show actual RGB effect)
@@ -142,6 +147,17 @@ report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
         // Clear mouse movement (cursor shouldn't move while scrolling)
         mouse_report.x = 0;
         mouse_report.y = 0;
+    } else {
+        // Apply mouse sensitivity scaling
+        mouse_accumulated_x += (float)mouse_report.x * MOUSE_SENSITIVITY;
+        mouse_accumulated_y += (float)mouse_report.y * MOUSE_SENSITIVITY;
+
+        mouse_report.x = (mouse_xy_report_t)mouse_accumulated_x;
+        mouse_report.y = (mouse_xy_report_t)mouse_accumulated_y;
+
+        // Keep fractional remainder for smooth movement
+        mouse_accumulated_x -= (mouse_xy_report_t)mouse_accumulated_x;
+        mouse_accumulated_y -= (mouse_xy_report_t)mouse_accumulated_y;
     }
     return mouse_report;
 }
