@@ -1,9 +1,10 @@
 # QMK Userspace
 
-Personal QMK firmware for three keyboards:
+Personal QMK firmware for four keyboards:
 - **Kyria Rev4** (Halcyon series) - Split ergonomic with Colemak-DH
 - **Elora Rev2** (Halcyon series) - Split ergonomic with Colemak-DH + number row
 - **Keychron Q15 Max** - Ortholinear with Bluetooth/2.4GHz wireless
+- **ZSA Planck EZ Glow** - 4x12 ortholinear with Colemak-DH
 
 ## Kyria Rev4 (Halcyon)
 
@@ -138,6 +139,53 @@ F-keys and battery level indicator.
 
 ---
 
+## ZSA Planck EZ Glow
+
+4x12 ortholinear keyboard with per-key RGB and 2u center spacebar. Uses ZSA's QMK fork (separate Docker image).
+
+### Flashing
+
+The Planck EZ uses DFU mode:
+
+1. Press the reset button on the bottom of the keyboard
+2. Run `./docker-build.sh flash-planck`
+
+### Keymap
+
+5-layer Colemak-DH layout matching the Kyria, with per-layer RGB indicators.
+
+#### Default Layer
+
+Colemak-DH base layer adapted from the Kyria.
+
+![Default layer](images/planck-default.svg)
+
+#### QWERTY Layer
+
+Gaming layer (toggled from Function layer).
+
+![QWERTY layer](images/planck-qwerty.svg)
+
+#### Lower Layer
+
+Navigation with arrow keys.
+
+![Lower layer](images/planck-lower.svg)
+
+#### Raise Layer
+
+Symbols and numpad. RGB indicators: blue for numbers, yellow for symbols.
+
+![Raise layer](images/planck-raise.svg)
+
+#### Function Layer
+
+F-keys, RGB controls, and bootloader.
+
+![Function layer](images/planck-function.svg)
+
+---
+
 ## Build Commands
 
 All builds use Docker - no local QMK installation required.
@@ -167,6 +215,13 @@ All builds use Docker - no local QMK installation required.
 ```bash
 ./docker-build.sh q15          # Build Q15 Max firmware
 ./docker-build.sh flash-q15    # Build and flash Q15 Max
+```
+
+### ZSA Planck EZ Glow
+
+```bash
+./docker-build.sh planck          # Build Planck EZ Glow firmware
+./docker-build.sh flash-planck    # Build and flash Planck EZ
 ```
 
 ### Common

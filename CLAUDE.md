@@ -1,9 +1,10 @@
 # Project Notes for AI Agents
 
-This repo contains QMK keymaps for three keyboards:
+This repo contains QMK keymaps for four keyboards:
 - **Kyria Rev4** (Halcyon series) - Split ergonomic keyboard
 - **Elora Rev2** (Halcyon series) - Split ergonomic keyboard with number row
 - **Keychron Q15 Max** - Ortholinear with Bluetooth/2.4GHz wireless
+- **ZSA Planck EZ Glow** - 4x12 ortholinear with per-key RGB
 
 ## Code Sharing: Kyria and Elora
 
@@ -36,6 +37,10 @@ Each keyboard has keymap definitions that must stay in sync:
 1. **`keyboards/keychron/q15_max/ansi_encoder/keymaps/obbut/keymap.c`** - QMK firmware keymap
 2. **`keymap-q15.yaml`** - Manual YAML for keymap-drawer visualization
 
+### Planck EZ Glow
+1. **`keyboards/zsa/planck_ez/glow/keymaps/obbut/keymap.c`** - QMK firmware keymap (self-contained, not shared)
+2. **`keymap-planck.yaml`** - Manual YAML for keymap-drawer visualization
+
 **When changing a keymap:**
 1. Update `keymap.c` with the firmware changes
 2. Update the corresponding `.yaml` file to match
@@ -59,6 +64,10 @@ All builds use Docker - no local QMK installation required. Just need Docker Des
 ### Q15 Max (Bash)
 - `./docker-build.sh q15` - Compile Q15 Max firmware
 - `./docker-build.sh flash-q15` - Build and flash Q15 Max (requires dfu-util)
+
+### Planck EZ Glow (Bash)
+- `./docker-build.sh planck` - Compile Planck EZ Glow firmware
+- `./docker-build.sh flash-planck` - Build and flash Planck EZ (requires dfu-util)
 
 ### Common
 - `./docker-build.sh clean` - Remove build artifacts
@@ -309,3 +318,73 @@ Bluetooth/Wireless keycodes (on function layers):
 
 - **Base layers**: Volume control (rotate)
 - **Function layers**: RGB brightness (rotate)
+
+---
+
+# ZSA Planck EZ Glow
+
+## Hardware
+
+- ZSA Planck EZ Glow - 4x12 ortholinear keyboard
+- STM32F303 MCU with stm32-dfu bootloader
+- Per-key RGB (IS31FL3737 driver)
+- 2u center spacebar (uses `LAYOUT_planck_1x2uC`)
+
+## ZSA Fork
+
+ZSA removed the Planck EZ from mainline QMK. This keyboard uses ZSA's QMK fork via a separate Docker image (`Dockerfile.zsa`). The build uses `make` instead of `qmk compile`.
+
+The keymap is self-contained (not shared with Kyria/Elora) but mirrors the same layout and RGB indicator logic.
+
+**ZSA-specific notes:**
+- Keyboard path is `zsa/planck_ez/glow` (not `planck/ez/glow`)
+- Uses older RGB keycode names (`RGB_TOG`, `RGB_SAI`, etc.) instead of QMK's newer names (`RM_TOGG`, `RM_SATU`)
+- ZSA's `defaults` community module must be manually enabled in `rules.mk` (provides `LED_LEVEL` and `TOGGLE_LAYER_COLOR` keycodes used by keyboard-level code)
+- Output filename: `zsa_planck_ez_glow_obbut.bin`
+
+## Flashing
+
+The Planck EZ uses DFU mode for flashing (same mechanism as Q15 Max).
+
+### One-Time Setup (Windows)
+
+Same as Q15 Max - requires dfu-util and WinUSB driver via Zadig. The Planck EZ uses the same STM32 DFU VID:PID (0483:df11).
+
+### Entering DFU Mode
+
+- Press the reset button on the bottom of the keyboard
+
+### Flashing Workflow
+
+**Automatic (recommended):**
+```bash
+./docker-build.sh flash-planck
+```
+The script will wait for the keyboard to enter DFU mode.
+
+**Manual:**
+1. Build firmware: `./docker-build.sh planck`
+2. Put keyboard in DFU mode (reset button on bottom)
+3. Flash with: `dfu-util -a 0 -d 0483:df11 -s 0x08000000:leave -D zsa_planck_ez_glow_obbut.bin`
+
+## Physical Layout
+
+```
+Row 0: [Tab] [Q] [W] [F] [P] [B] [J] [L] [U] [Y] [;] [Bksp]
+Row 1: [Esc] [A] [R] [S] [T] [G] [M] [N] [E] [I] [O] [']
+Row 2: [Sft] [Z] [X] [C] [D] [V] [K] [H] [,] [.] [/] [Ent]
+Row 3: [PrtSc][Ctrl][Alt][Aero][Cmd]  [Space 2u]  [Raise][Lower][Fn][RAlt][Del]
+```
+
+## Layers
+
+Same layout concept as Kyria (reimplemented independently):
+1. **Default** - Colemak-DH base layer
+2. **QWERTY** - Gaming layer (toggled via Function layer)
+3. **Lower** - Navigation (arrow keys), Delete/Backspace
+4. **Raise** - Symbols and numpad
+5. **Function** - F-keys (F1-F15), RGB controls, Boot keys, QWERTY toggle
+
+## RGB Layer Indicators
+
+Same keycode-based approach as Kyria (reimplemented in the Planck's own `keymap.c`). Colors match the Kyria/Elora scheme. See Kyria section above for the color mapping.

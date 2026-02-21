@@ -46,6 +46,9 @@ draw_keymap "keymap-elora.yaml" "elora" "Default" "QWERTY" "Lower" "Raise" "Func
 # Q15 Max layers
 draw_keymap "keymap-q15.yaml" "q15" "Mac Base" "Win Base" "Mac Fn1" "Win Fn1" "Fn2" "Raise"
 
+# Planck EZ Glow layers
+draw_keymap "keymap-planck.yaml" "planck" "Default" "QWERTY" "Lower" "Raise" "Function"
+
 echo ""
 echo "Generated layer images in $OUTPUT_DIR/"
 ls -la "$OUTPUT_DIR"/*.svg 2>/dev/null || true
