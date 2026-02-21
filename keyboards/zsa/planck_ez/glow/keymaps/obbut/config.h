@@ -8,3 +8,8 @@
 // Turn off RGB after 5 minutes of inactivity (300000ms)
 #undef RGB_MATRIX_TIMEOUT
 #define RGB_MATRIX_TIMEOUT 300000
+
+// Map layer indicator LEDs to our layer numbers
+#define PLANCK_EZ_LED_LOWER 2    // _LOWER
+#define PLANCK_EZ_LED_RAISE 3    // _RAISE
+#define PLANCK_EZ_LED_ADJUST 4   // _FUNCTION
