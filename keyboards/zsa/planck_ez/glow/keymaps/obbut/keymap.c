@@ -15,8 +15,8 @@ enum layers {
     _FUNCTION,
 };
 
-#define LOWER      MO(_LOWER)
-#define RAISE      MO(_RAISE)
+#define LOWER      TL_LOWR
+#define RAISE      TL_UPPR
 #define FKEYS      MO(_FUNCTION)
 #define TG_QWERTY  TG(_QWERTY)
 
@@ -75,6 +75,9 @@ void keyboard_post_init_user(void) {
     // Dim the layer indicator LEDs (level 1 out of 4)
     planck_ez_right_led_level(255 / 4);
     planck_ez_left_led_level(255 / 4);
+    // Turn off both LEDs on boot (default layer has no indicators)
+    planck_ez_left_led_off();
+    planck_ez_right_led_off();
 }
 
 // ============== OS DETECTION ==============

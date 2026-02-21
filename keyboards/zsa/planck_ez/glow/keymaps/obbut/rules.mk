@@ -1,4 +1,5 @@
 OS_DETECTION_ENABLE = yes
+TRI_LAYER_ENABLE = yes
 
 # Enable ZSA defaults module (defines LED_LEVEL, TOGGLE_LAYER_COLOR keycodes
 # required by planck_ez.c). Normally enabled via keymap.json community_modules,

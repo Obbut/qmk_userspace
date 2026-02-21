@@ -13,3 +13,8 @@
 #define PLANCK_EZ_LED_LOWER 2    // _LOWER
 #define PLANCK_EZ_LED_RAISE 3    // _RAISE
 #define PLANCK_EZ_LED_ADJUST 4   // _FUNCTION
+
+// Tri-layer: holding Lower + Raise activates Function
+#define TRI_LAYER_LOWER_LAYER 2  // _LOWER
+#define TRI_LAYER_UPPER_LAYER 3  // _RAISE
+#define TRI_LAYER_ADJUST_LAYER 4 // _FUNCTION
