@@ -69,6 +69,14 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 };
 // clang-format on
 
+// ============== INIT ==============
+
+void keyboard_post_init_user(void) {
+    // Dim the layer indicator LEDs (level 1 out of 4)
+    planck_ez_right_led_level(255 / 4);
+    planck_ez_left_led_level(255 / 4);
+}
+
 // ============== OS DETECTION ==============
 
 static inline bool is_windows(void) {
