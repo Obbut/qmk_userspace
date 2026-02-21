@@ -10,12 +10,15 @@ export MSYS_NO_PATHCONV=1
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 IMAGE_NAME="qmk-userspace-builder"
 KEYCHRON_IMAGE_NAME="qmk-keychron-builder"
+ZSA_IMAGE_NAME="qmk-zsa-builder"
 BUILD_CACHE="$SCRIPT_DIR/.docker-build-cache"
 KEYCHRON_BUILD_CACHE="$SCRIPT_DIR/.docker-build-cache-keychron"
+ZSA_BUILD_CACHE="$SCRIPT_DIR/.docker-build-cache-zsa"
 
 # Create build cache directories
 mkdir -p "$BUILD_CACHE"
 mkdir -p "$KEYCHRON_BUILD_CACHE"
+mkdir -p "$ZSA_BUILD_CACHE"
 
 # Build mainline QMK Docker image if needed
 build_qmk_image() {
@@ -30,6 +33,14 @@ build_keychron_image() {
     if ! docker image inspect "$KEYCHRON_IMAGE_NAME" &>/dev/null; then
         echo "Building Keychron QMK Docker image (this takes a few minutes on first run)..."
         docker build -t "$KEYCHRON_IMAGE_NAME" -f "$SCRIPT_DIR/Dockerfile.keychron" "$SCRIPT_DIR"
+    fi
+}
+
+# Build ZSA QMK Docker image if needed
+build_zsa_image() {
+    if ! docker image inspect "$ZSA_IMAGE_NAME" &>/dev/null; then
+        echo "Building ZSA QMK Docker image (this takes a few minutes on first run)..."
+        docker build -t "$ZSA_IMAGE_NAME" -f "$SCRIPT_DIR/Dockerfile.zsa" "$SCRIPT_DIR"
     fi
 }
 
@@ -128,6 +139,15 @@ check_dfu_device() {
     fi
 }
 
+# Convert path to native format (MSYS→Windows) for native Windows tools
+to_native_path() {
+    if command -v cygpath &>/dev/null; then
+        cygpath -w "$1"
+    else
+        echo "$1"
+    fi
+}
+
 # Flash Q15 Max via DFU
 flash_q15_dfu() {
     local bin_file="$1"
@@ -146,6 +166,8 @@ flash_q15_dfu() {
 
     local timeout=60
     local elapsed=0
+    local native_path
+    native_path="$(to_native_path "$SCRIPT_DIR/$bin_file")"
 
     while [[ $elapsed -lt $timeout ]]; do
         if check_dfu_device; then
@@ -153,11 +175,11 @@ flash_q15_dfu() {
             echo "Flashing $bin_file..."
 
             if command -v dfu-util &>/dev/null; then
-                dfu-util -a 0 -d 0483:df11 -s 0x08000000:leave -D "$SCRIPT_DIR/$bin_file"
+                dfu-util -a 0 -d 0483:df11 -s 0x08000000:leave -D "$native_path"
                 echo "Firmware flashed successfully!"
                 return 0
             elif command -v dfu-util.exe &>/dev/null; then
-                dfu-util.exe -a 0 -d 0483:df11 -s 0x08000000:leave -D "$SCRIPT_DIR/$bin_file"
+                dfu-util.exe -a 0 -d 0483:df11 -s 0x08000000:leave -D "$native_path"
                 echo "Firmware flashed successfully!"
                 return 0
             else
@@ -251,6 +273,70 @@ build_q15() {
     echo "Build complete: keychron_q15_max_ansi_encoder_obbut.bin"
 }
 
+build_planck() {
+    build_zsa_image
+    echo "Building Planck EZ Glow..."
+    docker run --rm \
+        -v "$SCRIPT_DIR:/qmk_userspace" \
+        -v "$ZSA_BUILD_CACHE:/qmk_firmware/.build" \
+        -e MAKEFLAGS="-j$(nproc)" \
+        "$ZSA_IMAGE_NAME" \
+        sh -c 'export QMK_USERSPACE=/qmk_userspace && cd /qmk_firmware && make zsa/planck_ez/glow:obbut'
+    echo "Build complete: zsa_planck_ez_glow_obbut.bin"
+}
+
+# Flash Planck EZ via DFU (same mechanism as Q15 Max)
+flash_planck_dfu() {
+    local bin_file="$1"
+
+    if [[ ! -f "$SCRIPT_DIR/$bin_file" ]]; then
+        echo "Error: Firmware file not found: $bin_file"
+        echo "Run build first."
+        exit 1
+    fi
+
+    echo ""
+    echo "Waiting for Planck EZ in DFU mode..."
+    echo "To enter DFU mode: Press the reset button on the bottom of the keyboard"
+    echo ""
+
+    local timeout=60
+    local elapsed=0
+    local native_path
+    native_path="$(to_native_path "$SCRIPT_DIR/$bin_file")"
+
+    while [[ $elapsed -lt $timeout ]]; do
+        if check_dfu_device; then
+            echo "Found STM32 DFU device!"
+            echo "Flashing $bin_file..."
+
+            if command -v dfu-util &>/dev/null; then
+                dfu-util -a 0 -d 0483:df11 -s 0x08000000:leave -D "$native_path"
+                echo "Firmware flashed successfully!"
+                return 0
+            elif command -v dfu-util.exe &>/dev/null; then
+                dfu-util.exe -a 0 -d 0483:df11 -s 0x08000000:leave -D "$native_path"
+                echo "Firmware flashed successfully!"
+                return 0
+            else
+                echo "Error: dfu-util not found."
+                echo "Please install dfu-util and add it to your PATH."
+                echo "Download from: https://dfu-util.sourceforge.net/releases/"
+                echo "Or install QMK MSYS which includes dfu-util."
+                exit 1
+            fi
+        fi
+        sleep 1
+        elapsed=$((elapsed + 1))
+        if [[ $((elapsed % 5)) -eq 0 ]]; then
+            echo "Waiting... ($elapsed seconds)"
+        fi
+    done
+
+    echo "Error: Timeout waiting for DFU device"
+    exit 1
+}
+
 case "${1:-help}" in
     kyria-left)
         build_kyria_left
@@ -295,6 +381,13 @@ case "${1:-help}" in
         build_q15
         flash_q15_dfu "keychron_q15_max_ansi_encoder_obbut.bin"
         ;;
+    planck)
+        build_planck
+        ;;
+    flash-planck)
+        build_planck
+        flash_planck_dfu "zsa_planck_ez_glow_obbut.bin"
+        ;;
     clean)
         rm -f "$SCRIPT_DIR"/*.uf2 "$SCRIPT_DIR"/*.hex "$SCRIPT_DIR"/*.bin
         echo "Cleaned build artifacts"
@@ -308,6 +401,11 @@ case "${1:-help}" in
         echo "Rebuilding Keychron QMK Docker image..."
         docker rmi "$KEYCHRON_IMAGE_NAME" 2>/dev/null || true
         docker build -t "$KEYCHRON_IMAGE_NAME" -f "$SCRIPT_DIR/Dockerfile.keychron" "$SCRIPT_DIR"
+        ;;
+    rebuild-zsa-image)
+        echo "Rebuilding ZSA QMK Docker image..."
+        docker rmi "$ZSA_IMAGE_NAME" 2>/dev/null || true
+        docker build -t "$ZSA_IMAGE_NAME" -f "$SCRIPT_DIR/Dockerfile.zsa" "$SCRIPT_DIR"
         ;;
     *)
         echo "Usage: $0 [command]"
@@ -330,10 +428,15 @@ case "${1:-help}" in
         echo "  q15                - Build Q15 Max firmware"
         echo "  flash-q15          - Build and flash Q15 Max (requires dfu-util)"
         echo ""
+        echo "ZSA Planck EZ Glow commands:"
+        echo "  planck             - Build Planck EZ Glow firmware"
+        echo "  flash-planck       - Build and flash Planck EZ (requires dfu-util)"
+        echo ""
         echo "Maintenance:"
         echo "  clean              - Remove build artifacts"
         echo "  rebuild-image      - Force rebuild the QMK Docker image"
         echo "  rebuild-keychron-image - Force rebuild the Keychron Docker image"
+        echo "  rebuild-zsa-image  - Force rebuild the ZSA Docker image"
         exit 1
         ;;
 esac

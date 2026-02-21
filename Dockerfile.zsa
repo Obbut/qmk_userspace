@@ -1,0 +1,16 @@
+# ZSA QMK Firmware build environment
+# Uses ZSA's fork which includes Planck EZ, Moonlander, etc.
+
+FROM ghcr.io/qmk/qmk_cli
+
+# Clone ZSA's QMK fork (shallow clone to save space)
+RUN git clone --depth 1 https://github.com/zsa/qmk_firmware.git /qmk_firmware
+
+# Initialize submodules needed for the build
+WORKDIR /qmk_firmware
+RUN make git-submodule
+
+# Set up for userspace overlay
+ENV QMK_USERSPACE=/qmk_userspace
+
+WORKDIR /qmk_firmware

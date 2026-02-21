@@ -1,0 +1,10 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
+
+#pragma once
+
+// Fix layer-tap delay: activate hold when another key is tapped while holding
+#define PERMISSIVE_HOLD
+
+// Turn off RGB after 5 minutes of inactivity (300000ms)
+#undef RGB_MATRIX_TIMEOUT
+#define RGB_MATRIX_TIMEOUT 300000

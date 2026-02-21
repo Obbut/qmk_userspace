@@ -7,6 +7,7 @@
 .build/
 .docker-build-cache/
 .docker-build-cache-keychron/
+.docker-build-cache-zsa/
 
 # macOS
 .DS_Store
