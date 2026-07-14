@@ -6,6 +6,12 @@ import WinSDK
 enum WindowsApplicationRunLoop {
     private typealias ContentPreTranslateMessage = @convention(c) (UnsafePointer<MSG>?) -> Bool
 
+    /// Swift's main executor is not represented by a Win32 message-queue
+    /// handle. Never let the WinUI loop sleep indefinitely after draining
+    /// messages, or background HID callbacks and Task wakeups can remain queued
+    /// until the next mouse or keyboard event.
+    private static let maximumSwiftRunLoopSleepMilliseconds = 8.0
+
     private static let preTranslate: ContentPreTranslateMessage? = {
         guard let module = LoadLibraryA("Microsoft.UI.Windowing.Core.dll"),
               let address = GetProcAddress(module, "ContentPreTranslateMessage") else {
@@ -33,11 +39,26 @@ enum WindowsApplicationRunLoop {
             } while nextDate.map { $0.timeIntervalSinceNow <= 0 } ?? false
 
             let timeout: DWORD
-            if let nextDate {
-                let milliseconds = max(1, min(nextDate.timeIntervalSinceNow * 1_000, Double(DWORD.max - 1)))
-                timeout = DWORD(milliseconds.rounded(.up))
+#if DEBUG
+            let usesLegacyWait = CommandLine.arguments.contains("--legacy-run-loop-probe")
+#else
+            let usesLegacyWait = false
+#endif
+            if usesLegacyWait {
+                timeout = nextDate.map {
+                    DWORD(max(1, min(
+                        $0.timeIntervalSinceNow * 1_000,
+                        Double(DWORD.max - 1)
+                    )).rounded(.up))
+                } ?? DWORD(INFINITE)
             } else {
-                timeout = DWORD(INFINITE)
+                let scheduledMilliseconds = nextDate.map {
+                    max(1, $0.timeIntervalSinceNow * 1_000)
+                } ?? maximumSwiftRunLoopSleepMilliseconds
+                timeout = DWORD(min(
+                    scheduledMilliseconds,
+                    maximumSwiftRunLoopSleepMilliseconds
+                ).rounded(.up))
             }
             _ = MsgWaitForMultipleObjects(0, nil, false, timeout, QS_ALLINPUT)
         }

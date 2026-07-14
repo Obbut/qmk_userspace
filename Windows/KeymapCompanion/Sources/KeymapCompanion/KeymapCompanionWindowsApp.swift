@@ -21,6 +21,12 @@ final class KeymapCompanionWindowsApp: SwiftApplication, @unchecked Sendable {
 
     override func onLaunched(_ args: WinUI.LaunchActivatedEventArgs) {
         MainActor.assumeIsolated {
+#if DEBUG
+            if RunLoopPerformanceProbe.shouldRun {
+                RunLoopPerformanceProbe.start()
+                return
+            }
+#endif
             let controller = WindowsAppController()
             self.controller = controller
             controller.launch()
@@ -40,10 +46,12 @@ final class KeymapCompanionWindowsApp: SwiftApplication, @unchecked Sendable {
 private final class WindowsAppController: @unchecked Sendable {
     private let window = Window()
     private let model: KeymapCompanionModel
-    private var contentBody: StackPanel?
     private lazy var hud = WindowsLayerHUDController()
     private var tray: OpaquePointer?
     private var renderedSnapshot: WindowsViewSnapshot?
+    private var keymapSurface: WindowsKeymapSurface?
+    private var layerPillBorders: [Border] = []
+    private var layerPillLabels: [TextBlock] = []
     private var isExiting = false
     private var isMainWindowActive = true
 
@@ -160,6 +168,9 @@ private final class WindowsAppController: @unchecked Sendable {
 
     private func makeContent() -> UIElement {
         clearRGBControlReferences()
+        keymapSurface = nil
+        layerPillBorders.removeAll(keepingCapacity: true)
+        layerPillLabels.removeAll(keepingCapacity: true)
         let body = StackPanel()
         body.orientation = .vertical
         body.spacing = 20
@@ -167,15 +178,15 @@ private final class WindowsAppController: @unchecked Sendable {
         body.requestedTheme = .dark
 
         body.children.append(makeHeader())
-        body.children.append(makeConnectionInfo())
+        if let connectionInfo = makeConnectionInfo() {
+            body.children.append(connectionInfo)
+        }
 
         if let definition = model.keymapDefinition {
             body.children.append(makeKeyboardCard(definition))
         } else {
             body.children.append(makeEmptyState())
         }
-        contentBody = body
-
         let scroll = ScrollViewer()
         scroll.background = WindowsTheme.brush(23, 25, 32)
         scroll.verticalScrollBarVisibility = .auto
@@ -199,8 +210,9 @@ private final class WindowsAppController: @unchecked Sendable {
         }
 
         if previous.effectiveLayerMask != current.effectiveLayerMask,
-           let definition = model.keymapDefinition {
-            contentBody?.children.setAt(2, makeKeyboardCard(definition))
+           model.keymapDefinition != nil {
+            keymapSurface?.update(activeLayerMask: current.effectiveLayerMask)
+            synchronizeLayerPills(activeLayerMask: current.effectiveLayerMask)
         }
         if previous.rgbSettings != current.rgbSettings {
             synchronizeRGBControls()
@@ -308,7 +320,8 @@ private final class WindowsAppController: @unchecked Sendable {
         return badge
     }
 
-    private func makeConnectionInfo() -> InfoBar {
+    private func makeConnectionInfo() -> InfoBar? {
+        guard model.connectionStatus != .connected else { return nil }
         let info = InfoBar()
         info.isOpen = true
         info.isClosable = false
@@ -319,9 +332,7 @@ private final class WindowsAppController: @unchecked Sendable {
             info.title = "Looking for your keyboard"
             info.message = "Connect an Elora Rev2 or Kyria Rev4 running the companion protocol."
         case .connected:
-            info.severity = .success
-            info.title = model.keyboardKind?.displayName ?? "Keyboard connected"
-            info.message = "Live layer and lighting state is updating over Raw HID."
+            return nil
         case .disconnected:
             info.severity = .warning
             info.title = "Keyboard disconnected"
@@ -356,27 +367,20 @@ private final class WindowsAppController: @unchecked Sendable {
         content.orientation = .vertical
         content.spacing = 16
 
-        let heading = StackPanel()
-        heading.orientation = .horizontal
-        heading.spacing = 12
         let name = WindowsTheme.text(definition.keyboardKind.displayName, size: 21)
         name.fontWeight = FontWeights.semiBold
-        heading.children.append(name)
-        heading.children.append(WindowsTheme.text(
-            "Active layer: \(model.activeLayer.displayName)",
-            size: 14,
-            color: WindowsTheme.color(158, 183, 255)
-        ))
-        content.children.append(heading)
+        content.children.append(name)
         content.children.append(makeLayerStrip())
 
         let boardScroll = ScrollViewer()
         boardScroll.horizontalScrollBarVisibility = .auto
         boardScroll.verticalScrollBarVisibility = .disabled
-        boardScroll.content = WindowsKeymapRenderer.make(
+        let surface = WindowsKeymapSurface(
             definition: definition,
             activeLayerMask: model.effectiveLayerMask
         )
+        keymapSurface = surface
+        boardScroll.content = surface.canvas
         content.children.append(boardScroll)
         return WindowsTheme.card(content: content, padding: 22)
     }
@@ -401,8 +405,24 @@ private final class WindowsAppController: @unchecked Sendable {
             label.fontWeight = isActive ? FontWeights.semiBold : FontWeights.normal
             pill.child = label
             strip.children.append(pill)
+            layerPillBorders.append(pill)
+            layerPillLabels.append(label)
         }
         return strip
+    }
+
+    private func synchronizeLayerPills(activeLayerMask: UInt32) {
+        for (index, layer) in KeymapLayer.allCases.enumerated() {
+            guard index < layerPillBorders.count, index < layerPillLabels.count else { break }
+            let isActive = layer.isActive(in: activeLayerMask)
+            layerPillBorders[index].background = isActive
+                ? WindowsTheme.brush(73, 105, 184, alpha: 210)
+                : WindowsTheme.brush(255, 255, 255, alpha: 14)
+            layerPillLabels[index].foreground = SolidColorBrush(
+                isActive ? WindowsTheme.color(255, 255, 255) : WindowsTheme.color(157, 164, 181)
+            )
+            layerPillLabels[index].fontWeight = isActive ? FontWeights.semiBold : FontWeights.normal
+        }
     }
 
     private func makeRGBFlyoutContent() -> UIElement {

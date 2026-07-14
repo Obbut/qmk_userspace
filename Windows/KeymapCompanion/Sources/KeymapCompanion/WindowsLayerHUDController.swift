@@ -7,6 +7,7 @@ import WinUI
 
 /// A delayed, always-on-top, click-through WinUI layer overlay. It remains a
 /// Windows-only presentation surface while consuming the shared renderer model.
+@MainActor
 final class WindowsLayerHUDController: @unchecked Sendable {
     private static let windowTitle = "Keymap Companion — Layer HUD"
 
@@ -94,11 +95,11 @@ final class WindowsLayerHUDController: @unchecked Sendable {
         let heading = WindowsTheme.text("\(presentation.layer.displayName) layer", size: 20)
         heading.fontWeight = FontWeights.semiBold
         stack.children.append(heading)
-        stack.children.append(WindowsKeymapRenderer.make(
+        stack.children.append(WindowsKeymapSurface(
             definition: definition,
             activeLayerMask: presentation.activeLayerMask,
             scale: 0.72
-        ))
+        ).canvas)
         return stack
     }
 }
