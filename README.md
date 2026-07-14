@@ -8,7 +8,7 @@ Personal QMK firmware for four keyboards:
 
 ## Keymap Companion
 
-The repository includes native companion apps that visualize a connected Kyria or Elora, follow QMK layer changes in realtime, and control supported keyboard lighting. Platform UI remains native while protocol, state, keymap-decoding, legend, and geometry code is shared through the local Swift package in [`Shared`](Shared).
+The repository includes native companion apps that visualize a connected Kyria or Elora, follow QMK layer changes in realtime, and control supported keyboard lighting. Platform UI remains native while an `@Observable` view model, hardware dependency interface, protocol, state, keymap-decoding, legend, and geometry code are shared through the local Swift package in [`Shared`](Shared). macOS and Windows inject their own Raw HID implementations through Point-Free's `swift-dependencies`.
 
 - [Keymap Companion for macOS](macOS/KeymapCompanion/README.md) uses SwiftUI and its Canvas renderer.
 - [Keymap Companion for Windows](Windows/KeymapCompanion/README.md) uses native WinUI 3 and Swift 6.3.3.

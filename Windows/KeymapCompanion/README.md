@@ -6,10 +6,12 @@ layer, encoder, lighting, tray, reconnect, and delayed layer-HUD features as the
 macOS companion.
 
 The Windows presentation is intentionally platform-native and is not shared
-with the SwiftUI app. Protocol handling, state reduction, firmware keymap
-decoding, legends, and keyboard geometry live in the local
+with the SwiftUI app. The `@Observable` source of truth, protocol handling,
+state reduction, firmware keymap decoding, legends, and keyboard geometry live in the local
 [`Shared`](../../Shared) Swift package. WinUI's canvas consumes that shared
 rendering model, while macOS continues to draw it with SwiftUI `Canvas`.
+The model accesses a shared `KeyboardHardwareClient` through Point-Free's
+`@Dependency`; the Windows target injects its SetupAPI/Raw HID adapter at launch.
 
 ## Requirements
 
@@ -32,8 +34,9 @@ From PowerShell:
 
 The first build runs `bootstrap.ps1`. It downloads pinned Swift/WinRT
 projections and the matching x64 Windows App SDK bootstrap library into the
-ignored `Windows/KeymapCompanion/Dependencies` directory. Nothing is installed
-system-wide. Later builds reuse those files.
+ignored `Windows/KeymapCompanion/Dependencies` directory. SwiftPM also resolves
+the pinned Point-Free dependency graph into its normal build cache. Nothing is
+installed system-wide. Later builds reuse those files.
 
 Build products are written to:
 
