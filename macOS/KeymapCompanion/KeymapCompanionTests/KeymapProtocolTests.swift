@@ -2,14 +2,14 @@ import AppKit
 import Testing
 @testable import KeymapCompanion
 
-/// Verifies that the metadata handshake exactly matches protocol v2.
+/// Verifies that the metadata handshake exactly matches protocol v3.
 @Test
 func metadataRequestUsesFixedRawHIDEnvelope() {
     let request = KeymapProtocol.makeKeymapMetadataRequest()
 
     #expect(request.count == 32)
     #expect(Array(request[0..<4]) == Array("KMAP".utf8))
-    #expect(request[4] == 2)
+    #expect(request[4] == 3)
     #expect(request[5] == 3)
     #expect(request.dropFirst(6).allSatisfy { $0 == 0 })
 }
@@ -56,7 +56,9 @@ func parsesKeymapMetadataReport() {
     packet[10] = 4
     packet[11] = 5
     packet.replaceSubrange(12..<16, with: [0x78, 0x56, 0x34, 0x12])
-    packet.replaceSubrange(16..<18, with: [0x5E, 0x01])
+    packet.replaceSubrange(16..<18, with: [0x68, 0x01])
+    packet[18] = 1
+    packet[19] = 2
 
     let metadata = KeymapProtocol.parseKeymapMetadataReport(packet)
 
@@ -65,7 +67,8 @@ func parsesKeymapMetadataReport() {
     #expect(metadata?.matrixRowCount == 10)
     #expect(metadata?.matrixColumnCount == 7)
     #expect(metadata?.entriesPerChunk == 5)
-    #expect(metadata?.entryCount == 350)
+    #expect(metadata?.entryCount == 360)
+    #expect(metadata?.encoderCount == 1)
     #expect(metadata?.fingerprint == 0x1234_5678)
 }
 
@@ -76,14 +79,14 @@ func parsesKeymapChunkReport() {
     packet[6] = KeyboardKind.kyria.rawValue
     packet[7] = 2
     packet.replaceSubrange(8..<10, with: [5, 0])
-    packet.replaceSubrange(10..<12, with: [0x5E, 0x01])
+    packet.replaceSubrange(10..<12, with: [0x68, 0x01])
     packet.replaceSubrange(12..<16, with: [0x1E, 0x02, 0, KeyStyle.yellow.rawValue])
     packet.replaceSubrange(16..<20, with: [0x20, 0x52, 1, KeyStyle.purple.rawValue])
 
     let chunk = KeymapProtocol.parseKeymapChunkReport(packet)
 
     #expect(chunk?.startIndex == 5)
-    #expect(chunk?.totalEntryCount == 350)
+    #expect(chunk?.totalEntryCount == 360)
     #expect(chunk?.entries == [
         FirmwareKeymapEntry(keycode: 0x021E, semantic: 0, style: .yellow),
         FirmwareKeymapEntry(keycode: 0x5220, semantic: 1, style: .purple)
@@ -98,9 +101,12 @@ func validatesFirmwareKeymapFingerprint() {
         layerCount: 1,
         matrixRowCount: 1,
         matrixColumnCount: 1,
-        fingerprint: 0x454E_649D,
+        encoderCount: 1,
+        fingerprint: 0x8DF5_1499,
         entries: [
-            FirmwareKeymapEntry(keycode: 0x1234, semantic: 2, style: .red)
+            FirmwareKeymapEntry(keycode: 0x1234, semantic: 2, style: .red),
+            FirmwareKeymapEntry(keycode: 0x00AC, semantic: 0, style: .standard),
+            FirmwareKeymapEntry(keycode: 0x00AB, semantic: 0, style: .standard)
         ]
     )
 
@@ -123,7 +129,7 @@ func rgbSettingsRequestUsesExplicitValues() {
 
     #expect(request.count == 32)
     #expect(Array(request[0..<4]) == Array("KMAP".utf8))
-    #expect(request[4] == 2)
+    #expect(request[4] == 3)
     #expect(request[5] == 7)
     #expect(request[6] == 1)
     #expect(request[7] == RGBEffect.hueWave.rawValue)
@@ -209,13 +215,13 @@ func rejectsUnknownRawHIDPacket() {
     #expect(KeymapProtocol.parseKeymapChunkReport(unknownPacket) == nil)
 }
 
-/// Creates one zero-filled protocol v2 packet with a selected message type.
+/// Creates one zero-filled protocol v3 packet with a selected message type.
 /// - Parameter type: The numeric protocol message type.
 /// - Returns: A complete Raw HID packet.
 private func makePacket(type: UInt8) -> [UInt8] {
     var packet = [UInt8](repeating: 0, count: 32)
     packet.replaceSubrange(0..<4, with: Array("KMAP".utf8))
-    packet[4] = 2
+    packet[4] = 3
     packet[5] = type
     return packet
 }

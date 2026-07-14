@@ -282,6 +282,7 @@ private final class HIDDeviceSession {
             layerCount: metadata.layerCount,
             matrixRowCount: metadata.matrixRowCount,
             matrixColumnCount: metadata.matrixColumnCount,
+            encoderCount: metadata.encoderCount,
             fingerprint: metadata.fingerprint,
             entries: keymapEntries
         )
@@ -304,7 +305,7 @@ private final class HIDDeviceSession {
     /// - Parameter startIndex: The first entry expected in the response.
     private func requestKeymapChunk(startingAt startIndex: Int) {
         guard let encodedIndex = UInt16(exactly: startIndex) else {
-            monitor?.receiveTransferFailure("Firmware keymap is too large for protocol v2.")
+            monitor?.receiveTransferFailure("Firmware keymap is too large for protocol v3.")
             return
         }
         send(KeymapProtocol.makeKeymapChunkRequest(startingAt: encodedIndex))

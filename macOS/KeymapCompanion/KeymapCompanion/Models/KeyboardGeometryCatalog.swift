@@ -32,7 +32,12 @@ enum KeyboardGeometryCatalog {
             canvasWidth: 952,
             canvasHeight: 320,
             placements: placements,
-            matrixPositions: matrixPositions
+            matrixPositions: matrixPositions,
+            rightEncoderPlacement: PhysicalKeyPlacement(
+                centerX: 583,
+                centerY: 105,
+                rotationDegrees: 0
+            )
         )
     }
 
@@ -51,7 +56,12 @@ enum KeyboardGeometryCatalog {
             canvasWidth: 952,
             canvasHeight: 376,
             placements: placements,
-            matrixPositions: matrixPositions
+            matrixPositions: matrixPositions,
+            rightEncoderPlacement: PhysicalKeyPlacement(
+                centerX: 583,
+                centerY: 161,
+                rotationDegrees: 0
+            )
         )
     }
 

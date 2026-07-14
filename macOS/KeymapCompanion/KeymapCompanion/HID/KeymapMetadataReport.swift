@@ -21,6 +21,9 @@ struct KeymapMetadataReport: Equatable, Sendable {
     /// The FNV-1a fingerprint covering metadata and every entry.
     let fingerprint: UInt32
 
-    /// The total number of layer-major matrix entries.
+    /// The total number of matrix and encoder entries.
     let entryCount: Int
+
+    /// The number of physical encoders represented after the matrix entries.
+    let encoderCount: Int
 }

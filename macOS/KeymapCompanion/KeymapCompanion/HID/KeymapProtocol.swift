@@ -10,7 +10,7 @@ enum KeymapProtocol {
     static let reportSize = 32
 
     /// The protocol version shared with the firmware.
-    static let version: UInt8 = 2
+    static let version: UInt8 = 3
 
     /// The byte count of one keycode, semantic, and style tuple.
     static let keymapEntrySize = 4
@@ -103,14 +103,21 @@ enum KeymapProtocol {
         let entrySize = Int(bytes[10])
         let entriesPerChunk = Int(bytes[11])
         let entryCount = Int(readUInt16(from: bytes, at: 16))
+        let encoderCount = Int(bytes[18])
+        let encoderDirectionCount = Int(bytes[19])
+        let matrixEntryCount = layerCount * matrixRowCount * matrixColumnCount
+        let encoderEntryCount = layerCount * encoderCount * encoderDirectionCount
         guard layerCount > 0,
               layerCount <= 32,
               matrixRowCount > 0,
               matrixColumnCount > 0,
+              encoderCount > 0,
+              encoderCount <= 8,
+              encoderDirectionCount == EncoderDirection.allCases.count,
               entrySize == keymapEntrySize,
               entriesPerChunk > 0,
               entriesPerChunk * entrySize <= reportSize - 12,
-              entryCount == layerCount * matrixRowCount * matrixColumnCount else {
+              entryCount == matrixEntryCount + encoderEntryCount else {
             return nil
         }
 
@@ -122,7 +129,8 @@ enum KeymapProtocol {
             entrySize: entrySize,
             entriesPerChunk: entriesPerChunk,
             fingerprint: readUInt32(from: bytes, at: 12),
-            entryCount: entryCount
+            entryCount: entryCount,
+            encoderCount: encoderCount
         )
     }
 
