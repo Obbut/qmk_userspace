@@ -35,6 +35,6 @@ struct KeymapCompanionApp: App {
                 Label("Keymap Companion", systemImage: "keyboard")
             }
         }
-        .menuBarExtraStyle(.window)
+        .menuBarExtraStyle(.menu)
     }
 }

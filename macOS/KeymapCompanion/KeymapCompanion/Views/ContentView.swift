@@ -36,7 +36,7 @@ struct ContentView: View {
                         activeLayerMask: model.effectiveLayerMask
                     )
                 } else {
-                    WaitingPanel(onRetry: model.reconnect)
+                    WaitingPanel()
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -109,7 +109,7 @@ struct ContentView: View {
 }
 
 #Preview("Waiting Panel") {
-    WaitingPanel(onRetry: {})
+    WaitingPanel()
         .padding()
         .frame(width: 760, height: 520)
 }
@@ -142,7 +142,7 @@ private struct ConnectionHeader: View {
                         .font(.headline)
                         .foregroundStyle(.secondary)
                 } else {
-                    Text("Elora and Kyria realtime keymap")
+                    Text("Realtime keymap")
                         .font(.headline)
                         .foregroundStyle(.secondary)
                 }
@@ -278,11 +278,8 @@ private struct LayerChip: View {
     }
 }
 
-/// Initial discovery help shown before the first compatible packet arrives.
+/// Waiting state shown while automatic keyboard discovery remains active.
 private struct WaitingPanel: View {
-    /// Restarts Raw HID discovery.
-    let onRetry: () -> Void
-
     /// The waiting-state content.
     var body: some View {
         VStack(spacing: 16) {
@@ -290,14 +287,8 @@ private struct WaitingPanel: View {
                 .font(.system(.largeTitle, design: .rounded, weight: .medium))
                 .foregroundStyle(.secondary)
                 .accessibilityHidden(true)
-            Text("Waiting for an Elora or Kyria")
+            Text("Waiting for keyboard")
                 .font(.title2.bold())
-            Text("Connect a keyboard flashed with the companion-enabled firmware. The keymap appears as soon as the Raw HID handshake completes.")
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: 520)
-            Button("Retry Connection", action: onRetry)
-                .buttonStyle(.borderedProminent)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(40)
