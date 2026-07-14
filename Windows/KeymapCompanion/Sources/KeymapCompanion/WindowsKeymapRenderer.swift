@@ -102,10 +102,13 @@ enum WindowsKeymapRenderer {
 
         let counterClockwise = encoder.counterClockwiseKey.resolvedLegend(activeLayerMask: activeLayerMask)
         let clockwise = encoder.clockwiseKey.resolvedLegend(activeLayerMask: activeLayerMask)
+        // Keep both turn actions in the center gap to the left of the knob. The
+        // first key in the right half begins too close to the physical encoder
+        // for a trailing action pill without overlap.
         canvas.children.append(makeEncoderAction(
             arrow: "↶",
             legend: counterClockwise,
-            x: centerX - 98 * scale,
+            x: centerX - 186 * scale,
             y: centerY - 18 * scale,
             isDirect: encoder.counterClockwiseKey.isDirectlyMapped(on: activeLayer),
             scale: scale
@@ -113,7 +116,7 @@ enum WindowsKeymapRenderer {
         canvas.children.append(makeEncoderAction(
             arrow: "↷",
             legend: clockwise,
-            x: centerX + 47 * scale,
+            x: centerX - 86 * scale,
             y: centerY - 18 * scale,
             isDirect: encoder.clockwiseKey.isDirectlyMapped(on: activeLayer),
             scale: scale
