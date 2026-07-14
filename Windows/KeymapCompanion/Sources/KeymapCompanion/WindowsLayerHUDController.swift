@@ -5,47 +5,71 @@ import UWP
 import WinAppSDK
 import WinUI
 
-/// A delayed, always-on-top, click-through WinUI layer overlay. It remains a
-/// Windows-only presentation surface while consuming the shared renderer model.
+/// A delayed, always-on-top, click-through WinUI layer overlay.
+///
+/// This Windows-only presentation surface consumes the shared renderer model.
 @MainActor
-final class WindowsLayerHUDController: @unchecked Sendable {
+final class WindowsLayerHUDController {
+    /// The native title used to locate and configure the overlay window.
     private static let windowTitle = "Keymap Companion — Layer HUD"
 
+    /// The lazily created overlay window.
     private var window: Window?
+
+    /// The delayed layer snapshot currently eligible for presentation.
     private var presentation: LayerHUDPresentation?
+
+    /// The downloaded renderer input.
     private var definition: KeymapDefinition?
+
+    /// Whether the primary app window currently has keyboard focus.
     private var mainWindowIsActive = true
 
+    /// Updates renderer input and delayed layer presentation.
+    ///
+    /// - Parameters:
+    ///   - definition: The downloaded renderer input.
+    ///   - presentation: The delayed layer snapshot.
+    ///   - mainWindowIsActive: Whether the primary window currently has keyboard focus.
     func update(
         definition: KeymapDefinition?,
         presentation: LayerHUDPresentation?,
-        mainWindowIsVisible: Bool
+        mainWindowIsActive: Bool
     ) {
         self.definition = definition
         self.presentation = presentation
-        mainWindowIsActive = mainWindowIsVisible
+        self.mainWindowIsActive = mainWindowIsActive
         renderIfVisible()
     }
 
+    /// Reconciles overlay visibility after primary-window activity changes.
+    ///
+    /// - Parameter isActive: Whether the primary window currently has keyboard focus.
     func mainWindowActivityDidChange(isActive: Bool) {
         mainWindowIsActive = isActive
         renderIfVisible()
     }
 
+    /// Hides the overlay and discards its delayed presentation.
     func hideImmediately() {
         presentation = nil
         try? window?.appWindow.hide()
     }
 
+    /// Closes and releases the native overlay window.
+    ///
+    /// - Throws: A Swift/WinRT error when the window cannot close.
     func close() throws {
         try window?.close()
         window = nil
     }
 
+    /// Reconciles native overlay visibility with current presentation state.
     private func renderIfVisible() {
         guard !mainWindowIsActive,
-              let definition,
-              let presentation else {
+            let definition,
+            let presentation
+        else {
             try? window?.appWindow.hide()
             return
         }
@@ -58,6 +82,9 @@ final class WindowsLayerHUDController: @unchecked Sendable {
         }
     }
 
+    /// Returns the existing overlay window or creates and activates one.
+    ///
+    /// - Returns: The process-lifetime overlay window.
     private func ensureWindow() -> Window {
         if let window { return window }
 
@@ -81,6 +108,12 @@ final class WindowsLayerHUDController: @unchecked Sendable {
         return window
     }
 
+    /// Creates the current layer overlay content.
+    ///
+    /// - Parameters:
+    ///   - definition: The downloaded renderer input.
+    ///   - presentation: The delayed layer snapshot.
+    /// - Returns: The configured overlay content.
     private func makeContent(
         definition: KeymapDefinition,
         presentation: LayerHUDPresentation
@@ -90,16 +123,17 @@ final class WindowsLayerHUDController: @unchecked Sendable {
         stack.orientation = .vertical
         stack.spacing = 10
         stack.padding = Thickness(left: 20, top: 16, right: 20, bottom: 16)
-        stack.background = WindowsTheme.brush(25, 27, 34, alpha: 238)
+        stack.background = WindowsTheme.makeBrush(red: 25, green: 27, blue: 34, alpha: 238)
 
-        let heading = WindowsTheme.text("\(presentation.layer.displayName) layer", size: 20)
+        let heading = WindowsTheme.makeText(text: "\(presentation.layer.displayName) layer", size: 20)
         heading.fontWeight = FontWeights.semiBold
         stack.children.append(heading)
-        stack.children.append(WindowsKeymapSurface(
-            definition: definition,
-            activeLayerMask: presentation.activeLayerMask,
-            scale: 0.72
-        ).canvas)
+        stack.children.append(
+            WindowsKeymapSurface(
+                definition: definition,
+                activeLayerMask: presentation.activeLayerMask,
+                scale: 0.72
+            ).canvas)
         return stack
     }
 }
