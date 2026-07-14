@@ -16,13 +16,13 @@ struct WindowsHIDDescriptor: Sendable {
     ///
     /// - Returns: An open transport, or `nil` when Windows cannot open the endpoint.
     func makeTransport() -> (any WindowsHIDTransport)? {
-        WindowsHIDTransportImplementation(descriptor: self)
+        NativeWindowsHIDTransport(descriptor: self)
     }
 
     /// Returns all HID endpoints matching QMK's Raw HID usage pair.
     ///
     /// - Returns: The compatible endpoints available at enumeration time.
-    static func allCompatibleDevices() -> [Self] {
+    static func compatibleEndpoints() -> [Self] {
         let box = WindowsHIDEnumerationResultBox()
         let context = Unmanaged.passUnretained(box).toOpaque()
         keymap_hid_enumerate(

@@ -3,27 +3,34 @@ import Foundation
 @testable import KeymapCompanion
 
 /// A transport test double whose input remains blocked while output stays observable.
+///
+/// ``lock`` protects captured reports. Semaphores coordinate the read, write,
+/// cancellation, and destruction operations without sharing mutable state.
 final class BlockingReadHIDTransport: WindowsHIDTransport, @unchecked Sendable {
-    /// The lock protecting captured reports and lifecycle state.
+    /// The lock protecting captured reports.
     private let lock = NSLock()
 
     /// The signal that releases the simulated blocking read.
     private let readCancellation = DispatchSemaphore(value: 0)
 
+    /// The signal emitted when the simulated read begins blocking.
+    private let readStarted = DispatchSemaphore(value: 0)
+
     /// The signal emitted for every captured output report.
     private let writeCompleted = DispatchSemaphore(value: 0)
 
+    /// The signal emitted when the transport is destroyed.
+    private let destructionCompleted = DispatchSemaphore(value: 0)
+
     /// The captured output reports.
     private var reports: [[UInt8]] = []
-
-    /// Whether the transport has been destroyed.
-    private var isDestroyed = false
 
     /// Blocks until cancellation and then reports a transport error.
     ///
     /// - Parameter buffer: Unused input storage.
     /// - Returns: A negative transport result after cancellation.
     func readReport(into buffer: UnsafeMutableBufferPointer<UInt8>) -> Int32 {
+        readStarted.signal()
         readCancellation.wait()
         return -1
     }
@@ -47,26 +54,35 @@ final class BlockingReadHIDTransport: WindowsHIDTransport, @unchecked Sendable {
 
     /// Records native-resource destruction.
     func destroy() {
-        lock.withLock {
-            isDestroyed = true
-        }
+        destructionCompleted.signal()
+    }
+
+    /// Waits until the input operation has started blocking.
+    ///
+    /// - Parameter deadline: The absolute deadline for the wait.
+    /// - Returns: `true` when the read starts before the deadline.
+    func waitForRead(until deadline: DispatchTime) -> Bool {
+        readStarted.wait(timeout: deadline) == .success
     }
 
     /// Waits for the next output report.
     ///
-    /// - Parameter timeout: The maximum wait duration.
-    /// - Returns: `true` when a report arrives before the timeout.
-    func waitForWrite(timeout: DispatchTime) -> Bool {
-        writeCompleted.wait(timeout: timeout) == .success
+    /// - Parameter deadline: The absolute deadline for the wait.
+    /// - Returns: `true` when a report arrives before the deadline.
+    func waitForWrite(until deadline: DispatchTime) -> Bool {
+        writeCompleted.wait(timeout: deadline) == .success
+    }
+
+    /// Waits until the session destroys the transport.
+    ///
+    /// - Parameter deadline: The absolute deadline for the wait.
+    /// - Returns: `true` when destruction finishes before the deadline.
+    func waitForDestruction(until deadline: DispatchTime) -> Bool {
+        destructionCompleted.wait(timeout: deadline) == .success
     }
 
     /// The reports captured so far.
     var capturedReports: [[UInt8]] {
         lock.withLock { reports }
-    }
-
-    /// Whether session cleanup destroyed the transport.
-    var wasDestroyed: Bool {
-        lock.withLock { isDestroyed }
     }
 }

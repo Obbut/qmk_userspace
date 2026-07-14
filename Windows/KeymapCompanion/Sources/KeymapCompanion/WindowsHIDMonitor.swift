@@ -7,11 +7,8 @@ import KeymapCompanionCore
 /// All mutable monitor state is confined to ``queue``. Individual sessions own their
 /// blocking read and serialized write paths independently.
 final class WindowsHIDMonitor: @unchecked Sendable {
-    /// A receiver for hardware lifecycle and state events.
-    typealias EventHandler = @Sendable (_ event: KeyboardMonitorEvent) -> Void
-
     /// The receiver for hardware lifecycle and state events.
-    private let eventHandler: EventHandler
+    private let eventHandler: @Sendable (_ event: KeyboardMonitorEvent) -> Void
 
     /// The serial queue that confines monitor state.
     private let queue = DispatchQueue(label: "KeymapCompanion.WindowsHIDMonitor")
@@ -28,7 +25,7 @@ final class WindowsHIDMonitor: @unchecked Sendable {
     /// Creates a Windows HID monitor.
     ///
     /// - Parameter eventHandler: The receiver for hardware lifecycle and state events.
-    init(eventHandler: @escaping EventHandler) {
+    init(eventHandler: @escaping @Sendable (_ event: KeyboardMonitorEvent) -> Void) {
         self.eventHandler = eventHandler
     }
 
@@ -84,7 +81,7 @@ final class WindowsHIDMonitor: @unchecked Sendable {
 
     /// Reconciles open sessions with the currently enumerated device paths.
     private func scan() {
-        let descriptors = WindowsHIDDescriptor.allCompatibleDevices()
+        let descriptors = WindowsHIDDescriptor.compatibleEndpoints()
         let paths = Set(descriptors.map(\.path))
 
         for path in Array(sessions.keys) where !paths.contains(path) {

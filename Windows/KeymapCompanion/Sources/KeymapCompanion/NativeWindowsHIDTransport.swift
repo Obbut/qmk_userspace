@@ -4,7 +4,7 @@ import CWindowsHID
 ///
 /// The owning session guarantees a single reader, a single serialized writer, and destruction
 /// only after both operation paths have drained.
-final class WindowsHIDTransportImplementation: WindowsHIDTransport, @unchecked Sendable {
+final class NativeWindowsHIDTransport: WindowsHIDTransport, @unchecked Sendable {
     /// The native Windows HID handle.
     private let handle: OpaquePointer
 

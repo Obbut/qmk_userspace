@@ -14,12 +14,29 @@ func lightingWriteDoesNotWaitForBlockingRead() {
     )
 
     session.start()
-    #expect(transport.waitForWrite(timeout: .now() + .seconds(1)))
+    #expect(transport.waitForRead(until: .now() + .seconds(1)))
+    #expect(transport.waitForWrite(until: .now() + .seconds(1)))
 
     session.applyRGBSettings(.default)
-    #expect(transport.waitForWrite(timeout: .now() + .seconds(1)))
+    #expect(transport.waitForWrite(until: .now() + .seconds(1)))
     #expect(transport.capturedReports.count == 2)
     #expect(transport.capturedReports.last?[5] == 7)
 
     session.close()
+    #expect(transport.waitForDestruction(until: .now() + .seconds(1)))
+}
+
+/// Verifies an unstarted session still releases its owned native transport.
+@Test
+func closingUnstartedSessionDestroysTransport() {
+    let transport = BlockingReadHIDTransport()
+    let session = WindowsHIDSession(
+        path: "unstarted-test-device",
+        transport: transport,
+        eventHandler: { _ in }
+    )
+
+    session.close()
+
+    #expect(transport.waitForDestruction(until: .now() + .seconds(1)))
 }

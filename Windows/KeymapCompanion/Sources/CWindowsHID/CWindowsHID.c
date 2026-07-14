@@ -127,7 +127,7 @@ keymap_hid_handle *keymap_hid_open(
         FILE_SHARE_READ | FILE_SHARE_WRITE,
         NULL,
         OPEN_EXISTING,
-        0,
+        FILE_FLAG_OVERLAPPED,
         NULL
     );
     if (file == INVALID_HANDLE_VALUE) {
@@ -153,12 +153,19 @@ int32_t keymap_hid_read_report(
     if (handle == NULL || report == NULL || report_length == 0) {
         return -1;
     }
+    if (InterlockedCompareExchange(&handle->cancelled, 0, 0) != 0) {
+        return -2;
+    }
     uint32_t wire_length = handle->input_report_length;
     if (wire_length < report_length || wire_length > 1024) {
         return -1;
     }
-    uint8_t *wire_report = calloc(wire_length, 1);
-    if (wire_report == NULL) {
+    uint8_t wire_report[1024] = {0};
+
+    OVERLAPPED overlapped;
+    memset(&overlapped, 0, sizeof(overlapped));
+    overlapped.hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+    if (overlapped.hEvent == NULL) {
         return -1;
     }
 
@@ -168,12 +175,30 @@ int32_t keymap_hid_read_report(
         wire_report,
         wire_length,
         &bytes_read,
-        NULL
+        &overlapped
     );
     if (!succeeded) {
         DWORD error = GetLastError();
-        free(wire_report);
-        return error == ERROR_OPERATION_ABORTED ? -2 : -1;
+        if (error == ERROR_IO_PENDING) {
+            succeeded = GetOverlappedResult(
+                handle->file,
+                &overlapped,
+                &bytes_read,
+                TRUE
+            );
+            if (!succeeded) {
+                error = GetLastError();
+            }
+        }
+        CloseHandle(overlapped.hEvent);
+        if (succeeded) {
+            error = ERROR_SUCCESS;
+        }
+        if (error != ERROR_SUCCESS) {
+            return error == ERROR_OPERATION_ABORTED ? -2 : -1;
+        }
+    } else {
+        CloseHandle(overlapped.hEvent);
     }
 
     if (bytes_read == report_length + 1 && wire_report[0] == 0) {
@@ -181,10 +206,8 @@ int32_t keymap_hid_read_report(
     } else if (bytes_read >= report_length) {
         memcpy(report, wire_report, report_length);
     } else {
-        free(wire_report);
         return -1;
     }
-    free(wire_report);
     return (int32_t)report_length;
 }
 
@@ -196,16 +219,23 @@ int32_t keymap_hid_write_report(
     if (handle == NULL || report == NULL || report_length == 0) {
         return -1;
     }
+    if (InterlockedCompareExchange(&handle->cancelled, 0, 0) != 0) {
+        return -2;
+    }
     uint32_t wire_length = handle->output_report_length;
     if (wire_length < report_length || wire_length > 1024) {
         return -1;
     }
-    uint8_t *wire_report = calloc(wire_length, 1);
-    if (wire_report == NULL) {
-        return -1;
-    }
+    uint8_t wire_report[1024] = {0};
     uint32_t offset = wire_length == report_length + 1 ? 1 : 0;
     memcpy(wire_report + offset, report, report_length);
+
+    OVERLAPPED overlapped;
+    memset(&overlapped, 0, sizeof(overlapped));
+    overlapped.hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+    if (overlapped.hEvent == NULL) {
+        return -1;
+    }
 
     DWORD bytes_written = 0;
     BOOL succeeded = WriteFile(
@@ -213,9 +243,17 @@ int32_t keymap_hid_write_report(
         wire_report,
         wire_length,
         &bytes_written,
-        NULL
+        &overlapped
     );
-    free(wire_report);
+    if (!succeeded && GetLastError() == ERROR_IO_PENDING) {
+        succeeded = GetOverlappedResult(
+            handle->file,
+            &overlapped,
+            &bytes_written,
+            TRUE
+        );
+    }
+    CloseHandle(overlapped.hEvent);
     return succeeded && bytes_written == wire_length ? (int32_t)report_length : -1;
 }
 

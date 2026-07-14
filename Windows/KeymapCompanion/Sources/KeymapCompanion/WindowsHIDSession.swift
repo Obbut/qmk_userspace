@@ -26,10 +26,10 @@ final class WindowsHIDSession: @unchecked Sendable {
     private let stateLock = NSLock()
 
     /// Whether cancellation has started.
-    private var isClosedState = false
+    private var isClosingStorage = false
 
     /// Whether the blocking read loop has started.
-    private var isStarted = false
+    private var hasStartedReadLoop = false
 
     /// The platform-neutral transfer engine.
     private var transferSession = KeymapTransferSession()
@@ -66,8 +66,8 @@ final class WindowsHIDSession: @unchecked Sendable {
     /// Starts the keymap handshake and blocking input loop once.
     func start() {
         let shouldStart = stateLock.withLock {
-            guard !isClosedState, !isStarted else { return false }
-            isStarted = true
+            guard !isClosingStorage, !hasStartedReadLoop else { return false }
+            hasStartedReadLoop = true
             return true
         }
         guard shouldStart else { return }
@@ -86,7 +86,7 @@ final class WindowsHIDSession: @unchecked Sendable {
     /// - Parameter settings: The complete base-layer configuration to persist.
     func applyRGBSettings(_ settings: RGBSettings) {
         let request = stateLock.withLock { () -> [UInt8]? in
-            guard !isClosedState else { return nil }
+            guard !isClosingStorage else { return nil }
             return transferSession.rgbSettingsRequest(for: settings)
         }
         guard let request else { return }
@@ -95,32 +95,37 @@ final class WindowsHIDSession: @unchecked Sendable {
 
     /// Cancels input and prevents new output reports.
     func close() {
-        let shouldCancel = stateLock.withLock {
-            guard !isClosedState else { return false }
-            isClosedState = true
-            return true
+        let shouldDestroyWithoutReadLoop = stateLock.withLock { () -> Bool? in
+            guard !isClosingStorage else { return nil }
+            isClosingStorage = true
+            return !hasStartedReadLoop
         }
-        if shouldCancel {
-            transport.cancel()
+        guard let shouldDestroyWithoutReadLoop else { return }
+
+        transport.cancel()
+        if shouldDestroyWithoutReadLoop {
+            writeQueue.async { [transport] in
+                transport.destroy()
+            }
         }
     }
 
     /// Returns whether cancellation has started.
-    private var isClosed: Bool {
-        stateLock.withLock { isClosedState }
+    private var isClosing: Bool {
+        stateLock.withLock { isClosingStorage }
     }
 
     /// Reads and decodes reports until cancellation or transport failure.
     private func readReportsUntilClosed() {
         var report = [UInt8](repeating: 0, count: KeymapProtocol.reportSize)
-        while !isClosed {
+        while !isClosing {
             let result = report.withUnsafeMutableBufferPointer { buffer in
                 transport.readReport(into: buffer)
             }
             if result == Int32(KeymapProtocol.reportSize) {
                 let actions = stateLock.withLock { transferSession.receive(report) }
                 perform(actions)
-            } else if !isClosed {
+            } else if !isClosing {
                 eventHandler(.failed(message: "The keyboard stopped responding over Raw HID."))
                 close()
             }
@@ -150,11 +155,11 @@ final class WindowsHIDSession: @unchecked Sendable {
     /// - Parameter bytes: The complete protocol report to write.
     private func enqueueWrite(_ bytes: [UInt8]) {
         writeQueue.async { [self] in
-            guard !isClosed else { return }
+            guard !isClosing else { return }
             let result = bytes.withUnsafeBufferPointer { buffer in
                 transport.writeReport(buffer)
             }
-            if result != Int32(bytes.count), !isClosed {
+            if result != Int32(bytes.count), !isClosing {
                 eventHandler(.failed(message: "Could not write to the keyboard's Raw HID endpoint."))
             }
         }
