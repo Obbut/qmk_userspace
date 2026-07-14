@@ -1,46 +1,38 @@
-import CWindowsHID
 import Dispatch
 import Foundation
 import KeymapCompanionCore
 
-/// Main-actor adapter that satisfies the shared hardware dependency while the
-/// underlying Windows HID monitor keeps blocking reads on private queues.
-@MainActor
-final class WindowsKeyboardHardwareClient: KeyboardHardwareClient {
-    private var eventHandler: @MainActor @Sendable (KeyboardMonitorEvent) -> Void = { _ in }
-    private lazy var monitor = WindowsHIDMonitor { [weak self] event in
-        DispatchQueue.main.async { [weak self] in
-            self?.eventHandler(event)
-        }
-    }
-
-    func setEventHandler(
-        _ handler: @escaping @MainActor @Sendable (KeyboardMonitorEvent) -> Void
-    ) {
-        eventHandler = handler
-    }
-
-    func start() { monitor.start() }
-    func restart() { monitor.restart() }
-    func applyRGBSettings(_ settings: RGBSettings) { monitor.applyRGBSettings(settings) }
-    func stop() { monitor.stop() }
-}
-
-/// Discovers QMK Raw HID endpoints with Windows SetupAPI and feeds their packets
-/// through the platform-neutral keymap transfer engine.
+/// A serially coordinated monitor for compatible Windows Raw HID endpoints.
+///
+/// All mutable monitor state is confined to ``queue``. Individual sessions own their
+/// blocking read and serialized write paths independently.
 final class WindowsHIDMonitor: @unchecked Sendable {
-    typealias EventHandler = @Sendable (KeyboardMonitorEvent) -> Void
+    /// A receiver for hardware lifecycle and state events.
+    typealias EventHandler = @Sendable (_ event: KeyboardMonitorEvent) -> Void
 
+    /// The receiver for hardware lifecycle and state events.
     private let eventHandler: EventHandler
+
+    /// The serial queue that confines monitor state.
     private let queue = DispatchQueue(label: "KeymapCompanion.WindowsHIDMonitor")
+
+    /// The periodic device-enumeration timer.
     private var timer: DispatchSourceTimer?
+
+    /// Open sessions keyed by Windows device path.
     private var sessions: [String: WindowsHIDSession] = [:]
+
+    /// The path currently supplying visible keyboard state.
     private var activePath: String?
 
+    /// Creates a Windows HID monitor.
+    ///
+    /// - Parameter eventHandler: The receiver for hardware lifecycle and state events.
     init(eventHandler: @escaping EventHandler) {
         self.eventHandler = eventHandler
     }
 
+    /// Starts periodic compatible-device discovery.
     func start() {
         queue.async { [self] in
             guard timer == nil else { return }
@@ -54,9 +46,12 @@ final class WindowsHIDMonitor: @unchecked Sendable {
         }
     }
 
+    /// Closes existing sessions and immediately starts a fresh discovery pass.
     func restart() {
         queue.async { [self] in
-            sessions.values.forEach { $0.close() }
+            for session in sessions.values {
+                session.close()
+            }
             sessions.removeAll()
             activePath = nil
             eventHandler(.searching)
@@ -64,16 +59,22 @@ final class WindowsHIDMonitor: @unchecked Sendable {
         }
     }
 
+    /// Stops discovery and closes every active HID session.
     func stop() {
         queue.async { [self] in
             timer?.cancel()
             timer = nil
-            sessions.values.forEach { $0.close() }
+            for session in sessions.values {
+                session.close()
+            }
             sessions.removeAll()
             activePath = nil
         }
     }
 
+    /// Persists an RGB Matrix configuration to the active keyboard.
+    ///
+    /// - Parameter settings: The complete base-layer configuration to persist.
     func applyRGBSettings(_ settings: RGBSettings) {
         queue.async { [self] in
             guard let activePath, let session = sessions[activePath] else { return }
@@ -81,8 +82,9 @@ final class WindowsHIDMonitor: @unchecked Sendable {
         }
     }
 
+    /// Reconciles open sessions with the currently enumerated device paths.
     private func scan() {
-        let descriptors = WindowsHIDDescriptor.enumerate()
+        let descriptors = WindowsHIDDescriptor.allCompatibleDevices()
         let paths = Set(descriptors.map(\.path))
 
         for path in Array(sessions.keys) where !paths.contains(path) {
@@ -95,19 +97,26 @@ final class WindowsHIDMonitor: @unchecked Sendable {
         }
 
         for descriptor in descriptors where sessions[descriptor.path] == nil {
-            guard let session = WindowsHIDSession(
-                descriptor: descriptor,
+            guard let transport = descriptor.makeTransport() else { continue }
+            let session = WindowsHIDSession(
+                path: descriptor.path,
+                transport: transport,
                 eventHandler: { [weak self, path = descriptor.path] event in
                     guard let monitor = self else { return }
-                    monitor.queue.async { monitor.receive(event, from: path) }
+                    monitor.queue.async { monitor.receive(event, fromDeviceAt: path) }
                 }
-            ) else { continue }
+            )
             sessions[descriptor.path] = session
             session.start()
         }
     }
 
-    private func receive(_ event: KeyboardMonitorEvent, from path: String) {
+    /// Publishes an event received from an open device session.
+    ///
+    /// - Parameters:
+    ///   - event: The validated session event.
+    ///   - path: The device path that produced the event.
+    private func receive(_ event: KeyboardMonitorEvent, fromDeviceAt path: String) {
         guard sessions[path] != nil else { return }
         switch event {
         case .keymap, .state:
@@ -120,6 +129,7 @@ final class WindowsHIDMonitor: @unchecked Sendable {
         eventHandler(event)
     }
 
+    /// Selects a fully initialized replacement session or publishes disconnection.
     private func selectReplacementOrDisconnect() {
         if let replacement = sessions.values.first(where: {
             $0.latestKeymap != nil && $0.latestReport != nil
@@ -129,153 +139,6 @@ final class WindowsHIDMonitor: @unchecked Sendable {
             eventHandler(.state(report))
         } else {
             eventHandler(.disconnected)
-        }
-    }
-}
-
-private struct WindowsHIDDescriptor: Sendable {
-    let path: String
-    let inputReportLength: UInt16
-    let outputReportLength: UInt16
-
-    static func enumerate() -> [Self] {
-        final class ResultBox {
-            var descriptors: [WindowsHIDDescriptor] = []
-        }
-
-        let box = ResultBox()
-        let context = Unmanaged.passUnretained(box).toOpaque()
-        keymap_hid_enumerate(
-            UInt16(KeymapProtocol.usagePage),
-            UInt16(KeymapProtocol.usage),
-            { path, inputLength, outputLength, context in
-                guard let path, let context else { return }
-                let box = Unmanaged<ResultBox>.fromOpaque(context).takeUnretainedValue()
-                box.descriptors.append(
-                    WindowsHIDDescriptor(
-                        path: String(decodingCString: path, as: UTF16.self),
-                        inputReportLength: inputLength,
-                        outputReportLength: outputLength
-                    )
-                )
-            },
-            context
-        )
-        return box.descriptors
-    }
-}
-
-/// Owns one blocking Windows HID read loop. All transfer-engine mutations happen
-/// on `queue`; cancellation is safe from the monitor queue.
-private final class WindowsHIDSession: @unchecked Sendable {
-    let path: String
-
-    private let eventHandler: @Sendable (KeyboardMonitorEvent) -> Void
-    private let queue: DispatchQueue
-    private let handle: OpaquePointer
-    private let stateLock = NSLock()
-    private var isClosed = false
-    private var transferSession = KeymapTransferSession()
-
-    var latestKeymap: FirmwareKeymap? {
-        stateLock.withLock { transferSession.latestKeymap }
-    }
-
-    var latestReport: KeyboardStateReport? {
-        stateLock.withLock { transferSession.latestReport }
-    }
-
-    init?(
-        descriptor: WindowsHIDDescriptor,
-        eventHandler: @escaping @Sendable (KeyboardMonitorEvent) -> Void
-    ) {
-        let pathUnits = Array(descriptor.path.utf16) + [0]
-        let opened = pathUnits.withUnsafeBufferPointer { pathBuffer in
-            keymap_hid_open(
-                pathBuffer.baseAddress,
-                descriptor.inputReportLength,
-                descriptor.outputReportLength
-            )
-        }
-        guard let opened else { return nil }
-
-        path = descriptor.path
-        self.eventHandler = eventHandler
-        queue = DispatchQueue(label: "KeymapCompanion.HIDSession.\(descriptor.path.hashValue)")
-        handle = opened
-    }
-
-    func start() {
-        queue.async { [self] in
-            stateLock.lock()
-            let actions = transferSession.start()
-            stateLock.unlock()
-            handleActions(actions)
-            readLoop()
-            keymap_hid_destroy(handle)
-        }
-    }
-
-    func applyRGBSettings(_ settings: RGBSettings) {
-        queue.async { [self] in
-            guard !closed else { return }
-            send(transferSession.rgbSettingsRequest(for: settings))
-        }
-    }
-
-    func close() {
-        let shouldCancel = stateLock.withLock {
-            guard !isClosed else { return false }
-            isClosed = true
-            return true
-        }
-        if shouldCancel { keymap_hid_cancel(handle) }
-    }
-
-    private var closed: Bool {
-        stateLock.withLock { isClosed }
-    }
-
-    private func readLoop() {
-        var report = [UInt8](repeating: 0, count: KeymapProtocol.reportSize)
-        while !closed {
-            let result = report.withUnsafeMutableBufferPointer { buffer in
-                keymap_hid_read_report(handle, buffer.baseAddress, UInt32(buffer.count))
-            }
-            if result == Int32(KeymapProtocol.reportSize) {
-                stateLock.lock()
-                let actions = transferSession.receive(report)
-                stateLock.unlock()
-                handleActions(actions)
-            } else if !closed {
-                eventHandler(.failed(message: "The keyboard stopped responding over Raw HID."))
-                close()
-            }
-        }
-    }
-
-    private func handleActions(_ actions: [KeymapSessionAction]) {
-        for action in actions {
-            switch action {
-            case let .write(bytes):
-                send(bytes)
-            case let .keymap(keymap):
-                eventHandler(.keymap(keymap))
-            case let .state(report):
-                eventHandler(.state(report))
-            case let .failed(message):
-                eventHandler(.failed(message: message))
-            }
-        }
-    }
-
-    private func send(_ bytes: [UInt8]) {
-        guard !closed else { return }
-        let result = bytes.withUnsafeBufferPointer { buffer in
-            keymap_hid_write_report(handle, buffer.baseAddress, UInt32(buffer.count))
-        }
-        if result != Int32(bytes.count), !closed {
-            eventHandler(.failed(message: "Could not write to the keyboard's Raw HID endpoint."))
         }
     }
 }

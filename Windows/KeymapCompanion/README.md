@@ -46,8 +46,8 @@ Windows\KeymapCompanion\.build\x86_64-unknown-windows-msvc\release
 ```
 
 Launch `KeymapCompanion.exe` from the selected directory. The required Swift
-6.3.3 runtime DLLs are staged beside the executable automatically. Release
-builds use the Windows GUI subsystem, and both configurations embed a
+6.3.3 runtime DLLs are staged beside the executable automatically. Both
+configurations use the Windows GUI subsystem and embed a
 per-monitor-v2 DPI manifest for sharp rendering at non-100% display scaling.
 
 ## Controls and behavior
