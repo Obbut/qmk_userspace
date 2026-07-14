@@ -5,9 +5,9 @@ import KeymapCompanionCore
 
 /// Discovers QMK Raw HID endpoints and keeps their state callbacks on the main run loop.
 @MainActor
-final class KeyboardHIDMonitor {
+final class KeyboardHIDMonitor: KeyboardHardwareClient {
     /// Receives validated device-monitor events on the main actor.
-    var eventHandler: @MainActor (KeyboardMonitorEvent) -> Void = { _ in }
+    private var eventHandler: @MainActor @Sendable (KeyboardMonitorEvent) -> Void = { _ in }
 
     /// The macOS HID manager retained for the application's lifetime.
     private let manager: IOHIDManager
@@ -29,6 +29,12 @@ final class KeyboardHIDMonitor {
             kIOHIDDeviceUsageKey: KeymapProtocol.usage
         ]
         IOHIDManagerSetDeviceMatching(manager, matching as CFDictionary)
+    }
+
+    func setEventHandler(
+        _ handler: @escaping @MainActor @Sendable (KeyboardMonitorEvent) -> Void
+    ) {
+        eventHandler = handler
     }
 
     /// Opens the manager and begins discovery on the main run loop.
@@ -77,7 +83,7 @@ final class KeyboardHIDMonitor {
     }
 
     /// Unschedules the manager and releases every open device endpoint.
-    private func stop() {
+    func stop() {
         guard isRunning else { return }
 
         sessions.values.forEach { $0.close() }
