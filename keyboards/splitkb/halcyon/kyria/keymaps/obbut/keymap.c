@@ -77,6 +77,12 @@ layer_state_t layer_state_set_user(layer_state_t state) {
     return obbut_layer_state_set(state);
 }
 
+#if defined(RAW_ENABLE)
+void raw_hid_receive(uint8_t *data, uint8_t length) {
+    obbut_raw_hid_receive(data, length);
+}
+#endif
+
 #if defined(RGB_MATRIX_ENABLE)
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
     return obbut_rgb_matrix_indicators(led_min, led_max);

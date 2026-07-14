@@ -6,6 +6,10 @@ Personal QMK firmware for four keyboards:
 - **Keychron Q15 Max** - Ortholinear with Bluetooth/2.4GHz wireless
 - **ZSA Planck EZ Glow** - 4x12 ortholinear with Colemak-DH
 
+## Keymap Companion for macOS
+
+The repository includes a native macOS 27 menu-bar app that visualizes the connected Kyria or Elora and follows QMK layer changes in realtime. See [macOS/KeymapCompanion/README.md](macOS/KeymapCompanion/README.md) for build, flashing, and protocol details.
+
 ## Kyria Rev4 (Halcyon)
 
 Split ergonomic keyboard with asymmetric modules:

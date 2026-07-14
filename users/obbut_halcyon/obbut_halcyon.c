@@ -3,6 +3,108 @@
 
 #include "obbut_halcyon.h"
 
+#if defined(RAW_ENABLE)
+#    include "raw_hid.h"
+#endif
+
+// ============== KEYMAP COMPANION PROTOCOL ==============
+
+#if defined(RAW_ENABLE)
+
+#    define OBBUT_HID_MAGIC_0 'K'
+#    define OBBUT_HID_MAGIC_1 'M'
+#    define OBBUT_HID_MAGIC_2 'A'
+#    define OBBUT_HID_MAGIC_3 'P'
+#    define OBBUT_HID_PROTOCOL_VERSION 1
+#    define OBBUT_HID_GET_STATE 1
+#    define OBBUT_HID_STATE 2
+#    define OBBUT_HID_REPORT_SIZE 32
+#    define OBBUT_HID_CAPABILITY_LAYER_STATE (1UL << 0)
+#    define OBBUT_HID_MINIMUM_SEND_INTERVAL 5
+
+static bool     keymap_companion_connected       = false;
+static bool     keymap_companion_state_is_dirty  = true;
+static uint32_t keymap_companion_sequence         = 0;
+static uint32_t keymap_companion_last_send         = 0;
+static uint32_t keymap_companion_last_layer_state  = UINT32_MAX;
+static uint32_t keymap_companion_last_default_layer_state = UINT32_MAX;
+
+static uint8_t keymap_companion_keyboard_kind(void) {
+#    if defined(KEYBOARD_splitkb_halcyon_kyria_rev4)
+    return 1;
+#    elif defined(KEYBOARD_splitkb_halcyon_elora_rev2)
+    return 2;
+#    else
+    return 0;
+#    endif
+}
+
+static void keymap_companion_write_u32(uint8_t *data, uint8_t offset, uint32_t value) {
+    data[offset]     = (uint8_t)(value & 0xFF);
+    data[offset + 1] = (uint8_t)((value >> 8) & 0xFF);
+    data[offset + 2] = (uint8_t)((value >> 16) & 0xFF);
+    data[offset + 3] = (uint8_t)((value >> 24) & 0xFF);
+}
+
+static bool keymap_companion_has_valid_header(const uint8_t *data, uint8_t length) {
+    return length == OBBUT_HID_REPORT_SIZE && data[0] == OBBUT_HID_MAGIC_0 && data[1] == OBBUT_HID_MAGIC_1 && data[2] == OBBUT_HID_MAGIC_2 && data[3] == OBBUT_HID_MAGIC_3 && data[4] == OBBUT_HID_PROTOCOL_VERSION;
+}
+
+static void keymap_companion_send_state(void) {
+    uint8_t  response[OBBUT_HID_REPORT_SIZE] = {0};
+    uint32_t current_layer_state         = (uint32_t)layer_state;
+    uint32_t current_default_layer_state = (uint32_t)default_layer_state;
+
+    response[0] = OBBUT_HID_MAGIC_0;
+    response[1] = OBBUT_HID_MAGIC_1;
+    response[2] = OBBUT_HID_MAGIC_2;
+    response[3] = OBBUT_HID_MAGIC_3;
+    response[4] = OBBUT_HID_PROTOCOL_VERSION;
+    response[5] = OBBUT_HID_STATE;
+    response[6] = keymap_companion_keyboard_kind();
+    response[7] = get_highest_layer(layer_state | default_layer_state);
+    keymap_companion_write_u32(response, 8, current_layer_state);
+    keymap_companion_write_u32(response, 12, current_default_layer_state);
+    keymap_companion_write_u32(response, 16, ++keymap_companion_sequence);
+    keymap_companion_write_u32(response, 20, OBBUT_HID_CAPABILITY_LAYER_STATE);
+
+    raw_hid_send(response, OBBUT_HID_REPORT_SIZE);
+    keymap_companion_last_send                = timer_read32();
+    keymap_companion_last_layer_state         = current_layer_state;
+    keymap_companion_last_default_layer_state = current_default_layer_state;
+    keymap_companion_state_is_dirty           = false;
+}
+
+void obbut_raw_hid_receive(uint8_t *data, uint8_t length) {
+    if (!is_keyboard_master() || !keymap_companion_has_valid_header(data, length)) {
+        return;
+    }
+
+    if (data[5] == OBBUT_HID_GET_STATE) {
+        keymap_companion_connected = true;
+        keymap_companion_send_state();
+    }
+}
+
+static void keymap_companion_housekeeping_task(void) {
+    uint32_t current_layer_state         = (uint32_t)layer_state;
+    uint32_t current_default_layer_state = (uint32_t)default_layer_state;
+
+    if (!is_keyboard_master() || !keymap_companion_connected) {
+        return;
+    }
+
+    if (current_layer_state != keymap_companion_last_layer_state || current_default_layer_state != keymap_companion_last_default_layer_state) {
+        keymap_companion_state_is_dirty = true;
+    }
+
+    if (keymap_companion_state_is_dirty && timer_elapsed32(keymap_companion_last_send) >= OBBUT_HID_MINIMUM_SEND_INTERVAL) {
+        keymap_companion_send_state();
+    }
+}
+
+#endif
+
 // ============== POINTING DEVICE SETTINGS ==============
 
 #ifndef SCROLL_DIVISOR_H
@@ -50,6 +152,10 @@ void obbut_housekeeping_task(void) {
             }
         }
     }
+
+#if defined(RAW_ENABLE)
+    keymap_companion_housekeeping_task();
+#endif
 }
 
 // ============== OS DETECTION ==============
@@ -138,6 +244,9 @@ layer_state_t obbut_layer_state_set(layer_state_t state) {
     if (get_highest_layer(state) != _FUNCTION) {
         rgb_preview_mode = false;
     }
+#if defined(RAW_ENABLE)
+    keymap_companion_state_is_dirty = true;
+#endif
     return state;
 }
 

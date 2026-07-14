@@ -2,3 +2,4 @@
 # This file is included via VPATH in keymap rules.mk
 
 SRC += obbut_halcyon.c
+RAW_ENABLE = yes

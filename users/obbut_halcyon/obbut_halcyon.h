@@ -174,6 +174,10 @@ void obbut_housekeeping_task(void);
 bool obbut_process_record(uint16_t keycode, keyrecord_t *record);
 layer_state_t obbut_layer_state_set(layer_state_t state);
 
+#if defined(RAW_ENABLE)
+void obbut_raw_hid_receive(uint8_t *data, uint8_t length);
+#endif
+
 #if defined(RGB_MATRIX_ENABLE)
 bool obbut_rgb_matrix_indicators(uint8_t led_min, uint8_t led_max);
 #endif
