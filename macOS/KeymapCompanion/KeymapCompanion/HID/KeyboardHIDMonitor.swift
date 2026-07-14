@@ -79,7 +79,7 @@ final class KeyboardHIDMonitor {
         isRunning = false
     }
 
-    /// Opens a newly matched Raw HID endpoint and requests current state.
+    /// Opens a newly matched Raw HID endpoint and starts its keymap transfer.
     /// - Parameter device: The matched IOHID device.
     private func add(_ device: IOHIDDevice) {
         let id = ObjectIdentifier(device)
@@ -88,7 +88,7 @@ final class KeyboardHIDMonitor {
         let session = HIDDeviceSession(device: device, monitor: self)
         guard session.open() == kIOReturnSuccess else { return }
         sessions[id] = session
-        session.requestCurrentState()
+        session.requestKeymapMetadata()
     }
 
     /// Removes a device endpoint and updates visible connection state when needed.
@@ -100,9 +100,13 @@ final class KeyboardHIDMonitor {
 
         guard activeSessionID == id else { return }
         activeSessionID = nil
-        if let replacement = sessions.first(where: { $0.value.latestReport != nil }),
+        if let replacement = sessions.first(where: {
+            $0.value.latestReport != nil && $0.value.latestKeymap != nil
+        }),
+           let keymap = replacement.value.latestKeymap,
            let report = replacement.value.latestReport {
             activeSessionID = replacement.key
+            eventHandler(.keymap(keymap))
             eventHandler(.state(report))
         } else {
             eventHandler(.disconnected)
@@ -120,6 +124,21 @@ final class KeyboardHIDMonitor {
         eventHandler(.state(report))
     }
 
+    /// Accepts a complete keymap from one open session.
+    /// - Parameters:
+    ///   - keymap: The downloaded and fingerprint-validated keymap.
+    ///   - session: The endpoint that delivered it.
+    fileprivate func receive(_ keymap: FirmwareKeymap, from session: HIDDeviceSession) {
+        activeSessionID = ObjectIdentifier(session.device)
+        eventHandler(.keymap(keymap))
+    }
+
+    /// Surfaces a malformed or inconsistent firmware transfer.
+    /// - Parameter message: The transfer validation failure.
+    fileprivate func receiveTransferFailure(_ message: String) {
+        eventHandler(.failed(message))
+    }
+
 }
 
 /// One open QMK Raw HID endpoint and its stable input-report buffer.
@@ -131,6 +150,9 @@ private final class HIDDeviceSession {
     /// The most recent compatible packet received on this endpoint.
     var latestReport: KeyboardStateReport?
 
+    /// The complete keymap most recently downloaded from this endpoint.
+    var latestKeymap: FirmwareKeymap?
+
     /// The monitor that owns this session.
     private weak var monitor: KeyboardHIDMonitor?
 
@@ -139,6 +161,12 @@ private final class HIDDeviceSession {
 
     /// Whether the endpoint is currently open.
     private var isOpen = false
+
+    /// Metadata for the keymap transfer currently in progress.
+    private var keymapMetadata: KeymapMetadataReport?
+
+    /// Consecutive entries accumulated for the current transfer.
+    private var keymapEntries: [FirmwareKeymapEntry] = []
 
     /// Creates a device session and allocates its callback buffer.
     /// - Parameters:
@@ -169,14 +197,13 @@ private final class HIDDeviceSession {
             { context, result, _, _, _, report, reportLength in
                 guard result == kIOReturnSuccess,
                       reportLength >= 0,
-                      reportLength <= 32,
+                      reportLength <= KeymapProtocol.reportSize,
                       let context else { return }
                 let bytes = Array(UnsafeBufferPointer(start: report, count: reportLength))
 
                 MainActor.assumeIsolated {
-                    guard let state = KeymapProtocol.parseStateReport(bytes) else { return }
                     let session = Unmanaged<HIDDeviceSession>.fromOpaque(context).takeUnretainedValue()
-                    session.monitor?.receive(state, from: session)
+                    session.receive(bytes)
                 }
             },
             Unmanaged.passUnretained(self).toOpaque()
@@ -185,9 +212,98 @@ private final class HIDDeviceSession {
         return result
     }
 
-    /// Sends the protocol handshake and current-state request.
-    func requestCurrentState() {
-        let request = KeymapProtocol.makeStateRequest()
+    /// Starts the protocol handshake by requesting dimensions and a fingerprint.
+    func requestKeymapMetadata() {
+        send(KeymapProtocol.makeKeymapMetadataRequest())
+    }
+
+    /// Routes one input packet into the state or paginated keymap flow.
+    /// - Parameter bytes: One complete Raw HID input report.
+    private func receive(_ bytes: [UInt8]) {
+        if let metadata = KeymapProtocol.parseKeymapMetadataReport(bytes) {
+            beginKeymapTransfer(metadata)
+            return
+        }
+        if let chunk = KeymapProtocol.parseKeymapChunkReport(bytes) {
+            continueKeymapTransfer(chunk)
+            return
+        }
+        if let state = KeymapProtocol.parseStateReport(bytes) {
+            latestReport = state
+            if latestKeymap?.keyboardKind == state.keyboardKind {
+                monitor?.receive(state, from: self)
+            }
+        }
+    }
+
+    /// Resets transfer state and requests the first page.
+    /// - Parameter metadata: The validated firmware transfer metadata.
+    private func beginKeymapTransfer(_ metadata: KeymapMetadataReport) {
+        keymapMetadata = metadata
+        keymapEntries.removeAll(keepingCapacity: true)
+        keymapEntries.reserveCapacity(metadata.entryCount)
+        requestKeymapChunk(startingAt: 0)
+    }
+
+    /// Validates and appends one page, then requests the next page or publishes the result.
+    /// - Parameter chunk: The decoded keymap page.
+    private func continueKeymapTransfer(_ chunk: KeymapChunkReport) {
+        guard let metadata = keymapMetadata,
+              chunk.keyboardKind == metadata.keyboardKind,
+              chunk.totalEntryCount == metadata.entryCount,
+              chunk.startIndex == keymapEntries.count,
+              chunk.entries.count <= metadata.entriesPerChunk else {
+            monitor?.receiveTransferFailure("Firmware returned an inconsistent keymap chunk.")
+            return
+        }
+
+        keymapEntries.append(contentsOf: chunk.entries)
+        guard keymapEntries.count == metadata.entryCount else {
+            requestKeymapChunk(startingAt: keymapEntries.count)
+            return
+        }
+
+        let keymap = FirmwareKeymap(
+            keyboardKind: metadata.keyboardKind,
+            layerCount: metadata.layerCount,
+            matrixRowCount: metadata.matrixRowCount,
+            matrixColumnCount: metadata.matrixColumnCount,
+            fingerprint: metadata.fingerprint,
+            entries: keymapEntries
+        )
+        guard keymap.hasValidFingerprint else {
+            monitor?.receiveTransferFailure("Firmware keymap fingerprint validation failed.")
+            return
+        }
+
+        latestKeymap = keymap
+        keymapMetadata = nil
+        monitor?.receive(keymap, from: self)
+        if let latestReport, latestReport.keyboardKind == keymap.keyboardKind {
+            monitor?.receive(latestReport, from: self)
+        } else {
+            requestCurrentState()
+        }
+    }
+
+    /// Requests the next transfer page.
+    /// - Parameter startIndex: The first entry expected in the response.
+    private func requestKeymapChunk(startingAt startIndex: Int) {
+        guard let encodedIndex = UInt16(exactly: startIndex) else {
+            monitor?.receiveTransferFailure("Firmware keymap is too large for protocol v2.")
+            return
+        }
+        send(KeymapProtocol.makeKeymapChunkRequest(startingAt: encodedIndex))
+    }
+
+    /// Sends the current-state request after the keymap transfer completes.
+    private func requestCurrentState() {
+        send(KeymapProtocol.makeStateRequest())
+    }
+
+    /// Writes one fixed-size output report to the device.
+    /// - Parameter request: A complete protocol request.
+    private func send(_ request: [UInt8]) {
         request.withUnsafeBufferPointer { buffer in
             guard let baseAddress = buffer.baseAddress else { return }
             _ = IOHIDDeviceSetReport(

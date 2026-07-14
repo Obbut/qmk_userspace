@@ -1,6 +1,6 @@
 # Keymap Companion
 
-Keymap Companion is a native SwiftUI utility for macOS 27. It discovers the Raw HID interface exposed by this userspace's Kyria and Elora firmware, shows the effective keymap, and follows momentary or toggled layers in realtime.
+Keymap Companion is a native SwiftUI utility for macOS 27. It discovers the Raw HID interface exposed by this userspace's Kyria and Elora firmware, downloads the complete compiled keymap, and follows momentary or toggled layers in realtime. The connected firmware is the source of truth for keycodes, semantic overrides, and RGB-inspired styles; the app retains only physical board geometry and generic QMK keycode formatting.
 
 The app has both a normal `WindowGroup` and a `MenuBarExtra`. Closing the main window leaves the same process-level `AppModel` and HID monitor running. Use the keyboard item in the menu bar to reopen the window, retry discovery, or quit.
 
@@ -55,11 +55,22 @@ Then flash each half with the existing commands:
 ./docker-build.sh flash-elora-right
 ```
 
-Once a flashed board enumerates, the app finds QMK's vendor usage page `0xFF60` and usage `0x61`, opens the matching endpoint, and sends a state request. The keyboard identity comes from the validated response, so the host does not depend on hardcoded USB vendor or product IDs.
+Once a flashed board enumerates, the app finds QMK's vendor usage page `0xFF60` and usage `0x61`, opens the matching endpoint, downloads and fingerprint-validates the keymap, and then requests current state. The keyboard identity comes from the validated responses, so the host does not depend on hardcoded USB vendor or product IDs.
 
 ## Protocol
 
-Every Raw HID report is exactly 32 bytes and starts with `KMAP` plus protocol version `1`.
+Every Raw HID report is exactly 32 bytes and starts with `KMAP` plus protocol version `2`.
+
+| Message type | Value | Direction | Purpose |
+|---|---:|---|---|
+| Get state | `1` | Host → firmware | Request immediate layer state |
+| State | `2` | Firmware → host | Current layer masks and capabilities |
+| Get keymap info | `3` | Host → firmware | Begin a complete keymap transfer |
+| Keymap info | `4` | Firmware → host | Matrix dimensions, entry count, and fingerprint |
+| Get keymap chunk | `5` | Host → firmware | Request entries beginning at a 16-bit offset |
+| Keymap chunk | `6` | Firmware → host | Return up to five consecutive entries |
+
+### State packet
 
 | Offset | Size | State packet field |
 |---:|---:|---|
@@ -74,9 +85,47 @@ Every Raw HID report is exactly 32 bytes and starts with `KMAP` plus protocol ve
 | 20 | 4 | Capability flags, little-endian |
 | 24 | 8 | Reserved for future versions |
 
-The app combines both layer masks and resolves transparent keys through the complete active stack. For example, a transparent key on Lower still displays its QWERTY mapping when QWERTY is toggled underneath it.
+Capability bit `0` advertises realtime layer state. Bit `1` advertises firmware keymap reads.
 
-Firmware sends only after a host handshake and only when state changes. The callback marks state dirty; the actual Raw HID write is throttled and performed from QMK's housekeeping task on the USB master.
+### Keymap info packet
+
+| Offset | Size | Field |
+|---:|---:|---|
+| 0 | 4 | ASCII magic `KMAP` |
+| 4 | 1 | Protocol version `2` |
+| 5 | 1 | Message type `4` |
+| 6 | 1 | Keyboard: `1` Kyria, `2` Elora |
+| 7 | 1 | Layer count |
+| 8 | 1 | Matrix row count |
+| 9 | 1 | Matrix column count |
+| 10 | 1 | Entry size: `4` bytes |
+| 11 | 1 | Entries per chunk: `5` |
+| 12 | 4 | FNV-1a keymap fingerprint, little-endian |
+| 16 | 2 | Total entry count, little-endian |
+| 18 | 14 | Reserved for future versions |
+
+The fingerprint covers keyboard kind, dimensions, and every encoded entry. The app rejects an incomplete, reordered, or corrupted transfer.
+
+### Keymap chunk packet
+
+The host writes the desired 16-bit start index at offsets `6...7` of a Get keymap chunk request. The firmware returns:
+
+| Offset | Size | Field |
+|---:|---:|---|
+| 0 | 4 | ASCII magic `KMAP` |
+| 4 | 1 | Protocol version `2` |
+| 5 | 1 | Message type `6` |
+| 6 | 1 | Keyboard kind |
+| 7 | 1 | Entry count in this chunk |
+| 8 | 2 | Start index, little-endian |
+| 10 | 2 | Total entry count, little-endian |
+| 12 | 20 | Up to five four-byte entries |
+
+Each entry contains a 16-bit compiled QMK keycode, a one-byte semantic override, and a one-byte visual style. Entries are ordered by layer, matrix row, then matrix column. Semantic overrides preserve names such as `Screenshot` and `Aerospace` that cannot be recovered from the compiled keycode after C preprocessing.
+
+The app maps the downloaded matrix coordinates onto its physical Kyria or Elora geometry, combines both layer masks, and resolves transparent keys through the complete active stack. For example, a transparent key on Lower still displays its firmware-provided QWERTY mapping when QWERTY is toggled underneath it.
+
+Firmware sends keymap metadata and chunks only in response to host requests. After that handshake, state notifications are sent only when the layer masks change. The layer callback marks state dirty; the actual state write is throttled and performed from QMK's housekeeping task on the USB master.
 
 ## Extension point for OS-driven keymap features
 

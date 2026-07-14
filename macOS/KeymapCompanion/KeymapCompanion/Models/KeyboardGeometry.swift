@@ -8,4 +8,7 @@ struct KeyboardGeometry: Equatable, Sendable {
 
     /// Key positions in the same order as the flattened keymap rows.
     let placements: [PhysicalKeyPlacement]
+
+    /// QMK matrix coordinates in the same order as `placements`.
+    let matrixPositions: [MatrixPosition]
 }

@@ -2,15 +2,14 @@ import SwiftUI
 
 /// A scrollable visualization using the board's real switch centers and rotations.
 struct KeyboardBoardView: View {
-    /// The connected keyboard model.
-    let keyboardKind: KeyboardKind
+    /// The visual definition downloaded from the connected firmware.
+    let definition: KeymapDefinition
 
     /// The complete active-layer mask.
     let activeLayerMask: UInt32
 
     /// The physically positioned board content.
     var body: some View {
-        let definition = KeymapCatalog.definition(for: keyboardKind)
         let activeLayer = KeymapLayer.highestActiveLayer(in: activeLayerMask)
 
         GeometryReader { viewport in
@@ -57,7 +56,7 @@ struct KeyboardBoardView: View {
 #if DEBUG
 #Preview("Elora Physical Raise Board") {
     KeyboardBoardView(
-        keyboardKind: .elora,
+        definition: .preview(for: .elora),
         activeLayerMask: 0b0_1001
     )
     .padding()
@@ -66,29 +65,13 @@ struct KeyboardBoardView: View {
 
 #Preview("Kyria Physical Lower over QWERTY Board") {
     KeyboardBoardView(
-        keyboardKind: .kyria,
+        definition: .preview(for: .kyria),
         activeLayerMask: 0b0_0111
     )
     .padding()
     .frame(width: 1_180, height: 405)
 }
 
-#Preview("Key Cap States") {
-    HStack(spacing: 16) {
-        KeyCap(
-            key: KeymapCatalog.kyria.rows[0].leftKeys[1],
-            activeLayer: .raise,
-            activeLayerMask: 0b0_1001
-        )
-        KeyCap(
-            key: KeymapCatalog.kyria.rows[0].leftKeys[3],
-            activeLayer: .lower,
-            activeLayerMask: 0b0_0111
-        )
-    }
-    .padding()
-    .frame(width: 260, height: 90)
-}
 #endif
 
 /// One physical key cap with resolved transparency and RGB-inspired emphasis.

@@ -24,10 +24,15 @@ enum KeyboardGeometryCatalog {
         let placements = [70.0, 126.0].flatMap { matrixRow(baseline: $0) }
             + bottomRow(baseline: 182)
             + thumbClusters(verticalOffset: 0)
+        let matrixPositions = matrixRowPositions(leftRow: 0, rightRow: 5)
+            + matrixRowPositions(leftRow: 1, rightRow: 6)
+            + bottomRowPositions(leftRow: 2, leftInnerRow: 3, rightRow: 7, rightInnerRow: 8)
+            + thumbPositions(leftRow: 3, rightRow: 8)
         return KeyboardGeometry(
             canvasWidth: 952,
             canvasHeight: 320,
-            placements: placements
+            placements: placements,
+            matrixPositions: matrixPositions
         )
     }
 
@@ -37,11 +42,70 @@ enum KeyboardGeometryCatalog {
         let placements = [70.0, 126.0, 182.0].flatMap { matrixRow(baseline: $0) }
             + bottomRow(baseline: 238)
             + thumbClusters(verticalOffset: 56)
+        let matrixPositions = matrixRowPositions(leftRow: 0, rightRow: 6)
+            + matrixRowPositions(leftRow: 1, rightRow: 7)
+            + matrixRowPositions(leftRow: 2, rightRow: 8)
+            + bottomRowPositions(leftRow: 3, leftInnerRow: 4, rightRow: 9, rightInnerRow: 10)
+            + thumbPositions(leftRow: 4, rightRow: 10)
         return KeyboardGeometry(
             canvasWidth: 952,
             canvasHeight: 376,
-            placements: placements
+            placements: placements,
+            matrixPositions: matrixPositions
         )
+    }
+
+    /// Creates the matrix coordinates for one visual twelve-key row.
+    /// - Parameters:
+    ///   - leftRow: The matrix row on the left half.
+    ///   - rightRow: The matrix row on the right half.
+    /// - Returns: Coordinates ordered left-outside-to-inside, then right-inside-to-outside.
+    private static func matrixRowPositions(leftRow: Int, rightRow: Int) -> [MatrixPosition] {
+        (1...6).reversed().map { MatrixPosition(row: leftRow, column: $0) }
+            + (1...6).map { MatrixPosition(row: rightRow, column: $0) }
+    }
+
+    /// Creates matrix coordinates for the bottom row and its four inner switches.
+    /// - Parameters:
+    ///   - leftRow: The main left matrix row.
+    ///   - leftInnerRow: The left thumb-adjacent matrix row.
+    ///   - rightRow: The main right matrix row.
+    ///   - rightInnerRow: The right thumb-adjacent matrix row.
+    /// - Returns: Coordinates in the same order as `bottomRow(baseline:)`.
+    private static func bottomRowPositions(
+        leftRow: Int,
+        leftInnerRow: Int,
+        rightRow: Int,
+        rightInnerRow: Int
+    ) -> [MatrixPosition] {
+        (1...6).reversed().map { MatrixPosition(row: leftRow, column: $0) }
+            + [
+                MatrixPosition(row: leftInnerRow, column: 3),
+                MatrixPosition(row: leftRow, column: 0),
+                MatrixPosition(row: rightRow, column: 0),
+                MatrixPosition(row: rightInnerRow, column: 3)
+            ]
+            + (1...6).map { MatrixPosition(row: rightRow, column: $0) }
+    }
+
+    /// Creates matrix coordinates for the two five-key thumb fans.
+    /// - Parameters:
+    ///   - leftRow: The left thumb matrix row.
+    ///   - rightRow: The right thumb matrix row.
+    /// - Returns: Coordinates in the same order as `thumbClusters(verticalOffset:)`.
+    private static func thumbPositions(leftRow: Int, rightRow: Int) -> [MatrixPosition] {
+        [
+            MatrixPosition(row: leftRow, column: 4),
+            MatrixPosition(row: leftRow, column: 2),
+            MatrixPosition(row: leftRow, column: 1),
+            MatrixPosition(row: leftRow, column: 5),
+            MatrixPosition(row: leftRow, column: 0),
+            MatrixPosition(row: rightRow, column: 0),
+            MatrixPosition(row: rightRow, column: 5),
+            MatrixPosition(row: rightRow, column: 1),
+            MatrixPosition(row: rightRow, column: 2),
+            MatrixPosition(row: rightRow, column: 4)
+        ]
     }
 
     /// Creates one mirrored 6-by-2 row with the physical column stagger.

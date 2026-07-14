@@ -8,8 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		017C93553B1579ADC57C9C89 /* KeymapCompanionApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EA268F53DF4B11685E8FDA6 /* KeymapCompanionApp.swift */; };
+		0C07DE527CA55670C7CF49DA /* MatrixPosition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C9D02E1FA834839E68F4D21 /* MatrixPosition.swift */; };
 		1AEE007C573628DA987A923E /* PositionedKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE13A2191E27B1FAD2169D94 /* PositionedKey.swift */; };
-		23239CECD919F003D0308AAC /* KeymapCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C9D816689D8D4CE751A982B /* KeymapCatalog.swift */; };
 		25245A7456597E1D8BB03127 /* KeymapProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3689B2F011CD51FC0E3812C1 /* KeymapProtocol.swift */; };
 		290CEA2DDCB4EE2CE005251A /* KeyboardGeometryCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01AE3FA80F7457B7186BEC2C /* KeyboardGeometryCatalog.swift */; };
 		2965062F030C6F234C20C1C1 /* KeymapResolutionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0CABF5B9049D823CE6F07EE /* KeymapResolutionTests.swift */; };
@@ -18,6 +18,7 @@
 		4EE999A7483BE6360452FD97 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = A7A3C488E002048FE5CC4D6F /* Localizable.xcstrings */; };
 		5143ADBF5C617D030B1CEAD9 /* KeyLegend.swift in Sources */ = {isa = PBXBuildFile; fileRef = 843BE78C3EF4D03FA9E8E56C /* KeyLegend.swift */; };
 		58938B5A10AF65BF45ADC644 /* KeymapKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 454C212125BFA8101CD194A7 /* KeymapKey.swift */; };
+		598AEF9F8F6E54618C05745C /* KeymapChunkReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF0AD231927ECA46483E71D5 /* KeymapChunkReport.swift */; };
 		5A2827B5EC1779B975D4FCB7 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCA0F9996E9EC9F36E8F62A4 /* AppModel.swift */; };
 		5B98481C5B0F9EE671BCF4A5 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C2B78C8E45E5F551FAEC3C3 /* IOKit.framework */; };
 		642F91FD50C785027F37EFAF /* KeyboardGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68A71C66E1A8E21AECB6FD32 /* KeyboardGeometry.swift */; };
@@ -25,15 +26,18 @@
 		6B5853CAFDC1C1F553332DFC /* ConnectionStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5310C44ED6927D9D733726C /* ConnectionStatus.swift */; };
 		74DF517B849F82E99D96E186 /* PhysicalKeyPlacement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68442F7799E715820606A2E9 /* PhysicalKeyPlacement.swift */; };
 		7A9598E5FF030C8587EC7FB0 /* KeyboardStateReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2859B233D8BBAC29555753D /* KeyboardStateReport.swift */; };
+		830AFE3A4B7C4C3DE49C3992 /* QMKKeycodeLegend.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E63FDC0FCED9B3B52B3C394 /* QMKKeycodeLegend.swift */; };
 		8EECFC85F71EC0F6EC8FF2C0 /* KeyboardBoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73D760FEFF36161898E22C76 /* KeyboardBoardView.swift */; };
 		95AFF2EC905E8537B449C12A /* KeyboardMonitorEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9F061E4523ED74CCFB91F9B /* KeyboardMonitorEvent.swift */; };
 		96F185CC9B61DE09E943E872 /* KeymapLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0C67F14A16EEF85D9575417 /* KeymapLayer.swift */; };
 		9DB0118E6D559CBF5E0DFFF0 /* KeymapProtocolTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16D9C02416D2201C1C52F3DC /* KeymapProtocolTests.swift */; };
 		A11DC6723B969E8D7D1F6820 /* KeymapDefinition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55E58D948312641152C32289 /* KeymapDefinition.swift */; };
-		BB54DD28ACFA35A0F2872211 /* KeymapRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = CFEABD74008BBCADD691ABCF /* KeymapRow.swift */; };
+		B0B9414FA9DF5349608BBC14 /* KeymapMetadataReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F4F26D51CF4D75FAD787FD /* KeymapMetadataReport.swift */; };
+		C5B0FA2506C4A8EC9CB0E265 /* FirmwareKeymap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AD6F3DBD8BF71AB5E053DBB /* FirmwareKeymap.swift */; };
 		D90C01812155A5C755F560CC /* KeyStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 958459E40F97A70F7E6F6492 /* KeyStyle.swift */; };
 		E0DE72A87C5682827DEB2830 /* KeyboardKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10ADEE907AFDE77CA53BA97 /* KeyboardKind.swift */; };
 		ED73F72757203616AA7C3D6A /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF34605EA194EAA9D892FB88 /* MenuBarView.swift */; };
+		F92BEE7F5E3ADCCA19831C4C /* FirmwareKeymapEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4DF7E6030D0EE41803BC018 /* FirmwareKeymapEntry.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -48,6 +52,7 @@
 
 /* Begin PBXFileReference section */
 		01AE3FA80F7457B7186BEC2C /* KeyboardGeometryCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardGeometryCatalog.swift; sourceTree = "<group>"; };
+		0AD6F3DBD8BF71AB5E053DBB /* FirmwareKeymap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirmwareKeymap.swift; sourceTree = "<group>"; };
 		16D9C02416D2201C1C52F3DC /* KeymapProtocolTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeymapProtocolTests.swift; sourceTree = "<group>"; };
 		3689B2F011CD51FC0E3812C1 /* KeymapProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeymapProtocol.swift; sourceTree = "<group>"; };
 		3EA268F53DF4B11685E8FDA6 /* KeymapCompanionApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeymapCompanionApp.swift; sourceTree = "<group>"; };
@@ -56,6 +61,7 @@
 		55E58D948312641152C32289 /* KeymapDefinition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeymapDefinition.swift; sourceTree = "<group>"; };
 		5BC3DC22731B86F9C60EB81B /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		5C2B78C8E45E5F551FAEC3C3 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
+		5C9D02E1FA834839E68F4D21 /* MatrixPosition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatrixPosition.swift; sourceTree = "<group>"; };
 		5E651E44642ED6E9DF498929 /* KeymapCompanionTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KeymapCompanionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		68442F7799E715820606A2E9 /* PhysicalKeyPlacement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhysicalKeyPlacement.swift; sourceTree = "<group>"; };
 		68A71C66E1A8E21AECB6FD32 /* KeyboardGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardGeometry.swift; sourceTree = "<group>"; };
@@ -63,18 +69,20 @@
 		73D760FEFF36161898E22C76 /* KeyboardBoardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardBoardView.swift; sourceTree = "<group>"; };
 		7EFF93D9F5FE314CD455DA4F /* MenuBarKeyboardIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarKeyboardIcon.swift; sourceTree = "<group>"; };
 		843BE78C3EF4D03FA9E8E56C /* KeyLegend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyLegend.swift; sourceTree = "<group>"; };
+		8E63FDC0FCED9B3B52B3C394 /* QMKKeycodeLegend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QMKKeycodeLegend.swift; sourceTree = "<group>"; };
 		958459E40F97A70F7E6F6492 /* KeyStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyStyle.swift; sourceTree = "<group>"; };
-		9C9D816689D8D4CE751A982B /* KeymapCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeymapCatalog.swift; sourceTree = "<group>"; };
 		A10ADEE907AFDE77CA53BA97 /* KeyboardKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardKind.swift; sourceTree = "<group>"; };
 		A7A3C488E002048FE5CC4D6F /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		B0C67F14A16EEF85D9575417 /* KeymapLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeymapLayer.swift; sourceTree = "<group>"; };
 		BCA0F9996E9EC9F36E8F62A4 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		BE13A2191E27B1FAD2169D94 /* PositionedKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PositionedKey.swift; sourceTree = "<group>"; };
 		C2859B233D8BBAC29555753D /* KeyboardStateReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardStateReport.swift; sourceTree = "<group>"; };
+		C4DF7E6030D0EE41803BC018 /* FirmwareKeymapEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirmwareKeymapEntry.swift; sourceTree = "<group>"; };
 		C5310C44ED6927D9D733726C /* ConnectionStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionStatus.swift; sourceTree = "<group>"; };
-		CFEABD74008BBCADD691ABCF /* KeymapRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeymapRow.swift; sourceTree = "<group>"; };
+		D8F4F26D51CF4D75FAD787FD /* KeymapMetadataReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeymapMetadataReport.swift; sourceTree = "<group>"; };
 		E0CABF5B9049D823CE6F07EE /* KeymapResolutionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeymapResolutionTests.swift; sourceTree = "<group>"; };
 		E9F061E4523ED74CCFB91F9B /* KeyboardMonitorEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardMonitorEvent.swift; sourceTree = "<group>"; };
+		EF0AD231927ECA46483E71D5 /* KeymapChunkReport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeymapChunkReport.swift; sourceTree = "<group>"; };
 		EF34605EA194EAA9D892FB88 /* MenuBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -138,14 +146,14 @@
 				01AE3FA80F7457B7186BEC2C /* KeyboardGeometryCatalog.swift */,
 				A10ADEE907AFDE77CA53BA97 /* KeyboardKind.swift */,
 				843BE78C3EF4D03FA9E8E56C /* KeyLegend.swift */,
-				9C9D816689D8D4CE751A982B /* KeymapCatalog.swift */,
 				55E58D948312641152C32289 /* KeymapDefinition.swift */,
 				454C212125BFA8101CD194A7 /* KeymapKey.swift */,
 				B0C67F14A16EEF85D9575417 /* KeymapLayer.swift */,
-				CFEABD74008BBCADD691ABCF /* KeymapRow.swift */,
 				958459E40F97A70F7E6F6492 /* KeyStyle.swift */,
+				5C9D02E1FA834839E68F4D21 /* MatrixPosition.swift */,
 				68442F7799E715820606A2E9 /* PhysicalKeyPlacement.swift */,
 				BE13A2191E27B1FAD2169D94 /* PositionedKey.swift */,
+				8E63FDC0FCED9B3B52B3C394 /* QMKKeycodeLegend.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -163,9 +171,13 @@
 		9E1DC0E2684DC9AD7DA593AA /* HID */ = {
 			isa = PBXGroup;
 			children = (
+				0AD6F3DBD8BF71AB5E053DBB /* FirmwareKeymap.swift */,
+				C4DF7E6030D0EE41803BC018 /* FirmwareKeymapEntry.swift */,
 				44B56321EDD42DA585D56D2B /* KeyboardHIDMonitor.swift */,
 				E9F061E4523ED74CCFB91F9B /* KeyboardMonitorEvent.swift */,
 				C2859B233D8BBAC29555753D /* KeyboardStateReport.swift */,
+				EF0AD231927ECA46483E71D5 /* KeymapChunkReport.swift */,
+				D8F4F26D51CF4D75FAD787FD /* KeymapMetadataReport.swift */,
 				3689B2F011CD51FC0E3812C1 /* KeymapProtocol.swift */,
 			);
 			path = HID;
@@ -287,6 +299,8 @@
 				5A2827B5EC1779B975D4FCB7 /* AppModel.swift in Sources */,
 				6B5853CAFDC1C1F553332DFC /* ConnectionStatus.swift in Sources */,
 				30D05FEABA0F68EBB3993F0C /* ContentView.swift in Sources */,
+				C5B0FA2506C4A8EC9CB0E265 /* FirmwareKeymap.swift in Sources */,
+				F92BEE7F5E3ADCCA19831C4C /* FirmwareKeymapEntry.swift in Sources */,
 				5143ADBF5C617D030B1CEAD9 /* KeyLegend.swift in Sources */,
 				D90C01812155A5C755F560CC /* KeyStyle.swift in Sources */,
 				8EECFC85F71EC0F6EC8FF2C0 /* KeyboardBoardView.swift in Sources */,
@@ -296,17 +310,19 @@
 				E0DE72A87C5682827DEB2830 /* KeyboardKind.swift in Sources */,
 				95AFF2EC905E8537B449C12A /* KeyboardMonitorEvent.swift in Sources */,
 				7A9598E5FF030C8587EC7FB0 /* KeyboardStateReport.swift in Sources */,
-				23239CECD919F003D0308AAC /* KeymapCatalog.swift in Sources */,
+				598AEF9F8F6E54618C05745C /* KeymapChunkReport.swift in Sources */,
 				017C93553B1579ADC57C9C89 /* KeymapCompanionApp.swift in Sources */,
 				A11DC6723B969E8D7D1F6820 /* KeymapDefinition.swift in Sources */,
 				58938B5A10AF65BF45ADC644 /* KeymapKey.swift in Sources */,
 				96F185CC9B61DE09E943E872 /* KeymapLayer.swift in Sources */,
+				B0B9414FA9DF5349608BBC14 /* KeymapMetadataReport.swift in Sources */,
 				25245A7456597E1D8BB03127 /* KeymapProtocol.swift in Sources */,
-				BB54DD28ACFA35A0F2872211 /* KeymapRow.swift in Sources */,
+				0C07DE527CA55670C7CF49DA /* MatrixPosition.swift in Sources */,
 				447DD1132A2D76D09D4D770D /* MenuBarKeyboardIcon.swift in Sources */,
 				ED73F72757203616AA7C3D6A /* MenuBarView.swift in Sources */,
 				74DF517B849F82E99D96E186 /* PhysicalKeyPlacement.swift in Sources */,
 				1AEE007C573628DA987A923E /* PositionedKey.swift in Sources */,
+				830AFE3A4B7C4C3DE49C3992 /* QMKKeycodeLegend.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
