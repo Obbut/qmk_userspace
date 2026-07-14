@@ -28,6 +28,8 @@ struct KeymapCompanionApp: App {
         }
         .defaultSize(width: 1_180, height: 720)
         .defaultLaunchBehavior(.presented)
+        .windowToolbarStyle(.unified)
+        .windowToolbarLabelStyle(fixed: .iconOnly)
         .commands {
             CommandGroup(replacing: .newItem) { }
             CommandGroup(after: .appInfo) {

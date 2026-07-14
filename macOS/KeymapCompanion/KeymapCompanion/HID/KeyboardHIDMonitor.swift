@@ -67,6 +67,14 @@ final class KeyboardHIDMonitor {
         start()
     }
 
+    /// Sends a complete RGB Matrix configuration to the active keyboard.
+    /// - Parameter settings: The persistent configuration to apply.
+    func applyRGBSettings(_ settings: RGBSettings) {
+        guard let activeSessionID,
+              let session = sessions[activeSessionID] else { return }
+        session.applyRGBSettings(settings)
+    }
+
     /// Unschedules the manager and releases every open device endpoint.
     private func stop() {
         guard isRunning else { return }
@@ -210,6 +218,12 @@ private final class HIDDeviceSession {
         )
         isOpen = true
         return result
+    }
+
+    /// Sends a complete RGB Matrix configuration to this keyboard.
+    /// - Parameter settings: The persistent configuration to apply.
+    func applyRGBSettings(_ settings: RGBSettings) {
+        send(KeymapProtocol.makeRGBSettingsRequest(settings))
     }
 
     /// Starts the protocol handshake by requesting dimensions and a fingerprint.

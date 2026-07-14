@@ -69,6 +69,7 @@ Every Raw HID report is exactly 32 bytes and starts with `KMAP` plus protocol ve
 | Keymap info | `4` | Firmware → host | Matrix dimensions, entry count, and fingerprint |
 | Get keymap chunk | `5` | Host → firmware | Request entries beginning at a 16-bit offset |
 | Keymap chunk | `6` | Firmware → host | Return up to five consecutive entries |
+| Set RGB settings | `7` | Host → firmware | Persist a complete RGB Matrix configuration |
 
 ### State packet
 
@@ -83,9 +84,16 @@ Every Raw HID report is exactly 32 bytes and starts with `KMAP` plus protocol ve
 | 12 | 4 | QMK `default_layer_state`, little-endian |
 | 16 | 4 | Packet sequence, little-endian |
 | 20 | 4 | Capability flags, little-endian |
-| 24 | 8 | Reserved for future versions |
+| 24 | 1 | Stable companion RGB effect identifier |
+| 25 | 1 | RGB hue |
+| 26 | 1 | RGB saturation |
+| 27 | 1 | RGB brightness |
+| 28 | 1 | RGB enabled flag |
+| 29 | 1 | RGB animation speed |
+| 30 | 1 | Number of available RGB effects |
+| 31 | 1 | Reserved |
 
-Capability bit `0` advertises realtime layer state. Bit `1` advertises firmware keymap reads.
+Capability bit `0` advertises realtime layer state. Bit `1` advertises firmware keymap reads. Bit `2` advertises explicit RGB Matrix settings.
 
 ### Keymap info packet
 
@@ -125,7 +133,11 @@ Each entry contains a 16-bit compiled QMK keycode, a one-byte semantic override,
 
 The app maps the downloaded matrix coordinates onto its physical Kyria or Elora geometry, combines both layer masks, and resolves transparent keys through the complete active stack. For example, a transparent key on Lower still displays its firmware-provided QWERTY mapping when QWERTY is toggled underneath it.
 
-Firmware sends keymap metadata and chunks only in response to host requests. After that handshake, state notifications are sent only when the layer masks change. The layer callback marks state dirty; the actual state write is throttled and performed from QMK's housekeeping task on the USB master.
+Firmware sends keymap metadata and chunks only in response to host requests. After that handshake, state notifications are sent when layer or RGB state changes. Callbacks mark state dirty; the actual state write is throttled and performed from QMK's housekeeping task on the USB master.
+
+The RGB settings popover is shown only when capability bit `2` is present, so the updated app remains compatible with companion firmware that supports only the v2 keymap transfer.
+
+An RGB settings request uses message type `7`. Byte `6` is the enabled flag, byte `7` is the stable effect identifier, and bytes `8` through `11` contain hue, saturation, brightness, and speed. Firmware maps the stable identifiers to QMK's build-dependent effect enum, applies the complete configuration, persists it once, and immediately echoes the resulting state.
 
 ## Extension point for OS-driven keymap features
 

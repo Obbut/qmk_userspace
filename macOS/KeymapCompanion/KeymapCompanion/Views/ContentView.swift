@@ -5,44 +5,37 @@ struct ContentView: View {
     /// Shared process-lifetime app state.
     let model: AppModel
 
-    /// The composed window content.
+    /// The keymap content and native window-toolbar items.
     var body: some View {
-        ZStack {
-            LinearGradient(
-                colors: [
-                    Color.accentColor.opacity(0.10),
-                    Color.clear,
-                    Color.purple.opacity(0.06)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
-
-            VStack(spacing: 20) {
-                ConnectionHeader(
-                    status: model.connectionStatus,
-                    keyboardKind: model.keyboardKind,
-                    activeLayer: model.activeLayer
+        VStack(spacing: 20) {
+            if let definition = model.keymapDefinition {
+                LayerStrip(
+                    activeLayer: model.activeLayer,
+                    activeLayerMask: model.effectiveLayerMask
                 )
+                KeyboardBoardView(
+                    definition: definition,
+                    activeLayerMask: model.effectiveLayerMask
+                )
+            } else {
+                ContentUnavailableView(
+                    "Waiting for keyboard",
+                    systemImage: "cable.connector.slash"
+                )
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(24)
+        .frame(minWidth: 760, minHeight: 520)
+        .toolbar {
+            ToolbarSpacer(.flexible)
 
-                if let definition = model.keymapDefinition {
-                    LayerStrip(
-                        activeLayer: model.activeLayer,
-                        activeLayerMask: model.effectiveLayerMask
-                    )
-                    KeyboardBoardView(
-                        definition: definition,
-                        activeLayerMask: model.effectiveLayerMask
-                    )
-                } else {
-                    WaitingPanel()
+            if model.supportsRGBSettings {
+                ToolbarItem {
+                    RGBSettingsPopoverButton(model: model)
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .padding(24)
         }
-        .frame(minWidth: 760, minHeight: 520)
     }
 }
 
@@ -67,27 +60,6 @@ struct ContentView: View {
     .frame(width: 1_180, height: 720)
 }
 
-#Preview("Connection Header") {
-    ConnectionHeader(
-        status: .connected,
-        keyboardKind: .kyria,
-        activeLayer: .lower
-    )
-    .padding()
-    .frame(width: 1_000, height: 100)
-}
-
-#Preview("Status Badges") {
-    HStack(spacing: 16) {
-        StatusBadge(status: .searching)
-        StatusBadge(status: .connected)
-        StatusBadge(status: .disconnected)
-        StatusBadge(status: .failed("Preview failure"))
-    }
-    .padding()
-    .frame(width: 720, height: 80)
-}
-
 #Preview("Layer Strip") {
     LayerStrip(
         activeLayer: .lower,
@@ -107,127 +79,7 @@ struct ContentView: View {
     .padding()
     .frame(width: 480, height: 70)
 }
-
-#Preview("Waiting Panel") {
-    WaitingPanel()
-        .padding()
-        .frame(width: 760, height: 520)
-}
 #endif
-
-/// The top-level device and active-layer summary.
-private struct ConnectionHeader: View {
-    /// The connection phase to display.
-    let status: ConnectionStatus
-
-    /// The last validated keyboard model.
-    let keyboardKind: KeyboardKind?
-
-    /// The currently effective highest layer.
-    let activeLayer: KeymapLayer
-
-    /// The header content.
-    var body: some View {
-        HStack(spacing: 16) {
-            Image(systemName: "keyboard.badge.ellipsis")
-                .font(.largeTitle)
-                .foregroundStyle(.tint)
-                .accessibilityHidden(true)
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Keymap Companion")
-                    .font(.title.bold())
-                if let keyboardKind {
-                    Text(keyboardKind.displayName)
-                        .font(.headline)
-                        .foregroundStyle(.secondary)
-                } else {
-                    Text("Realtime keymap")
-                        .font(.headline)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            Spacer()
-
-            StatusBadge(status: status)
-
-            if keyboardKind != nil {
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text("ACTIVE LAYER")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                    Text(activeLayer.displayName)
-                        .font(.title2.bold())
-                        .contentTransition(.numericText())
-                }
-            }
-        }
-    }
-}
-
-/// A compact connection-status capsule.
-private struct StatusBadge: View {
-    /// The connection phase to display.
-    let status: ConnectionStatus
-
-    /// The status capsule content.
-    var body: some View {
-        HStack(spacing: 7) {
-            Circle()
-                .fill(statusColor)
-                .frame(width: 8, height: 8)
-            Text(statusTitle)
-                .font(.callout.weight(.medium))
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 7)
-        .background(.regularMaterial, in: Capsule())
-        .help(statusDetail)
-    }
-
-    /// The localized status title.
-    private var statusTitle: LocalizedStringResource {
-        switch status {
-        case .searching:
-            "Searching"
-        case .connected:
-            "Connected"
-        case .disconnected:
-            "Disconnected"
-        case .failed:
-            "Connection Error"
-        }
-    }
-
-    /// A localized explanation suitable for a tooltip.
-    private var statusDetail: LocalizedStringResource {
-        switch status {
-        case .searching:
-            "Looking for a compatible QMK Raw HID interface."
-        case .connected:
-            "Receiving realtime layer changes from the keyboard."
-        case .disconnected:
-            "The keyboard was disconnected; discovery remains active."
-        case let .failed(message):
-            "HID monitoring failed: \(message)"
-        }
-    }
-
-    /// The semantic color for the current connection phase.
-    private var statusColor: Color {
-        switch status {
-        case .searching:
-            .orange
-        case .connected:
-            .green
-        case .disconnected:
-            .secondary
-        case .failed:
-            .red
-        }
-    }
-}
 
 /// The stable list of supported layers and their active bits.
 private struct LayerStrip: View {
@@ -275,23 +127,5 @@ private struct LayerChip: View {
                 Capsule()
                     .strokeBorder(Color.primary.opacity(isActive ? 0.18 : 0.08))
             }
-    }
-}
-
-/// Waiting state shown while automatic keyboard discovery remains active.
-private struct WaitingPanel: View {
-    /// The waiting-state content.
-    var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "cable.connector.slash")
-                .font(.system(.largeTitle, design: .rounded, weight: .medium))
-                .foregroundStyle(.secondary)
-                .accessibilityHidden(true)
-            Text("Waiting for keyboard")
-                .font(.title2.bold())
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(40)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
     }
 }

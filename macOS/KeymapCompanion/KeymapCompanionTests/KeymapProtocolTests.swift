@@ -1,3 +1,4 @@
+import AppKit
 import Testing
 @testable import KeymapCompanion
 
@@ -41,6 +42,7 @@ func parsesKeyboardStateReport() {
     #expect(report?.effectiveLayerMask == 7)
     #expect(report?.sequence == 42)
     #expect(report?.capabilities == 3)
+    #expect(report?.rgbSettings == nil)
 }
 
 /// Verifies keymap metadata dimensions and the transfer fingerprint.
@@ -103,6 +105,98 @@ func validatesFirmwareKeymapFingerprint() {
     )
 
     #expect(keymap.hasValidFingerprint)
+}
+
+/// Verifies that explicit RGB settings use the fixed host-to-keyboard payload.
+@Test
+func rgbSettingsRequestUsesExplicitValues() {
+    let settings = RGBSettings(
+        isEnabled: true,
+        effect: .hueWave,
+        hue: 91,
+        saturation: 203,
+        brightness: 107,
+        speed: 149
+    )
+
+    let request = KeymapProtocol.makeRGBSettingsRequest(settings)
+
+    #expect(request.count == 32)
+    #expect(Array(request[0..<4]) == Array("KMAP".utf8))
+    #expect(request[4] == 2)
+    #expect(request[5] == 7)
+    #expect(request[6] == 1)
+    #expect(request[7] == RGBEffect.hueWave.rawValue)
+    #expect(Array(request[8...11]) == [91, 203, 107, 149])
+    #expect(request.dropFirst(12).allSatisfy { $0 == 0 })
+}
+
+/// Verifies that RGB capability state is decoded alongside layer state.
+@Test
+func parsesRGBSettingsFromStateReport() {
+    var packet = makePacket(type: 2)
+    packet[6] = KeyboardKind.kyria.rawValue
+    packet[8] = 1
+    packet[12] = 1
+    packet[20] = 7
+    packet[24] = RGBEffect.pixelFlow.rawValue
+    packet[25] = 47
+    packet[26] = 219
+    packet[27] = 96
+    packet[28] = 1
+    packet[29] = 137
+    packet[30] = UInt8(RGBEffect.allCases.count)
+
+    let report = KeymapProtocol.parseStateReport(packet)
+
+    #expect(
+        report?.rgbSettings == RGBSettings(
+            isEnabled: true,
+            effect: .pixelFlow,
+            hue: 47,
+            saturation: 219,
+            brightness: 96,
+            speed: 137
+        )
+    )
+}
+
+/// Keeps the app's stable effect identifiers aligned with the firmware table.
+@Test
+func rgbEffectIdentifiersAreContiguous() {
+    #expect(RGBEffect.allCases.count == 30)
+    #expect(RGBEffect.allCases.map(\.rawValue) == Array(UInt8(1)...UInt8(30)))
+}
+
+/// Verifies that the native color picker maps back to QMK HSV components.
+@Test
+func nativeColorSelectionUpdatesQMKComponents() {
+    var settings = RGBSettings.default
+
+    settings.color = NSColor(
+        hue: 0.5,
+        saturation: 0.25,
+        brightness: 0.75,
+        alpha: 1
+    ).cgColor
+
+    #expect(settings.hue == 128)
+    #expect(settings.saturation == 64)
+    #expect(settings.brightness == 96)
+}
+
+/// Verifies native brightness and speed sliders map to the full QMK byte ranges.
+@Test
+func normalizedRGBControlsUpdateQMKValues() {
+    var settings = RGBSettings.default
+
+    settings.normalizedBrightness = 0.5
+    settings.normalizedSpeed = 0.75
+
+    #expect(settings.brightness == 64)
+    #expect(settings.speed == 191)
+    #expect(settings.normalizedBrightness == 0.5)
+    #expect(abs(settings.normalizedSpeed - 0.75) < 0.002)
 }
 
 /// Verifies unrelated Raw HID traffic is ignored safely.

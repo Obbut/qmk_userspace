@@ -25,8 +25,24 @@ final class AppModel {
     /// The capabilities advertised by the connected firmware.
     private(set) var capabilities: UInt32 = 0
 
+    /// The editable base-layer RGB Matrix configuration.
+    var rgbSettings: RGBSettings = .default {
+        didSet {
+            scheduleRGBSettingsUpdate()
+        }
+    }
+
     /// The long-lived HID monitor that outlives every app window.
     @ObservationIgnored private let monitor: KeyboardHIDMonitor
+
+    /// A pending debounce that coalesces native color-picker changes.
+    @ObservationIgnored private var pendingRGBUpdate: Task<Void, Never>?
+
+    /// The most recent configuration sent but not yet echoed by firmware.
+    @ObservationIgnored private var rgbSettingsAwaitingAcknowledgement: RGBSettings?
+
+    /// Prevents keyboard-originated state from being written back to the keyboard.
+    @ObservationIgnored private var isApplyingKeyboardRGBSettings = false
 
     /// Creates app state and immediately begins monitoring on the main run loop.
     /// - Parameter monitor: The HID monitor to retain for the application's lifetime.
@@ -48,12 +64,55 @@ final class AppModel {
         KeymapLayer.highestActiveLayer(in: effectiveLayerMask)
     }
 
-    /// Restarts discovery and requests fresh state from matching devices.
+    /// Whether the active firmware supports explicit RGB Matrix settings.
+    var supportsRGBSettings: Bool {
+        connectionStatus.isConnected
+            && capabilities & KeymapProtocol.rgbSettingsCapability != 0
+    }
+
+    /// Restarts discovery and downloads fresh keymap and state data from matching devices.
     func reconnect() {
+        cancelRGBSettingsUpdate()
         connectionStatus = .searching
         keyboardKind = nil
         keymapDefinition = nil
         monitor.restart()
+    }
+
+    /// Coalesces rapid native color-picker changes before persisting them to QMK.
+    private func scheduleRGBSettingsUpdate() {
+        guard !isApplyingKeyboardRGBSettings, supportsRGBSettings else { return }
+
+        pendingRGBUpdate?.cancel()
+        let settings = rgbSettings
+        pendingRGBUpdate = Task { @MainActor [weak self] in
+            do {
+                try await Task.sleep(for: .milliseconds(150))
+            } catch {
+                return
+            }
+            guard let self,
+                  !Task.isCancelled,
+                  self.rgbSettings == settings else { return }
+            self.pendingRGBUpdate = nil
+            self.rgbSettingsAwaitingAcknowledgement = settings
+            self.monitor.applyRGBSettings(settings)
+        }
+    }
+
+    /// Cancels pending RGB transport work when the active device changes.
+    private func cancelRGBSettingsUpdate() {
+        pendingRGBUpdate?.cancel()
+        pendingRGBUpdate = nil
+        rgbSettingsAwaitingAcknowledgement = nil
+    }
+
+    /// Applies firmware RGB state without scheduling a host write-back.
+    /// - Parameter settings: The validated configuration reported by QMK.
+    private func applyKeyboardRGBSettings(_ settings: RGBSettings) {
+        isApplyingKeyboardRGBSettings = true
+        rgbSettings = settings
+        isApplyingKeyboardRGBSettings = false
     }
 
     /// Applies a device-monitor event to observable UI state.
@@ -61,6 +120,7 @@ final class AppModel {
     private func receive(_ event: KeyboardMonitorEvent) {
         switch event {
         case .searching:
+            cancelRGBSettingsUpdate()
             connectionStatus = .searching
             keyboardKind = nil
             keymapDefinition = nil
@@ -79,9 +139,18 @@ final class AppModel {
             latestSequence = report.sequence
             capabilities = report.capabilities
             connectionStatus = .connected
+            if pendingRGBUpdate == nil,
+               let reportedSettings = report.rgbSettings,
+               rgbSettingsAwaitingAcknowledgement == nil
+                || rgbSettingsAwaitingAcknowledgement == reportedSettings {
+                rgbSettingsAwaitingAcknowledgement = nil
+                applyKeyboardRGBSettings(reportedSettings)
+            }
         case .disconnected:
+            cancelRGBSettingsUpdate()
             connectionStatus = .disconnected
         case let .failed(message):
+            cancelRGBSettingsUpdate()
             connectionStatus = .failed(message)
         }
     }
@@ -92,16 +161,19 @@ final class AppModel {
     ///   - connectionStatus: The connection phase to render.
     ///   - keyboardKind: The keyboard model to render, or `nil` for the waiting state.
     ///   - activeLayers: Nondefault layers whose bits should be active.
+    ///   - rgbSettings: The base-layer RGB configuration to render.
     /// - Returns: A preview-only model that performs no device discovery.
     static func preview(
         connectionStatus: ConnectionStatus = .connected,
         keyboardKind: KeyboardKind? = .elora,
-        activeLayers: [KeymapLayer] = []
+        activeLayers: [KeymapLayer] = [],
+        rgbSettings: RGBSettings = .default
     ) -> AppModel {
         AppModel(
             previewConnectionStatus: connectionStatus,
             keyboardKind: keyboardKind,
-            activeLayers: activeLayers
+            activeLayers: activeLayers,
+            rgbSettings: rgbSettings
         )
     }
 
@@ -110,10 +182,12 @@ final class AppModel {
     ///   - previewConnectionStatus: The connection phase to render.
     ///   - keyboardKind: The keyboard model to render.
     ///   - activeLayers: Nondefault layers whose bits should be active.
+    ///   - rgbSettings: The base-layer RGB configuration to render.
     private init(
         previewConnectionStatus: ConnectionStatus,
         keyboardKind: KeyboardKind?,
-        activeLayers: [KeymapLayer]
+        activeLayers: [KeymapLayer],
+        rgbSettings: RGBSettings
     ) {
         monitor = KeyboardHIDMonitor()
         connectionStatus = previewConnectionStatus
@@ -123,7 +197,8 @@ final class AppModel {
             mask |= UInt32(1) << UInt32(layer.rawValue)
         }
         defaultLayerStateMask = UInt32(1) << UInt32(KeymapLayer.base.rawValue)
-        capabilities = 1
+        capabilities = previewConnectionStatus.isConnected ? 7 : 0
+        self.rgbSettings = rgbSettings
     }
 #endif
 }

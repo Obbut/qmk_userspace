@@ -6,7 +6,13 @@ enum QMKKeycodeLegend {
     /// - Parameter entry: The firmware-owned keymap entry.
     /// - Returns: A compact label with the firmware-provided style.
     static func legend(for entry: FirmwareKeymapEntry) -> KeyLegend {
-        KeyLegend(label: label(for: entry), style: entry.style)
+        KeyLegend(
+            label: label(for: entry),
+            systemImageName: entry.semantic == 0
+                ? systemImageName(for: entry.keycode)
+                : nil,
+            style: entry.style
+        )
     }
 
     /// Converts semantic overrides and QMK numeric ranges into readable text.
@@ -76,15 +82,15 @@ enum QMKKeycodeLegend {
         case 0x0027:
             return "0"
         case 0x0028:
-            return "ENT"
+            return "Return"
         case 0x0029:
-            return "ESC"
+            return "Escape"
         case 0x002A:
-            return "BSPC"
+            return "Delete"
         case 0x002B:
-            return "TAB"
+            return "Tab"
         case 0x002C:
-            return "SPC"
+            return "Space"
         case 0x002D:
             return "-"
         case 0x002E:
@@ -107,6 +113,8 @@ enum QMKKeycodeLegend {
             return "."
         case 0x0038:
             return "/"
+        case 0x0039:
+            return "Caps Lock"
         case 0x003A...0x0045:
             return "F\(keycode - 0x0039)"
         case 0x0046:
@@ -118,7 +126,7 @@ enum QMKKeycodeLegend {
         case 0x004B:
             return "PgUp"
         case 0x004C:
-            return "DEL"
+            return "Forward Delete"
         case 0x004D:
             return "End"
         case 0x004E:
@@ -136,33 +144,77 @@ enum QMKKeycodeLegend {
         case 0x007F, 0x00A8:
             return "Mute"
         case 0x0080, 0x00A9:
-            return "Vol+"
+            return "Volume Up"
         case 0x0081, 0x00AA:
-            return "Vol-"
+            return "Volume Down"
         case 0x00AB:
-            return "Next"
+            return "Next Track"
         case 0x00AC:
-            return "Prev"
+            return "Previous Track"
         case 0x00AE:
-            return "Play"
+            return "Play or Pause"
         case 0x00D1:
             return "Click"
-        case 0x00E0:
-            return "LCTL"
-        case 0x00E1:
-            return "LSFT"
-        case 0x00E2:
-            return "LALT"
-        case 0x00E3:
-            return "LGUI"
-        case 0x00E4:
-            return "RCTL"
-        case 0x00E5:
-            return "RSFT"
-        case 0x00E6:
-            return "RALT"
-        case 0x00E7:
-            return "RGUI"
+        case 0x00E0, 0x00E4:
+            return "Control"
+        case 0x00E1, 0x00E5:
+            return "Shift"
+        case 0x00E2, 0x00E6:
+            return "Option"
+        case 0x00E3, 0x00E7:
+            return "Command"
+        default:
+            return nil
+        }
+    }
+
+    /// Returns the native Apple glyph for a standard macOS keyboard key.
+    /// - Parameter keycode: A compiled QMK keycode.
+    /// - Returns: An SF Symbol name, or `nil` for a textual legend.
+    private static func systemImageName(for keycode: UInt16) -> String? {
+        switch keycode {
+        case 0x0028:
+            return "return"
+        case 0x0029:
+            return "escape"
+        case 0x002A:
+            return "delete.left"
+        case 0x002B:
+            return "arrow.right.to.line"
+        case 0x002C:
+            return "space"
+        case 0x0039:
+            return "capslock"
+        case 0x004C:
+            return "delete.right"
+        case 0x004F:
+            return "arrow.right"
+        case 0x0050:
+            return "arrow.left"
+        case 0x0051:
+            return "arrow.down"
+        case 0x0052:
+            return "arrow.up"
+        case 0x007F, 0x00A8:
+            return "speaker.slash.fill"
+        case 0x0080, 0x00A9:
+            return "speaker.wave.3.fill"
+        case 0x0081, 0x00AA:
+            return "speaker.wave.1.fill"
+        case 0x00AB:
+            return "forward.end.fill"
+        case 0x00AC:
+            return "backward.end.fill"
+        case 0x00AE:
+            return "playpause.fill"
+        case 0x00E0, 0x00E4:
+            return "control"
+        case 0x00E1, 0x00E5:
+            return "shift"
+        case 0x00E2, 0x00E6:
+            return "option"
+        case 0x00E3, 0x00E7:
+            return "command"
         default:
             return nil
         }
