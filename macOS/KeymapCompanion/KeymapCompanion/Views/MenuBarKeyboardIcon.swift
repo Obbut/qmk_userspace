@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 /// A compact, adaptive menu-bar glyph shaped like the connected split keyboard.
@@ -5,10 +6,33 @@ struct MenuBarKeyboardIcon: View {
     /// The physical keyboard whose left half is represented.
     let keyboardKind: KeyboardKind
 
-    /// The layer shown in the glyph's trailing badge.
+    /// The active layer, shown in a trailing badge when it is not the base layer.
     let activeLayer: KeymapLayer
 
-    /// Draws a monochrome template-style icon that follows the menu bar's foreground color.
+    /// Supplies the status item with an AppKit-backed template image.
+    var body: some View {
+        Image(
+            nsImage: MenuBarKeyboardIconRenderer.makeTemplateImage(
+                keyboardKind: keyboardKind,
+                activeLayer: activeLayer
+            )
+        )
+        .renderingMode(.template)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(keyboardKind.displayName))
+        .accessibilityValue(Text(activeLayer.displayName))
+    }
+}
+
+/// The SwiftUI artwork rasterized into a template image for the status item.
+private struct MenuBarKeyboardArtwork: View {
+    /// The physical keyboard whose left half is represented.
+    let keyboardKind: KeyboardKind
+
+    /// The active layer, shown in a trailing badge when it is not the base layer.
+    let activeLayer: KeymapLayer
+
+    /// Draws opaque artwork on a transparent background for template masking.
     var body: some View {
         Canvas { context, size in
             MenuBarKeyboardIconRenderer.draw(
@@ -19,14 +43,15 @@ struct MenuBarKeyboardIcon: View {
             )
         }
         .frame(width: 34, height: 18)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(keyboardKind.displayName))
-        .accessibilityValue(Text(activeLayer.displayName))
+        .foregroundStyle(.black)
     }
 }
 
 /// Renders the keyboard plate, keycap cutouts, and layer badge into a SwiftUI canvas.
 private enum MenuBarKeyboardIconRenderer {
+    /// The logical point size of the status-item image.
+    private static let iconSize = CGSize(width: 34, height: 18)
+
     /// The design-space width of one half of either keyboard layout.
     private static let halfDesignWidth = 476.0
 
@@ -38,6 +63,36 @@ private enum MenuBarKeyboardIconRenderer {
 
     /// The size of the compact layer badge.
     private static let badgeSize = CGSize(width: 10, height: 8)
+
+    /// Rasterizes the artwork and marks it as an adaptive AppKit template image.
+    /// - Parameters:
+    ///   - keyboardKind: The keyboard model to represent.
+    ///   - activeLayer: The layer to mark in the badge.
+    /// - Returns: A menu-bar-compatible template image.
+    static func makeTemplateImage(
+        keyboardKind: KeyboardKind,
+        activeLayer: KeymapLayer
+    ) -> NSImage {
+        let renderer = ImageRenderer(
+            content: MenuBarKeyboardArtwork(
+                keyboardKind: keyboardKind,
+                activeLayer: activeLayer
+            )
+        )
+        renderer.scale = 2
+
+        guard let image = renderer.nsImage else {
+            let fallbackImage = NSImage(
+                systemSymbolName: "keyboard",
+                accessibilityDescription: nil
+            ) ?? NSImage(size: iconSize)
+            fallbackImage.isTemplate = true
+            return fallbackImage
+        }
+
+        image.isTemplate = true
+        return image
+    }
 
     /// Draws the complete icon.
     /// - Parameters:
@@ -58,7 +113,10 @@ private enum MenuBarKeyboardIconRenderer {
             height: geometry.canvasHeight * scale
         )
         let badgeInset = boardSize.width * 0.22
-        let combinedWidth = boardSize.width + badgeSize.width - badgeInset
+        let showsLayerBadge = activeLayer != .base
+        let combinedWidth = showsLayerBadge
+            ? boardSize.width + badgeSize.width - badgeInset
+            : boardSize.width
         let boardRect = CGRect(
             x: (size.width - combinedWidth) / 2,
             y: (size.height - boardSize.height) / 2,
@@ -77,17 +135,19 @@ private enum MenuBarKeyboardIconRenderer {
             in: &context
         )
 
-        let badgeRect = CGRect(
-            x: boardRect.maxX - badgeInset,
-            y: boardRect.maxY - badgeSize.height,
-            width: badgeSize.width,
-            height: badgeSize.height
-        )
-        context.fill(
-            Path(roundedRect: badgeRect, cornerRadius: 2.1),
-            with: .foreground
-        )
-        cutOutLayerMark(activeLayer, in: badgeRect, context: &context)
+        if showsLayerBadge {
+            let badgeRect = CGRect(
+                x: boardRect.maxX - badgeInset,
+                y: boardRect.maxY - badgeSize.height,
+                width: badgeSize.width,
+                height: badgeSize.height
+            )
+            context.fill(
+                Path(roundedRect: badgeRect, cornerRadius: 2.1),
+                with: .foreground
+            )
+            cutOutLayerMark(activeLayer, in: badgeRect, context: &context)
+        }
     }
 
     /// Erases the left-half keycaps from the filled keyboard plate.
@@ -150,7 +210,7 @@ private enum MenuBarKeyboardIconRenderer {
         case .raise:
             cutOutArrow(pointingUp: true, in: badgeRect, context: &context)
         case .base:
-            cutOutText("B", in: badgeRect, context: &context)
+            return
         case .qwerty:
             cutOutText("Q", in: badgeRect, context: &context)
         case .function:
@@ -228,7 +288,7 @@ private enum MenuBarKeyboardIconRenderer {
         return path
     }
 
-    /// Converts a normalized point into a destination rectangle.
+    /// Converts a normalized DXF point into the canvas's top-down coordinate space.
     /// - Parameters:
     ///   - point: A point whose axes range from zero through one.
     ///   - rect: The destination rectangle.
@@ -236,7 +296,7 @@ private enum MenuBarKeyboardIconRenderer {
     private static func scaled(_ point: CGPoint, in rect: CGRect) -> CGPoint {
         CGPoint(
             x: rect.minX + point.x * rect.width,
-            y: rect.minY + point.y * rect.height
+            y: rect.maxY - point.y * rect.height
         )
     }
 
