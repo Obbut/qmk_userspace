@@ -25,6 +25,9 @@ final class AppModel {
     /// The capabilities advertised by the connected firmware.
     private(set) var capabilities: UInt32 = 0
 
+    /// The delayed state that determines whether the layer HUD is visible.
+    let layerHUD: LayerHUDModel
+
     /// The editable base-layer RGB Matrix configuration.
     var rgbSettings: RGBSettings = .default {
         didSet {
@@ -45,9 +48,15 @@ final class AppModel {
     @ObservationIgnored private var isApplyingKeyboardRGBSettings = false
 
     /// Creates app state and immediately begins monitoring on the main run loop.
-    /// - Parameter monitor: The HID monitor to retain for the application's lifetime.
-    init(monitor: KeyboardHIDMonitor = KeyboardHIDMonitor()) {
+    /// - Parameters:
+    ///   - monitor: The HID monitor to retain for the application's lifetime.
+    ///   - layerHUD: The delayed HUD state to retain for the application's lifetime.
+    init(
+        monitor: KeyboardHIDMonitor = KeyboardHIDMonitor(),
+        layerHUD: LayerHUDModel = LayerHUDModel()
+    ) {
         self.monitor = monitor
+        self.layerHUD = layerHUD
         monitor.eventHandler = { [weak self] event in
             self?.receive(event)
         }
@@ -73,6 +82,7 @@ final class AppModel {
     /// Restarts discovery and downloads fresh keymap and state data from matching devices.
     func reconnect() {
         cancelRGBSettingsUpdate()
+        layerHUD.hideImmediately()
         connectionStatus = .searching
         keyboardKind = nil
         keymapDefinition = nil
@@ -121,10 +131,12 @@ final class AppModel {
         switch event {
         case .searching:
             cancelRGBSettingsUpdate()
+            layerHUD.hideImmediately()
             connectionStatus = .searching
             keyboardKind = nil
             keymapDefinition = nil
         case let .keymap(firmwareKeymap):
+            layerHUD.hideImmediately()
             guard let definition = KeymapDefinition(firmwareKeymap: firmwareKeymap) else {
                 connectionStatus = .failed("Firmware matrix does not match the supported keyboard geometry.")
                 return
@@ -139,6 +151,10 @@ final class AppModel {
             latestSequence = report.sequence
             capabilities = report.capabilities
             connectionStatus = .connected
+            layerHUD.update(
+                activeLayer: activeLayer,
+                activeLayerMask: effectiveLayerMask
+            )
             if pendingRGBUpdate == nil,
                let reportedSettings = report.rgbSettings,
                rgbSettingsAwaitingAcknowledgement == nil
@@ -148,9 +164,11 @@ final class AppModel {
             }
         case .disconnected:
             cancelRGBSettingsUpdate()
+            layerHUD.hideImmediately()
             connectionStatus = .disconnected
         case let .failed(message):
             cancelRGBSettingsUpdate()
+            layerHUD.hideImmediately()
             connectionStatus = .failed(message)
         }
     }
@@ -190,6 +208,7 @@ final class AppModel {
         rgbSettings: RGBSettings
     ) {
         monitor = KeyboardHIDMonitor()
+        layerHUD = LayerHUDModel()
         connectionStatus = previewConnectionStatus
         self.keyboardKind = keyboardKind
         keymapDefinition = keyboardKind.map { KeymapDefinition.preview(for: $0) }
