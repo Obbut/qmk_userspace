@@ -123,3 +123,98 @@ func transferSessionPublishesOnlyAFingerprintValidatedKeymap() throws {
     ))
     #expect(completion.last == .write(KeymapProtocol.makeStateRequest()))
 }
+
+@MainActor
+@Test
+func observableModelUsesInjectedHardwareClient() async throws {
+    let hardware = RecordingHardwareClient()
+    let model = KeymapCompanionModel.live(hardware: hardware)
+
+    #expect(hardware.startCount == 1)
+    #expect(model.connectionStatus == .searching)
+
+    hardware.emit(.keymap(makeModelTestKeymap()))
+    hardware.emit(.state(KeyboardStateReport(
+        keyboardKind: .kyria,
+        layerStateMask: 1,
+        defaultLayerStateMask: 1,
+        sequence: 42,
+        capabilities: KeymapProtocol.layerStateCapability
+            | KeymapProtocol.keymapReadCapability
+            | KeymapProtocol.rgbSettingsCapability,
+        rgbSettings: .default
+    )))
+
+    #expect(model.connectionStatus == .connected)
+    #expect(model.keyboardKind == .kyria)
+    #expect(model.latestSequence == 42)
+    #expect(model.supportsRGBSettings)
+
+    model.updateRGBSettings { $0.isEnabled = false }
+    try await Task.sleep(for: .milliseconds(220))
+    #expect(hardware.appliedRGBSettings == [model.rgbSettings])
+
+    model.reconnect()
+    #expect(hardware.restartCount == 1)
+    #expect(model.connectionStatus == .searching)
+
+    model.shutdown()
+    #expect(hardware.stopCount == 1)
+}
+
+@MainActor
+@Test
+func sharedHUDModelPublishesAfterLayerDwell() async throws {
+    let hud = LayerHUDModel(transitionDelay: .milliseconds(20))
+    let mask = UInt32(1 << KeymapLayer.base.rawValue)
+        | UInt32(1 << KeymapLayer.lower.rawValue)
+
+    hud.update(activeLayer: .lower, activeLayerMask: mask)
+    #expect(hud.presentation == nil)
+    try await Task.sleep(for: .milliseconds(80))
+    #expect(hud.presentation == LayerHUDPresentation(layer: .lower, activeLayerMask: mask))
+}
+
+@MainActor
+private final class RecordingHardwareClient: KeyboardHardwareClient {
+    private var eventHandler: @MainActor @Sendable (KeyboardMonitorEvent) -> Void = { _ in }
+    private(set) var startCount = 0
+    private(set) var restartCount = 0
+    private(set) var stopCount = 0
+    private(set) var appliedRGBSettings: [RGBSettings] = []
+
+    func setEventHandler(
+        _ handler: @escaping @MainActor @Sendable (KeyboardMonitorEvent) -> Void
+    ) {
+        eventHandler = handler
+    }
+
+    func start() { startCount += 1 }
+    func restart() { restartCount += 1 }
+    func applyRGBSettings(_ settings: RGBSettings) { appliedRGBSettings.append(settings) }
+    func stop() { stopCount += 1 }
+
+    func emit(_ event: KeyboardMonitorEvent) {
+        eventHandler(event)
+    }
+}
+
+private func makeModelTestKeymap() -> FirmwareKeymap {
+    let layerCount = KeymapLayer.allCases.count
+    let rowCount = 10
+    let columnCount = 7
+    let matrixEntryCount = layerCount * rowCount * columnCount
+    let encoderEntryCount = layerCount * EncoderDirection.allCases.count
+    return FirmwareKeymap(
+        keyboardKind: .kyria,
+        layerCount: layerCount,
+        matrixRowCount: rowCount,
+        matrixColumnCount: columnCount,
+        encoderCount: 1,
+        fingerprint: 0,
+        entries: Array(
+            repeating: FirmwareKeymapEntry(keycode: 0, semantic: 0, style: .standard),
+            count: matrixEntryCount + encoderEntryCount
+        )
+    )
+}
