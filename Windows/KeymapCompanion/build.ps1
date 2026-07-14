@@ -8,8 +8,25 @@ $ErrorActionPreference = 'Stop'
 
 & (Join-Path $PSScriptRoot 'bootstrap.ps1')
 
-$vcvars = 'C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvars64.bat'
-if (-not (Test-Path $vcvars)) {
+$vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+if (Test-Path $vswhere) {
+    $visualStudioRoot = & $vswhere `
+        -latest `
+        -products * `
+        -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
+        -property installationPath
+    if ($LASTEXITCODE -ne 0) {
+        throw "Visual Studio discovery failed with exit code $LASTEXITCODE."
+    }
+    if ([string]::IsNullOrWhiteSpace($visualStudioRoot)) {
+        $vcvars = $null
+    } else {
+        $vcvars = Join-Path $visualStudioRoot 'VC\Auxiliary\Build\vcvars64.bat'
+    }
+} else {
+    $vcvars = 'C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC\Auxiliary\Build\vcvars64.bat'
+}
+if ([string]::IsNullOrWhiteSpace($vcvars) -or -not (Test-Path $vcvars)) {
     throw 'Visual C++ x64 build tools were not found. Install the Visual Studio C++ desktop workload.'
 }
 

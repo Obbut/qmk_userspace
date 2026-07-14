@@ -2,6 +2,15 @@
 param()
 
 $ErrorActionPreference = 'Stop'
+
+function Assert-NativeCommandSucceeded {
+    param([string] $Operation)
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "$Operation failed with exit code $LASTEXITCODE."
+    }
+}
+
 $dependencies = @(
     @{ Name = 'swift-cwinrt'; Revision = 'eb46cdb66f770a1e006f9fcfebbf9e99a0fba811' },
     @{ Name = 'swift-uwp'; Revision = 'd1a96986570189f8aa9ed089e9c4dab3c96e688c' },
@@ -17,9 +26,20 @@ foreach ($dependency in $dependencies) {
     $path = Join-Path $root $dependency.Name
     if (-not (Test-Path (Join-Path $path '.git'))) {
         git clone "https://github.com/thebrowsercompany/$($dependency.Name).git" $path
+        Assert-NativeCommandSucceeded "Cloning $($dependency.Name)"
     }
-    git -C $path fetch --quiet origin $dependency.Revision
-    git -C $path checkout --quiet --detach $dependency.Revision
+
+    $currentRevision = git -C $path rev-parse HEAD 2>$null
+    Assert-NativeCommandSucceeded "Reading the current $($dependency.Name) revision"
+    if ($currentRevision -ne $dependency.Revision) {
+        git -C $path rev-parse --verify "$($dependency.Revision)^{commit}" 2>$null | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            git -C $path fetch --quiet origin $dependency.Revision
+            Assert-NativeCommandSucceeded "Fetching $($dependency.Name)"
+        }
+        git -C $path checkout --quiet --detach $dependency.Revision
+        Assert-NativeCommandSucceeded "Checking out $($dependency.Name)"
+    }
 }
 
 # The archived swift-winui snapshot accidentally carries an ARM64 bootstrap DLL
