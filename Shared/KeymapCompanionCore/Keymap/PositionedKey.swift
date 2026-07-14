@@ -14,7 +14,7 @@ public struct PositionedKey: Equatable, Identifiable, Sendable {
     /// - Parameters:
     ///   - key: The firmware-owned key definition.
     ///   - placement: The key's physical board position.
-    public init(key: KeymapKey, placement: PhysicalKeyPlacement) {
+    init(key: KeymapKey, placement: PhysicalKeyPlacement) {
         self.key = key
         self.placement = placement
     }

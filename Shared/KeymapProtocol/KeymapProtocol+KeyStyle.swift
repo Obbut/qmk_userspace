@@ -1,3 +1,4 @@
+/// Stable presentation-style identifiers carried by keymap entries.
 extension KeymapProtocol {
     /// A visual category assigned to a key by the firmware.
     public enum KeyStyle: UInt8, Equatable, Sendable {

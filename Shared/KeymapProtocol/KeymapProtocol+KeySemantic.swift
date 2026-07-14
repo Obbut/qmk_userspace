@@ -1,3 +1,4 @@
+/// Stable semantic identifiers carried by keymap entries.
 extension KeymapProtocol {
     /// A semantic override for a compiled QMK keycode.
     public enum KeySemantic: UInt8, Equatable, Sendable {

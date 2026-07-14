@@ -39,7 +39,7 @@ public struct KeymapMetadataReport: Equatable, Sendable {
     ///   - fingerprint: The firmware-computed keymap fingerprint.
     ///   - entryCount: The complete number of matrix and encoder entries.
     ///   - encoderCount: The number of physical encoders represented after matrix entries.
-    public init(
+    init(
         keyboardKind: KeyboardKind,
         layerCount: Int,
         matrixRowCount: Int,

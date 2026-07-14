@@ -1,3 +1,4 @@
+/// Stable keyboard identifiers carried by protocol reports.
 extension KeymapProtocol {
     /// A keyboard model represented on the wire.
     public enum KeyboardKind: UInt8, CaseIterable, Equatable, Sendable {

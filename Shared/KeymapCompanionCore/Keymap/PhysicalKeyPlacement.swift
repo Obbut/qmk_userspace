@@ -15,7 +15,7 @@ public struct PhysicalKeyPlacement: Equatable, Sendable {
     ///   - centerX: The horizontal coordinate of the switch center.
     ///   - centerY: The vertical coordinate of the switch center.
     ///   - rotationDegrees: The clockwise rotation of the switch, in degrees.
-    public init(centerX: Double, centerY: Double, rotationDegrees: Double) {
+    init(centerX: Double, centerY: Double, rotationDegrees: Double) {
         self.centerX = centerX
         self.centerY = centerY
         self.rotationDegrees = rotationDegrees

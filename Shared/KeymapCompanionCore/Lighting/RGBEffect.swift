@@ -1,6 +1,7 @@
 /// The RGB effect identifier shared by firmware and companion apps.
 public typealias RGBEffect = KeymapProtocol.RGBEffect
 
+/// Identifiable conformance for protocol RGB Matrix effects.
 extension KeymapProtocol.RGBEffect: Identifiable {
     /// The stable firmware effect identifier.
     public var id: UInt8 { rawValue }

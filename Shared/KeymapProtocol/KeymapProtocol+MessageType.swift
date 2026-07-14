@@ -1,3 +1,4 @@
+/// Message identifiers for the protocol request and response envelope.
 extension KeymapProtocol {
     /// Message identifiers carried in byte five of a report.
     enum MessageType: UInt8 {

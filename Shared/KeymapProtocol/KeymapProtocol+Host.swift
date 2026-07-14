@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #if !hasFeature(Embedded)
+    /// Host-side validation and decoding for protocol reports.
     extension KeymapProtocol {
         /// Creates a request for the keyboard's current state.
         ///

@@ -1,10 +1,10 @@
 /// Physical layouts mirrored from the keymap-drawer SVGs in the repository README.
 public enum KeyboardGeometryCatalog {
     /// The Kyria Rev4 renderer geometry.
-    public static let kyria = makeKyria()
+    static let kyria = makeKyria()
 
     /// The Elora Rev2 renderer geometry.
-    public static let elora = makeElora()
+    static let elora = makeElora()
 
     /// Returns the renderer geometry for a keyboard model.
     ///

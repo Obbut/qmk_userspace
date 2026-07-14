@@ -27,7 +27,7 @@ public struct KeyboardStateReport: Equatable, Sendable {
     ///   - sequence: The monotonically increasing firmware sequence number.
     ///   - capabilities: The protocol capabilities advertised by the firmware.
     ///   - rgbSettings: The reported lighting configuration, when supported.
-    public init(
+    init(
         keyboardKind: KeyboardKind,
         layerStateMask: UInt32,
         defaultLayerStateMask: UInt32,

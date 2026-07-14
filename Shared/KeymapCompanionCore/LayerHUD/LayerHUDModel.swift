@@ -1,6 +1,6 @@
 import Observation
 
-/// Delays layer-HUD presentation changes without coupling them to AppKit or WinUI.
+/// A layer-HUD state machine that delays presentation changes without AppKit or WinUI.
 @MainActor
 @Observable
 public final class LayerHUDModel {

@@ -1,6 +1,5 @@
 import KeymapCompanionCore
-
-import SwiftUI
+import Foundation
 
 /// A keyboard model represented on the wire.
 typealias KeyboardKind = KeymapCompanionCore.KeyboardKind

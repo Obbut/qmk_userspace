@@ -83,13 +83,17 @@ func standardMacKeysUseNativeAppleGlyphs() {
     ]
 
     for expected in expectedLegends {
-        let legend = QMKKeycodeLegend.legend(
-            for: FirmwareKeymapEntry(
-                keycode: expected.keycode,
-                semantic: .none,
-                style: .standard
-            )
+        let key = KeymapKey(
+            id: "test-key",
+            entries: [
+                FirmwareKeymapEntry(
+                    keycode: expected.keycode,
+                    semantic: .none,
+                    style: .standard
+                )
+            ]
         )
+        let legend = key.resolvedLegend(forActiveLayerMask: 1)
 
         #expect(legend.label == expected.label)
         #expect(legend.systemImageName == expected.systemImageName)

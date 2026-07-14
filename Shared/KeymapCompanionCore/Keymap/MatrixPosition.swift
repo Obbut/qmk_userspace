@@ -11,7 +11,7 @@ public struct MatrixPosition: Equatable, Hashable, Sendable {
     /// - Parameters:
     ///   - row: The zero-based matrix row.
     ///   - column: The zero-based matrix column.
-    public init(row: Int, column: Int) {
+    init(row: Int, column: Int) {
         self.row = row
         self.column = column
     }

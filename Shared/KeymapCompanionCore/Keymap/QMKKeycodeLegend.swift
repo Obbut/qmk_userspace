@@ -1,13 +1,13 @@
 import Foundation
 
-/// Converts compiled QMK keycodes and firmware semantics into compact legends.
-public enum QMKKeycodeLegend {
+/// A converter from compiled QMK keycodes and firmware semantics to compact legends.
+enum QMKKeycodeLegend {
     /// Returns the renderer legend for a firmware keymap entry.
     ///
     /// - Parameter entry: The firmware keymap entry to describe.
     ///
     /// - Returns: A compact renderer legend.
-    public static func legend(for entry: FirmwareKeymapEntry) -> KeyLegend {
+    static func legend(for entry: FirmwareKeymapEntry) -> KeyLegend {
         KeyLegend(
             label: label(for: entry),
             symbol: entry.semantic == .none ? symbol(for: entry.keycode) : nil,
@@ -61,8 +61,8 @@ public enum QMKKeycodeLegend {
     private static func basicLabel(for keycode: UInt16) -> String? {
         return switch keycode {
         case 0x0000, 0x0001: ""
-            case 0x0004...0x001D:
-                UnicodeScalar(Int(keycode - 0x0004) + 65).map { String($0) }
+        case 0x0004...0x001D:
+            UnicodeScalar(Int(keycode - 0x0004) + 65).map { String($0) }
         case 0x001E...0x0026: String(Int(keycode - 0x001D))
         case 0x0027: "0"
         case 0x0028: "Return"

@@ -63,7 +63,7 @@ public struct FirmwareKeymap: Equatable, Sendable {
     ///   - row: The zero-based matrix row.
     ///   - column: The zero-based matrix column.
     /// - Returns: The entry, or `nil` when the coordinate is out of bounds.
-    public func entry(onLayer layerIndex: Int, row: Int, column: Int) -> FirmwareKeymapEntry? {
+    func entry(onLayer layerIndex: Int, row: Int, column: Int) -> FirmwareKeymapEntry? {
         guard layerIndex >= 0,
             layerIndex < layerCount,
             row >= 0,
@@ -86,7 +86,7 @@ public struct FirmwareKeymap: Equatable, Sendable {
     ///   - encoderIndex: The zero-based encoder index.
     ///   - direction: The encoder rotation direction.
     /// - Returns: The entry, or `nil` when the coordinate is out of bounds.
-    public func encoderEntry(
+    func encoderEntry(
         onLayer layerIndex: Int,
         encoderIndex: Int,
         direction: EncoderDirection

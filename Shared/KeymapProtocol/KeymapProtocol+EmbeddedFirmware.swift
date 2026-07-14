@@ -79,7 +79,7 @@
         }
 
         /// Sends an unsolicited state report when observable QMK state changes.
-        static func housekeeping() {
+        static func performHousekeeping() {
             guard isConnected else { return }
             let snapshot = keymap_protocol_platform_get_snapshot()
             guard hasStateChanged(snapshot),

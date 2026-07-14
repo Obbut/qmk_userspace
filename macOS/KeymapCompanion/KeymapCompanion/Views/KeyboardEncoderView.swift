@@ -16,7 +16,7 @@ struct KeyboardEncoderView: View {
         let centerX = CGFloat(encoder.placement.centerX)
         let centerY = CGFloat(encoder.placement.centerY)
         let pressLegend = encoder.pressKey.resolvedLegend(
-            activeLayerMask: activeLayerMask
+            forActiveLayerMask: activeLayerMask
         )
 
         ZStack(alignment: .topLeading) {
@@ -213,6 +213,7 @@ fileprivate struct EncoderActionView: View {
     }
 }
 
+/// Encoder-specific legend presentation.
 fileprivate extension KeyLegend {
     /// A compact encoder-specific rendering of common media actions.
     var encoderDisplayLabel: String {
@@ -248,7 +249,7 @@ fileprivate extension KeyLegend {
     #Preview("Encoder Knob") {
         let definition = KeymapDefinition.makePreview(for: .kyria)
         let legend = definition.rightEncoder.pressKey.resolvedLegend(
-            activeLayerMask: 0b0_0101
+            forActiveLayerMask: 0b0_0101
         )
 
         EncoderKnobView(pressLegend: legend)

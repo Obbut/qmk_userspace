@@ -1,6 +1,7 @@
 // Shared Raw HID report encoders for firmware and desktop use.
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+/// Firmware-side protocol report encoders.
 extension KeymapProtocol {
     /// Encodes one complete keyboard-state report.
     ///
@@ -153,15 +154,5 @@ extension KeymapProtocol {
         bytes[offset + 2] = semantic
         bytes[offset + 3] = style
         return true
-    }
-
-    /// Maps a zero-based QMK effect-table position to its stable wire identifier.
-    ///
-    /// - Parameter index: The zero-based effect-table position.
-    ///
-    /// - Returns: The stable identifier, or zero when the index is unsupported.
-    public static func rgbEffectIdentifier(at index: UInt8) -> UInt8 {
-        guard index < rgbEffectCount else { return 0 }
-        return index &+ 1
     }
 }

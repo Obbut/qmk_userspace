@@ -14,6 +14,6 @@
     /// Gives the Swift protocol engine an opportunity to send changed state.
     @c @implementation
     func keymap_protocol_housekeeping() {
-        KeymapProtocolFirmware.housekeeping()
+        KeymapProtocolFirmware.performHousekeeping()
     }
 #endif

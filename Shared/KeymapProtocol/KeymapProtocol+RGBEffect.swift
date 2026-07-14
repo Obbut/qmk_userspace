@@ -1,6 +1,7 @@
 // Shared stable RGB effect identifiers.
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+/// Stable RGB Matrix effect identifiers carried by protocol reports.
 extension KeymapProtocol {
     /// A stable identifier for one supported QMK RGB Matrix effect.
     public enum RGBEffect: UInt8, CaseIterable, Equatable, Hashable, Sendable {

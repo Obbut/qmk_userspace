@@ -23,7 +23,7 @@ public struct KeyboardGeometry: Equatable, Sendable {
     ///   - placements: The ordered placements of the keyboard's visible switches.
     ///   - matrixPositions: The matrix positions corresponding to `placements`.
     ///   - rightEncoderPlacement: The placement of the right encoder.
-    public init(
+    init(
         canvasWidth: Double,
         canvasHeight: Double,
         placements: [PhysicalKeyPlacement],

@@ -19,7 +19,7 @@ public struct KeymapChunkReport: Equatable, Sendable {
     ///   - startIndex: The layer-major index of the first entry in this page.
     ///   - totalEntryCount: The complete entry count advertised by transfer metadata.
     ///   - entries: The consecutive entries in this page.
-    public init(
+    init(
         keyboardKind: KeyboardKind,
         startIndex: Int,
         totalEntryCount: Int,

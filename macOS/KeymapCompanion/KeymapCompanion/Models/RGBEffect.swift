@@ -1,6 +1,5 @@
 import KeymapCompanionCore
-
-import SwiftUI
+import Foundation
 
 /// A stable RGB Matrix effect identifier.
 typealias RGBEffect = KeymapCompanionCore.RGBEffect

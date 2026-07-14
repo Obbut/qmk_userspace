@@ -39,6 +39,7 @@ fileprivate enum KeyboardHardwareClientKey: TestDependencyKey {
     static let testValue: any KeyboardHardwareClient = InertKeyboardHardwareClient()
 }
 
+/// DependencyValues access to the platform keyboard hardware client.
 public extension DependencyValues {
     /// The platform hardware boundary used by the companion model.
     var keyboardHardware: any KeyboardHardwareClient {

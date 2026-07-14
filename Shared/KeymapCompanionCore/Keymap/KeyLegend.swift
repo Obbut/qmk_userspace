@@ -15,7 +15,7 @@ public struct KeyLegend: Equatable, Sendable {
     ///   - label: The compact fallback text.
     ///   - symbol: The optional semantic symbol for a native renderer.
     ///   - style: The presentation category supplied by firmware.
-    public init(
+    init(
         label: String,
         symbol: KeySymbol? = nil,
         style: KeyStyle = .standard

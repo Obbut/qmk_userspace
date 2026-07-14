@@ -1,6 +1,5 @@
 import KeymapCompanionCore
-
-import SwiftUI
+import Foundation
 
 /// A firmware layer shared by the Elora and Kyria keymaps.
 typealias KeymapLayer = KeymapCompanionCore.KeymapLayer

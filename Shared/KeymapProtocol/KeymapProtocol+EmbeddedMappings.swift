@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #if hasFeature(Embedded)
+    /// Embedded lookup tables that map C adapter values onto wire identifiers.
     extension KeymapProtocolFirmware {
         /// Calculates the total matrix and encoder entry count.
         ///

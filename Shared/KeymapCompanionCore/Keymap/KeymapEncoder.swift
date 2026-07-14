@@ -23,7 +23,7 @@ public struct KeymapEncoder: Equatable, Sendable {
     ///   - counterclockwiseKey: The counterclockwise mapping across every layer.
     ///   - pressKey: The encoder-press mapping across every layer.
     ///   - clockwiseKey: The clockwise mapping across every layer.
-    public init(
+    init(
         id: String,
         placement: PhysicalKeyPlacement,
         counterclockwiseKey: KeymapKey,

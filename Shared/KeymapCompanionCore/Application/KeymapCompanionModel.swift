@@ -57,10 +57,10 @@ public final class KeymapCompanionModel {
     /// Whether firmware state is currently being copied into ``rgbSettings``.
     @ObservationIgnored private var isApplyingKeyboardRGBSettings = false
 
-    /// Creates the shared model and starts the injected platform hardware client.
+    /// Creates the shared model and starts the currently injected hardware client.
     ///
     /// - Parameter layerHUD: The layer HUD state machine.
-    public init(layerHUD: LayerHUDModel = LayerHUDModel()) {
+    private init(layerHUD: LayerHUDModel) {
         self.layerHUD = layerHUD
         hardware.setEventHandler { [weak self] event in
             self?.receive(event)
@@ -240,6 +240,7 @@ public final class KeymapCompanionModel {
 }
 
 #if DEBUG
+    /// Preview factories for the shared companion state model.
     public extension KeymapCompanionModel {
         /// Creates deterministic preview state without starting a hardware client.
         ///
