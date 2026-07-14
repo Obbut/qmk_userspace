@@ -1,2 +1,4 @@
-/// The shared wire-level encoder direction.
-typealias EncoderDirection = KeymapProtocol.EncoderDirection
+import KeymapCompanionCore
+
+typealias KeymapProtocol = KeymapCompanionCore.KeymapProtocol
+typealias EncoderDirection = KeymapCompanionCore.EncoderDirection

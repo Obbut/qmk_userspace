@@ -1,36 +1,29 @@
 import Observation
+import KeymapCompanionCore
 
 /// Main-actor application state shared by the window and menu-bar scenes.
 @MainActor
 @Observable
 final class AppModel {
-    /// The current device-monitoring phase.
-    private(set) var connectionStatus: ConnectionStatus = .searching
+    /// Platform-neutral state shared with the Windows companion.
+    private var state = CompanionState()
 
-    /// The last compatible keyboard that sent a validated packet.
-    private(set) var keyboardKind: KeyboardKind?
-
-    /// The visual keymap built exclusively from the downloaded firmware matrix.
-    private(set) var keymapDefinition: KeymapDefinition?
-
-    /// The current QMK layer-state mask.
-    private(set) var layerStateMask: UInt32 = 1
-
-    /// The current QMK default-layer-state mask.
-    private(set) var defaultLayerStateMask: UInt32 = 1
-
-    /// The latest firmware packet sequence, useful for future diagnostics.
-    private(set) var latestSequence: UInt32 = 0
-
-    /// The capabilities advertised by the connected firmware.
-    private(set) var capabilities: UInt32 = 0
+    var connectionStatus: ConnectionStatus { state.connectionStatus }
+    var keyboardKind: KeyboardKind? { state.keyboardKind }
+    var keymapDefinition: KeymapDefinition? { state.keymapDefinition }
+    var layerStateMask: UInt32 { state.layerStateMask }
+    var defaultLayerStateMask: UInt32 { state.defaultLayerStateMask }
+    var latestSequence: UInt32 { state.latestSequence }
+    var capabilities: UInt32 { state.capabilities }
 
     /// The delayed state that determines whether the layer HUD is visible.
     let layerHUD: LayerHUDModel
 
     /// The editable base-layer RGB Matrix configuration.
-    var rgbSettings: RGBSettings = .default {
-        didSet {
+    var rgbSettings: RGBSettings {
+        get { state.rgbSettings }
+        set {
+            state.setRGBSettings(newValue)
             scheduleRGBSettingsUpdate()
         }
     }
@@ -65,27 +58,24 @@ final class AppModel {
 
     /// The union needed to resolve transparent QMK mappings.
     var effectiveLayerMask: UInt32 {
-        layerStateMask | defaultLayerStateMask
+        state.effectiveLayerMask
     }
 
     /// The highest layer currently visible to the user.
     var activeLayer: KeymapLayer {
-        KeymapLayer.highestActiveLayer(in: effectiveLayerMask)
+        state.activeLayer
     }
 
     /// Whether the active firmware supports explicit RGB Matrix settings.
     var supportsRGBSettings: Bool {
-        connectionStatus.isConnected
-            && capabilities & KeymapProtocol.rgbSettingsCapability != 0
+        state.supportsRGBSettings
     }
 
     /// Restarts discovery and downloads fresh keymap and state data from matching devices.
     func reconnect() {
         cancelRGBSettingsUpdate()
         layerHUD.hideImmediately()
-        connectionStatus = .searching
-        keyboardKind = nil
-        keymapDefinition = nil
+        state.apply(.searching)
         monitor.restart()
     }
 
@@ -121,7 +111,7 @@ final class AppModel {
     /// - Parameter settings: The validated configuration reported by QMK.
     private func applyKeyboardRGBSettings(_ settings: RGBSettings) {
         isApplyingKeyboardRGBSettings = true
-        rgbSettings = settings
+        state.setRGBSettings(settings)
         isApplyingKeyboardRGBSettings = false
     }
 
@@ -132,44 +122,33 @@ final class AppModel {
         case .searching:
             cancelRGBSettingsUpdate()
             layerHUD.hideImmediately()
-            connectionStatus = .searching
-            keyboardKind = nil
-            keymapDefinition = nil
-        case let .keymap(firmwareKeymap):
+            state.apply(event)
+        case .keymap:
             layerHUD.hideImmediately()
-            guard let definition = KeymapDefinition(firmwareKeymap: firmwareKeymap) else {
-                connectionStatus = .failed("Firmware matrix does not match the supported keyboard geometry.")
-                return
-            }
-            keyboardKind = firmwareKeymap.keyboardKind
-            keymapDefinition = definition
+            state.apply(event)
         case let .state(report):
             guard keymapDefinition?.keyboardKind == report.keyboardKind else { return }
-            keyboardKind = report.keyboardKind
-            layerStateMask = report.layerStateMask
-            defaultLayerStateMask = report.defaultLayerStateMask
-            latestSequence = report.sequence
-            capabilities = report.capabilities
-            connectionStatus = .connected
+            let acceptsRGBSettings = pendingRGBUpdate == nil
+                && report.rgbSettings != nil
+                && (rgbSettingsAwaitingAcknowledgement == nil
+                    || rgbSettingsAwaitingAcknowledgement == report.rgbSettings)
+            state.apply(event, acceptRGBSettings: acceptsRGBSettings)
             layerHUD.update(
                 activeLayer: activeLayer,
                 activeLayerMask: effectiveLayerMask
             )
-            if pendingRGBUpdate == nil,
-               let reportedSettings = report.rgbSettings,
-               rgbSettingsAwaitingAcknowledgement == nil
-                || rgbSettingsAwaitingAcknowledgement == reportedSettings {
+            if acceptsRGBSettings, let reportedSettings = report.rgbSettings {
                 rgbSettingsAwaitingAcknowledgement = nil
                 applyKeyboardRGBSettings(reportedSettings)
             }
         case .disconnected:
             cancelRGBSettingsUpdate()
             layerHUD.hideImmediately()
-            connectionStatus = .disconnected
-        case let .failed(message):
+            state.apply(event)
+        case .failed:
             cancelRGBSettingsUpdate()
             layerHUD.hideImmediately()
-            connectionStatus = .failed(message)
+            state.apply(event)
         }
     }
 
@@ -209,15 +188,18 @@ final class AppModel {
     ) {
         monitor = KeyboardHIDMonitor()
         layerHUD = LayerHUDModel()
-        connectionStatus = previewConnectionStatus
-        self.keyboardKind = keyboardKind
-        keymapDefinition = keyboardKind.map { KeymapDefinition.preview(for: $0) }
-        layerStateMask = activeLayers.reduce(into: UInt32.zero) { mask, layer in
+        let layerStateMask = activeLayers.reduce(into: UInt32.zero) { mask, layer in
             mask |= UInt32(1) << UInt32(layer.rawValue)
         }
-        defaultLayerStateMask = UInt32(1) << UInt32(KeymapLayer.base.rawValue)
-        capabilities = previewConnectionStatus.isConnected ? 7 : 0
-        self.rgbSettings = rgbSettings
+        state = CompanionState(
+            connectionStatus: previewConnectionStatus,
+            keyboardKind: keyboardKind,
+            keymapDefinition: keyboardKind.map { KeymapDefinition.preview(for: $0) },
+            layerStateMask: layerStateMask,
+            defaultLayerStateMask: UInt32(1) << UInt32(KeymapLayer.base.rawValue),
+            capabilities: previewConnectionStatus.isConnected ? 7 : 0,
+            rgbSettings: rgbSettings
+        )
     }
 #endif
 }

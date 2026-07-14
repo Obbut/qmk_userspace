@@ -1,26 +1,39 @@
-/// A key label and its layer-specific RGB category.
-struct KeyLegend: Equatable, Sendable {
-    /// The readable key name used for text legends and accessibility.
-    let label: String
+import KeymapCompanionCore
 
-    /// The native Apple glyph used instead of text when available.
-    let systemImageName: String?
+typealias KeyLegend = KeymapCompanionCore.KeyLegend
+typealias KeySymbol = KeymapCompanionCore.KeySymbol
 
-    /// The visual category for the key.
-    let style: KeyStyle
+extension KeymapCompanionCore.KeyLegend {
+    /// The SF Symbol used by the existing SwiftUI renderer.
+    var systemImageName: String? {
+        symbol?.systemImageName
+    }
+}
 
-    /// Creates a key legend.
-    /// - Parameters:
-    ///   - label: The readable key name.
-    ///   - systemImageName: An optional SF Symbol representing the key.
-    ///   - style: The RGB-inspired visual category.
-    init(
-        label: String,
-        systemImageName: String? = nil,
-        style: KeyStyle = .standard
-    ) {
-        self.label = label
-        self.systemImageName = systemImageName
-        self.style = style
+private extension KeymapCompanionCore.KeySymbol {
+    var systemImageName: String {
+        switch self {
+        case .returnKey: "return"
+        case .escape: "escape"
+        case .deleteBackward: "delete.left"
+        case .tab: "arrow.right.to.line"
+        case .space: "space"
+        case .capsLock: "capslock"
+        case .deleteForward: "delete.right"
+        case .arrowRight: "arrow.right"
+        case .arrowLeft: "arrow.left"
+        case .arrowDown: "arrow.down"
+        case .arrowUp: "arrow.up"
+        case .mute: "speaker.slash.fill"
+        case .volumeUp: "speaker.wave.3.fill"
+        case .volumeDown: "speaker.wave.1.fill"
+        case .nextTrack: "forward.end.fill"
+        case .previousTrack: "backward.end.fill"
+        case .playPause: "playpause.fill"
+        case .control: "control"
+        case .shift: "shift"
+        case .option: "option"
+        case .command: "command"
+        }
     }
 }

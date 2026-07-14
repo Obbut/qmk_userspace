@@ -5,20 +5,20 @@
 extension KeymapProtocol {
     /// Creates a request for the keyboard's current state.
     /// - Returns: One complete Raw HID output report.
-    static func makeStateRequest() -> [UInt8] {
+    public static func makeStateRequest() -> [UInt8] {
         makeRequest(type: .getState)
     }
 
     /// Creates a request for the firmware's keymap dimensions and fingerprint.
     /// - Returns: One complete Raw HID output report.
-    static func makeKeymapMetadataRequest() -> [UInt8] {
+    public static func makeKeymapMetadataRequest() -> [UInt8] {
         makeRequest(type: .getKeymapInfo)
     }
 
     /// Creates a request for consecutive keymap entries.
     /// - Parameter startIndex: The first layer-major matrix entry to return.
     /// - Returns: One complete Raw HID output report.
-    static func makeKeymapChunkRequest(startingAt startIndex: UInt16) -> [UInt8] {
+    public static func makeKeymapChunkRequest(startingAt startIndex: UInt16) -> [UInt8] {
         var report = makeRequest(type: .getKeymapChunk)
         report.withUnsafeMutableBufferPointer {
             writeUInt16(startIndex, to: $0, at: 6)
@@ -29,7 +29,7 @@ extension KeymapProtocol {
     /// Creates a request that persists an explicit RGB Matrix configuration.
     /// - Parameter settings: The complete base-layer configuration to apply.
     /// - Returns: One complete Raw HID output report.
-    static func makeRGBSettingsRequest(_ settings: RGBSettings) -> [UInt8] {
+    public static func makeRGBSettingsRequest(_ settings: RGBSettings) -> [UInt8] {
         var report = makeRequest(type: .setRGBSettings)
         report[6] = settings.isEnabled ? 1 : 0
         report[7] = settings.effect.rawValue
@@ -43,7 +43,7 @@ extension KeymapProtocol {
     /// Parses a state packet while rejecting unrelated Raw HID traffic.
     /// - Parameter bytes: A complete Raw HID input report.
     /// - Returns: A validated state report, or `nil` for another protocol or version.
-    static func parseStateReport(_ bytes: [UInt8]) -> KeyboardStateReport? {
+    public static func parseStateReport(_ bytes: [UInt8]) -> KeyboardStateReport? {
         bytes.withUnsafeBufferPointer { report in
             guard hasValidHeader(report, type: .state),
                   let keyboardKind = KeyboardKind(rawValue: report[6]) else {
@@ -80,7 +80,7 @@ extension KeymapProtocol {
     /// Parses the packet that begins a complete keymap transfer.
     /// - Parameter bytes: A complete Raw HID input report.
     /// - Returns: Validated transfer metadata, or `nil` for another packet type.
-    static func parseKeymapMetadataReport(_ bytes: [UInt8]) -> KeymapMetadataReport? {
+    public static func parseKeymapMetadataReport(_ bytes: [UInt8]) -> KeymapMetadataReport? {
         bytes.withUnsafeBufferPointer { report in
             guard hasValidHeader(report, type: .keymapInfo),
                   let keyboardKind = KeyboardKind(rawValue: report[6]) else {
@@ -128,7 +128,7 @@ extension KeymapProtocol {
     /// Parses one page of layer-major matrix entries.
     /// - Parameter bytes: A complete Raw HID input report.
     /// - Returns: A validated page, or `nil` for another or malformed packet.
-    static func parseKeymapChunkReport(_ bytes: [UInt8]) -> KeymapChunkReport? {
+    public static func parseKeymapChunkReport(_ bytes: [UInt8]) -> KeymapChunkReport? {
         bytes.withUnsafeBufferPointer { report in
             guard hasValidHeader(report, type: .keymapChunk),
                   let keyboardKind = KeyboardKind(rawValue: report[6]) else {

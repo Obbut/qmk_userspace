@@ -1,6 +1,7 @@
 import CoreFoundation
 import Foundation
 @preconcurrency import IOKit.hid
+import KeymapCompanionCore
 
 /// Discovers QMK Raw HID endpoints and keeps their state callbacks on the main run loop.
 @MainActor
@@ -127,7 +128,6 @@ final class KeyboardHIDMonitor {
     ///   - session: The endpoint that delivered it.
     fileprivate func receive(_ report: KeyboardStateReport, from session: HIDDeviceSession) {
         let id = ObjectIdentifier(session.device)
-        session.latestReport = report
         activeSessionID = id
         eventHandler(.state(report))
     }
@@ -155,11 +155,14 @@ private final class HIDDeviceSession {
     /// The underlying IOHID device.
     let device: IOHIDDevice
 
+    /// Platform-neutral packet decoding and keymap pagination state.
+    private var transferSession = KeymapTransferSession()
+
     /// The most recent compatible packet received on this endpoint.
-    var latestReport: KeyboardStateReport?
+    var latestReport: KeyboardStateReport? { transferSession.latestReport }
 
     /// The complete keymap most recently downloaded from this endpoint.
-    var latestKeymap: FirmwareKeymap?
+    var latestKeymap: FirmwareKeymap? { transferSession.latestKeymap }
 
     /// The monitor that owns this session.
     private weak var monitor: KeyboardHIDMonitor?
@@ -169,12 +172,6 @@ private final class HIDDeviceSession {
 
     /// Whether the endpoint is currently open.
     private var isOpen = false
-
-    /// Metadata for the keymap transfer currently in progress.
-    private var keymapMetadata: KeymapMetadataReport?
-
-    /// Consecutive entries accumulated for the current transfer.
-    private var keymapEntries: [FirmwareKeymapEntry] = []
 
     /// Creates a device session and allocates its callback buffer.
     /// - Parameters:
@@ -223,97 +220,34 @@ private final class HIDDeviceSession {
     /// Sends a complete RGB Matrix configuration to this keyboard.
     /// - Parameter settings: The persistent configuration to apply.
     func applyRGBSettings(_ settings: RGBSettings) {
-        send(KeymapProtocol.makeRGBSettingsRequest(settings))
+        send(transferSession.rgbSettingsRequest(settings))
     }
 
     /// Starts the protocol handshake by requesting dimensions and a fingerprint.
     func requestKeymapMetadata() {
-        send(KeymapProtocol.makeKeymapMetadataRequest())
+        handle(transferSession.start())
     }
 
     /// Routes one input packet into the state or paginated keymap flow.
     /// - Parameter bytes: One complete Raw HID input report.
     private func receive(_ bytes: [UInt8]) {
-        if let metadata = KeymapProtocol.parseKeymapMetadataReport(bytes) {
-            beginKeymapTransfer(metadata)
-            return
-        }
-        if let chunk = KeymapProtocol.parseKeymapChunkReport(bytes) {
-            continueKeymapTransfer(chunk)
-            return
-        }
-        if let state = KeymapProtocol.parseStateReport(bytes) {
-            latestReport = state
-            if latestKeymap?.keyboardKind == state.keyboardKind {
-                monitor?.receive(state, from: self)
+        handle(transferSession.receive(bytes))
+    }
+
+    /// Applies protocol actions to this platform HID endpoint and its owning monitor.
+    private func handle(_ actions: [KeymapSessionAction]) {
+        for action in actions {
+            switch action {
+            case let .write(request):
+                send(request)
+            case let .keymap(keymap):
+                monitor?.receive(keymap, from: self)
+            case let .state(report):
+                monitor?.receive(report, from: self)
+            case let .failed(message):
+                monitor?.receiveTransferFailure(message)
             }
         }
-    }
-
-    /// Resets transfer state and requests the first page.
-    /// - Parameter metadata: The validated firmware transfer metadata.
-    private func beginKeymapTransfer(_ metadata: KeymapMetadataReport) {
-        keymapMetadata = metadata
-        keymapEntries.removeAll(keepingCapacity: true)
-        keymapEntries.reserveCapacity(metadata.entryCount)
-        requestKeymapChunk(startingAt: 0)
-    }
-
-    /// Validates and appends one page, then requests the next page or publishes the result.
-    /// - Parameter chunk: The decoded keymap page.
-    private func continueKeymapTransfer(_ chunk: KeymapChunkReport) {
-        guard let metadata = keymapMetadata,
-              chunk.keyboardKind == metadata.keyboardKind,
-              chunk.totalEntryCount == metadata.entryCount,
-              chunk.startIndex == keymapEntries.count,
-              chunk.entries.count <= metadata.entriesPerChunk else {
-            monitor?.receiveTransferFailure("Firmware returned an inconsistent keymap chunk.")
-            return
-        }
-
-        keymapEntries.append(contentsOf: chunk.entries)
-        guard keymapEntries.count == metadata.entryCount else {
-            requestKeymapChunk(startingAt: keymapEntries.count)
-            return
-        }
-
-        let keymap = FirmwareKeymap(
-            keyboardKind: metadata.keyboardKind,
-            layerCount: metadata.layerCount,
-            matrixRowCount: metadata.matrixRowCount,
-            matrixColumnCount: metadata.matrixColumnCount,
-            encoderCount: metadata.encoderCount,
-            fingerprint: metadata.fingerprint,
-            entries: keymapEntries
-        )
-        guard keymap.hasValidFingerprint else {
-            monitor?.receiveTransferFailure("Firmware keymap fingerprint validation failed.")
-            return
-        }
-
-        latestKeymap = keymap
-        keymapMetadata = nil
-        monitor?.receive(keymap, from: self)
-        if let latestReport, latestReport.keyboardKind == keymap.keyboardKind {
-            monitor?.receive(latestReport, from: self)
-        } else {
-            requestCurrentState()
-        }
-    }
-
-    /// Requests the next transfer page.
-    /// - Parameter startIndex: The first entry expected in the response.
-    private func requestKeymapChunk(startingAt startIndex: Int) {
-        guard let encodedIndex = UInt16(exactly: startIndex) else {
-            monitor?.receiveTransferFailure("Firmware keymap is too large for protocol v3.")
-            return
-        }
-        send(KeymapProtocol.makeKeymapChunkRequest(startingAt: encodedIndex))
-    }
-
-    /// Sends the current-state request after the keymap transfer completes.
-    private func requestCurrentState() {
-        send(KeymapProtocol.makeStateRequest())
     }
 
     /// Writes one fixed-size output report to the device.

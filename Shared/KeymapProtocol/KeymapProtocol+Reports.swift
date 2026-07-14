@@ -19,7 +19,7 @@ extension KeymapProtocol {
     ///   - rgbSpeed: The QMK animation speed.
     /// - Returns: Whether the report was encoded successfully.
     @discardableResult
-    static func encodeStateReport(
+    public static func encodeStateReport(
         to bytes: UnsafeMutableBufferPointer<UInt8>,
         keyboardKind: UInt8,
         highestActiveLayer: UInt8,
@@ -68,7 +68,7 @@ extension KeymapProtocol {
     ///   - encoderCount: The number of physical encoders represented after matrix entries.
     /// - Returns: Whether the report was encoded successfully.
     @discardableResult
-    static func encodeKeymapMetadataReport(
+    public static func encodeKeymapMetadataReport(
         to bytes: UnsafeMutableBufferPointer<UInt8>,
         keyboardKind: UInt8,
         layerCount: UInt8,
@@ -101,7 +101,7 @@ extension KeymapProtocol {
     ///   - totalEntryCount: The complete keymap entry count.
     /// - Returns: Whether the pagination values fit a valid chunk.
     @discardableResult
-    static func encodeKeymapChunkHeader(
+    public static func encodeKeymapChunkHeader(
         to bytes: UnsafeMutableBufferPointer<UInt8>,
         keyboardKind: UInt8,
         entryCount: UInt8,
@@ -130,7 +130,7 @@ extension KeymapProtocol {
     ///   - bytes: The initialized chunk report.
     /// - Returns: Whether the entry index is present in this chunk.
     @discardableResult
-    static func encodeKeymapEntry(
+    public static func encodeKeymapEntry(
         keycode: UInt16,
         semantic: UInt8,
         style: UInt8,
@@ -152,7 +152,7 @@ extension KeymapProtocol {
     /// Maps a zero-based QMK effect-table position to its stable wire identifier.
     /// - Parameter index: The zero-based effect-table position.
     /// - Returns: The stable identifier, or zero when the index is unsupported.
-    static func rgbEffectIdentifier(at index: UInt8) -> UInt8 {
+    public static func rgbEffectIdentifier(at index: UInt8) -> UInt8 {
         guard index < rgbEffectCount else { return 0 }
         return index &+ 1
     }

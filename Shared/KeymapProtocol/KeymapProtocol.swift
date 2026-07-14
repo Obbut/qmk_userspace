@@ -2,18 +2,18 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /// The single wire definition for communication between QMK and Keymap Companion.
-enum KeymapProtocol {
+public enum KeymapProtocol {
     /// QMK's default Raw HID usage page.
-    static let usagePage = 0xFF60
+    public static let usagePage = 0xFF60
 
     /// QMK's default Raw HID usage identifier.
-    static let usage = 0x61
+    public static let usage = 0x61
 
     /// The byte count of every Raw HID report.
-    static let reportSize = 32
+    public static let reportSize = 32
 
     /// The current wire-format version.
-    static let version: UInt8 = 3
+    public static let version: UInt8 = 3
 
     /// The byte count of one keycode, semantic, and style tuple.
     static let keymapEntrySize = 4
@@ -30,13 +30,13 @@ enum KeymapProtocol {
     }
 
     /// The capability bit for realtime layer state.
-    static let layerStateCapability: UInt32 = 1 << 0
+    public static let layerStateCapability: UInt32 = 1 << 0
 
     /// The capability bit for reading the compiled keymap.
-    static let keymapReadCapability: UInt32 = 1 << 1
+    public static let keymapReadCapability: UInt32 = 1 << 1
 
     /// The capability bit for explicit RGB Matrix settings.
-    static let rgbSettingsCapability: UInt32 = 1 << 2
+    public static let rgbSettingsCapability: UInt32 = 1 << 2
 
     /// The number of stable RGB effect identifiers.
     static var rgbEffectCount: UInt8 {
@@ -68,7 +68,7 @@ enum KeymapProtocol {
     }
 
     /// A keyboard model represented on the wire.
-    enum KeyboardKind: UInt8, CaseIterable, Equatable, Sendable {
+    public enum KeyboardKind: UInt8, CaseIterable, Equatable, Sendable {
         /// The splitkb Kyria Rev4.
         case kyria = 1
 
@@ -77,7 +77,7 @@ enum KeymapProtocol {
     }
 
     /// A semantic override for a compiled QMK keycode.
-    enum KeySemantic: UInt8, Equatable, Sendable {
+    public enum KeySemantic: UInt8, Equatable, Sendable {
         /// No semantic override.
         case none = 0
 
@@ -89,7 +89,7 @@ enum KeymapProtocol {
     }
 
     /// A visual category assigned to a key by the firmware.
-    enum KeyStyle: UInt8, Equatable, Sendable {
+    public enum KeyStyle: UInt8, Equatable, Sendable {
         /// A key without a layer-specific RGB category.
         case standard = 0
 
@@ -122,7 +122,7 @@ enum KeymapProtocol {
     }
 
     /// One rotary direction in the firmware encoder map.
-    enum EncoderDirection: Int, CaseIterable, Equatable, Sendable {
+    public enum EncoderDirection: Int, CaseIterable, Equatable, Sendable {
         /// Counter-clockwise rotation.
         case counterClockwise = 0
 

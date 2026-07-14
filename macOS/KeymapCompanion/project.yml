@@ -19,15 +19,20 @@ settings:
     ENABLE_HARDENED_RUNTIME: YES
     LOCALIZATION_PREFERS_STRING_CATALOGS: YES
 
+packages:
+  KeymapCompanionShared:
+    path: ../../Shared
+
 targets:
   KeymapCompanion:
     type: application
     platform: macOS
     sources:
       - path: KeymapCompanion
-      - path: ../../Shared/KeymapProtocol
     dependencies:
       - sdk: IOKit.framework
+      - package: KeymapCompanionShared
+        product: KeymapCompanionCore
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.obbut.KeymapCompanion
