@@ -15,6 +15,9 @@
 # IDE
 .vscode/
 .idea/
+.derivedData/
+xcuserdata/
+*.xcuserstate
 
 # Claude Code - ignore local/personal files only
 .claude/**/*.local.*
