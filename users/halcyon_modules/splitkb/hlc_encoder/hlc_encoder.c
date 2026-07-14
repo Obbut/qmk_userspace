@@ -108,25 +108,26 @@ void matrix_read_cols_on_row(matrix_row_t current_matrix[], uint8_t current_row)
     // Start with a clear matrix row
     matrix_row_t current_row_value = 0;
 
+    // The Halcyon module row is synthetic: it has no matching matrix row pin.
+    // Read the encoder button directly instead of selecting row_pins[ROWS_PER_HAND - 1].
+    if (current_row == (ROWS_PER_HAND - 1)) {
+        current_matrix[current_row] = ((!gpio_read_pin(HLC_ENCODER_BUTTON)) & 1) << 0;
+        return;
+    }
+
     if (!select_row(current_row)) { // Select row
         return;                     // skip NO_PIN row
     }
     matrix_output_select_delay();
 
-    // ↓↓↓ THIS HAS BEEN ADDED/CHANGED
-    if (current_row == (ROWS_PER_HAND - 1)) {
-        current_row_value |= ((!gpio_read_pin(HLC_ENCODER_BUTTON)) & 1) << 0;
-    } else {
-        // For each col...
-        matrix_row_t row_shifter = MATRIX_ROW_SHIFTER;
-        for (uint8_t col_index = 0; col_index < MATRIX_COLS; col_index++, row_shifter <<= 1) {
-            uint8_t pin_state = readMatrixPin(col_pins[col_index]);
+    // For each col...
+    matrix_row_t row_shifter = MATRIX_ROW_SHIFTER;
+    for (uint8_t col_index = 0; col_index < MATRIX_COLS; col_index++, row_shifter <<= 1) {
+        uint8_t pin_state = readMatrixPin(col_pins[col_index]);
 
-            // Populate the matrix row with the state of the col pin
-            current_row_value |= pin_state ? 0 : row_shifter;
-        }
+        // Populate the matrix row with the state of the col pin
+        current_row_value |= pin_state ? 0 : row_shifter;
     }
-    // ↑↑↑ THIS HAS BEEN ADDED/CHANGED
 
     // Unselect row
     unselect_row(current_row);

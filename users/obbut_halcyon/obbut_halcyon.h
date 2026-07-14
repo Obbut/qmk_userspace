@@ -56,7 +56,7 @@ enum layers {
 
 // Module row (extra keys for modules) - 5 keys each side
 #define DEFAULT_MODULE_L  KC_NO, KC_NO, KC_NO, KC_NO, KC_NO
-#define DEFAULT_MODULE_R  KC_NO, KC_NO, KC_NO, KC_NO, KC_NO
+#define DEFAULT_MODULE_R  KC_MUTE, KC_NO, KC_NO, KC_NO, KC_NO
 
 // Number row (Elora only)
 #define DEFAULT_NUM_L   KC_GRV,  KC_1,    KC_2,    KC_3,    KC_4,    KC_5
@@ -78,7 +78,7 @@ enum layers {
 #define QWERTY_THUMB_R   KC_NO,   KC_SPC,  RAISE,  LOWER,  KC_NO
 
 #define QWERTY_MODULE_L  KC_NO, KC_NO, KC_NO, KC_NO, KC_NO
-#define QWERTY_MODULE_R  KC_NO, KC_NO, KC_NO, KC_NO, KC_NO
+#define QWERTY_MODULE_R  KC_MUTE, KC_NO, KC_NO, KC_NO, KC_NO
 
 // Number row (Elora only) - same as default
 #define QWERTY_NUM_L   KC_GRV,  KC_1,    KC_2,    KC_3,    KC_4,    KC_5
