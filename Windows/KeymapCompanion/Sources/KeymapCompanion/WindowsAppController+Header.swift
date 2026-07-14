@@ -2,7 +2,7 @@ import KeymapCompanionCore
 import UWP
 import WinUI
 
-/// Header and connection-state presentation for the Windows app controller.
+/// Header and connection guidance for the Windows app controller.
 extension WindowsAppController {
     /// Creates the app identity and primary action row.
     ///
@@ -18,17 +18,10 @@ extension WindowsAppController {
         actionsColumn.width = GridLength(value: 1, gridUnitType: .auto)
         header.columnDefinitions.append(actionsColumn)
 
-        let identity = StackPanel()
-        identity.orientation = .horizontal
-        identity.spacing = 14
-        identity.verticalAlignment = .center
-
         let title = WindowsTheme.makeText(text: "Keymap Companion", size: 30)
         title.fontWeight = FontWeights.semiBold
         title.verticalAlignment = .center
-        identity.children.append(title)
-        identity.children.append(makeStatusBadge())
-        header.children.append(identity)
+        header.children.append(title)
 
         let actions = StackPanel()
         actions.orientation = .horizontal
@@ -68,33 +61,6 @@ extension WindowsAppController {
         rgbFlyout = flyout
         button.flyout = flyout
         return button
-    }
-
-    /// Creates the compact hardware-connection status badge.
-    ///
-    /// - Returns: The configured status badge.
-    private func makeStatusBadge() -> Border {
-        let (label, color): (label: String, color: Color) =
-            switch model.connectionStatus {
-            case .searching:
-                ("Searching", WindowsTheme.makeColor(red: 98, green: 170, blue: 255))
-            case .connected:
-                ("Connected", WindowsTheme.makeColor(red: 74, green: 210, blue: 140))
-            case .disconnected:
-                ("Disconnected", WindowsTheme.makeColor(red: 247, green: 184, blue: 77))
-            case .failed:
-                ("Needs attention", WindowsTheme.makeColor(red: 255, green: 106, blue: 115))
-            }
-        let badge = Border()
-        badge.background = SolidColorBrush(Color(a: 34, r: color.r, g: color.g, b: color.b))
-        badge.borderBrush = SolidColorBrush(Color(a: 100, r: color.r, g: color.g, b: color.b))
-        badge.borderThickness = Thickness(left: 1, top: 1, right: 1, bottom: 1)
-        badge.cornerRadius = WindowsTheme.makeCornerRadius(all: 12)
-        badge.padding = Thickness(left: 10, top: 4, right: 10, bottom: 4)
-        let text = WindowsTheme.makeText(text: label, size: 12, color: color)
-        text.fontWeight = FontWeights.semiBold
-        badge.child = text
-        return badge
     }
 
     /// Creates connection guidance when live keyboard state is unavailable.
