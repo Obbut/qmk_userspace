@@ -38,41 +38,41 @@ final class WindowsAppController {
     /// Whether the primary window currently has keyboard focus.
     private var isMainWindowActive = true
 
-    /// The lighting enabled control while its flyout exists.
-    weak var rgbEnabledControl: ToggleSwitch?
+    /// The strongly retained lighting enabled projection while its flyout exists.
+    var rgbEnabledControl: ToggleSwitch?
 
-    /// The lighting effect control while its flyout exists.
-    weak var rgbEffectControl: ComboBox?
+    /// The strongly retained lighting effect projection while its flyout exists.
+    var rgbEffectControl: ComboBox?
 
-    /// The lighting color swatch while its flyout exists.
-    weak var rgbSwatch: Border?
+    /// The strongly retained lighting color-swatch projection while its flyout exists.
+    var rgbSwatch: Border?
 
-    /// The lighting flyout while attached to the header button.
-    weak var rgbFlyout: Flyout?
+    /// The strongly retained lighting flyout projection while attached to the header button.
+    var rgbFlyout: Flyout?
 
-    /// The brightness value label while its flyout exists.
-    weak var brightnessLabel: TextBlock?
+    /// The strongly retained brightness-label projection while its flyout exists.
+    var brightnessLabel: TextBlock?
 
-    /// The brightness track fill while its flyout exists.
-    weak var brightnessFill: Border?
+    /// The strongly retained brightness-fill projection while its flyout exists.
+    var brightnessFill: Border?
 
-    /// The brightness decrement button while its flyout exists.
-    weak var brightnessMinus: Button?
+    /// The strongly retained brightness-decrement projection while its flyout exists.
+    var brightnessMinus: Button?
 
-    /// The brightness increment button while its flyout exists.
-    weak var brightnessPlus: Button?
+    /// The strongly retained brightness-increment projection while its flyout exists.
+    var brightnessPlus: Button?
 
-    /// The animation-speed value label while its flyout exists.
-    weak var speedLabel: TextBlock?
+    /// The strongly retained animation-speed-label projection while its flyout exists.
+    var speedLabel: TextBlock?
 
-    /// The animation-speed track fill while its flyout exists.
-    weak var speedFill: Border?
+    /// The strongly retained animation-speed-fill projection while its flyout exists.
+    var speedFill: Border?
 
-    /// The animation-speed decrement button while its flyout exists.
-    weak var speedMinus: Button?
+    /// The strongly retained animation-speed-decrement projection while its flyout exists.
+    var speedMinus: Button?
 
-    /// The animation-speed increment button while its flyout exists.
-    weak var speedPlus: Button?
+    /// The strongly retained animation-speed-increment projection while its flyout exists.
+    var speedPlus: Button?
 
     /// Creates native Windows state around the shared observable model.
     init() {

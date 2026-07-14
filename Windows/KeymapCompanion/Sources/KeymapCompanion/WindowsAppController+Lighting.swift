@@ -38,8 +38,8 @@ extension WindowsAppController {
         enabled.offContent = "Off"
         enabled.isOn = model.rgbSettings.isEnabled
         rgbEnabledControl = enabled
-        enabled.toggled.addHandler { [weak self, weak enabled] _, _ in
-            guard let self, let enabled else { return }
+        enabled.toggled.addHandler { [weak self] _, _ in
+            guard let self, let enabled = self.rgbEnabledControl else { return }
             guard self.model.rgbSettings.isEnabled != enabled.isOn else { return }
             self.updateRGBSettings { $0.isEnabled = enabled.isOn }
         }
@@ -55,8 +55,8 @@ extension WindowsAppController {
             RGBEffect.allCases.firstIndex(of: model.rgbSettings.effect) ?? 0
         )
         rgbEffectControl = effect
-        effect.selectionChanged.addHandler { [weak self, weak effect] _, _ in
-            guard let self, let effect,
+        effect.selectionChanged.addHandler { [weak self] _, _ in
+            guard let self, let effect = self.rgbEffectControl,
                 effect.selectedIndex >= 0,
                 Int(effect.selectedIndex) < RGBEffect.allCases.count
             else { return }
