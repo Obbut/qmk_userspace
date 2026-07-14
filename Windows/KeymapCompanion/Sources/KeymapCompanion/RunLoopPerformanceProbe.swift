@@ -55,7 +55,7 @@ enum RunLoopPerformanceProbe {
 
     @MainActor
     private static func measureRendering() -> (rebuildAverage: Double, updateAverage: Double) {
-        let definition = KeymapDefinition.preview(for: .elora)
+        let definition = KeymapDefinition.makePreview(for: .elora)
         let baseMask = UInt32(1) << UInt32(KeymapLayer.base.rawValue)
         let lowerMask = baseMask | (UInt32(1) << UInt32(KeymapLayer.lower.rawValue))
 

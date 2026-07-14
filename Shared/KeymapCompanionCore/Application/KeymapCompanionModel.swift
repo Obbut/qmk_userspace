@@ -9,12 +9,25 @@ import Observation
 @MainActor
 @Observable
 public final class KeymapCompanionModel {
+    /// The current hardware discovery or connection state.
     public private(set) var connectionStatus: ConnectionStatus = .searching
+
+    /// The connected keyboard model, when known.
     public private(set) var keyboardKind: KeyboardKind?
+
+    /// The renderer input downloaded from the connected keyboard.
     public private(set) var keymapDefinition: KeymapDefinition?
+
+    /// The momentary firmware layer-state bit mask.
     public private(set) var layerStateMask: UInt32 = 1
+
+    /// The persistent firmware default-layer bit mask.
     public private(set) var defaultLayerStateMask: UInt32 = 1
+
+    /// The sequence number of the latest accepted state report.
     public private(set) var latestSequence: UInt32 = 0
+
+    /// The capability bit mask advertised by firmware.
     public private(set) var capabilities: UInt32 = 0
 
     /// The editable base-layer RGB Matrix configuration.
@@ -29,13 +42,24 @@ public final class KeymapCompanionModel {
     /// Delayed HUD state consumed by each platform's native overlay controller.
     public let layerHUD: LayerHUDModel
 
+    /// The injected platform hardware implementation.
     @ObservationIgnored @Dependency(\.keyboardHardware) private var hardware
+
+    /// The complete reduced state before observation-specific projection.
     @ObservationIgnored private var state = CompanionState()
+
+    /// The delayed and coalesced RGB write currently pending.
     @ObservationIgnored private var pendingRGBUpdate: Task<Void, Never>?
+
+    /// The RGB settings waiting for firmware acknowledgement.
     @ObservationIgnored private var rgbSettingsAwaitingAcknowledgement: RGBSettings?
+
+    /// Whether firmware state is currently being copied into ``rgbSettings``.
     @ObservationIgnored private var isApplyingKeyboardRGBSettings = false
 
     /// Creates the shared model and starts the injected platform hardware client.
+    ///
+    /// - Parameter layerHUD: The layer HUD state machine.
     public init(layerHUD: LayerHUDModel = LayerHUDModel()) {
         self.layerHUD = layerHUD
         hardware.setEventHandler { [weak self] event in
@@ -44,9 +68,13 @@ public final class KeymapCompanionModel {
         hardware.start()
     }
 
-    /// Creates a live model while capturing one platform implementation in the
-    /// model's `@Dependency` storage.
-    public static func live(
+    /// Creates a live model with a platform hardware implementation.
+    ///
+    /// - Parameters:
+    ///   - hardware: The platform hardware implementation to inject.
+    ///   - layerHUD: The layer HUD state machine.
+    /// - Returns: A model that has started hardware discovery.
+    public static func makeLive(
         hardware: any KeyboardHardwareClient,
         layerHUD: LayerHUDModel = LayerHUDModel()
     ) -> KeymapCompanionModel {
@@ -57,20 +85,28 @@ public final class KeymapCompanionModel {
         }
     }
 
+    /// Creates a model from deterministic state without starting hardware access.
+    ///
+    /// - Parameters:
+    ///   - state: The complete reduced model state.
+    ///   - layerHUD: The layer HUD state machine.
     private init(state: CompanionState, layerHUD: LayerHUDModel) {
         self.state = state
         self.layerHUD = layerHUD
         synchronizeObservableState()
     }
 
+    /// The union of momentary and default firmware layer masks.
     public var effectiveLayerMask: UInt32 {
         layerStateMask | defaultLayerStateMask
     }
 
+    /// The highest layer in ``effectiveLayerMask``.
     public var activeLayer: KeymapLayer {
-        KeymapLayer.highestActiveLayer(in: effectiveLayerMask)
+        KeymapLayer.highestActiveLayer(inLayerMask: effectiveLayerMask)
     }
 
+    /// Whether the connected firmware accepts explicit RGB settings.
     public var supportsRGBSettings: Bool {
         connectionStatus.isConnected
             && capabilities & KeymapProtocol.rgbSettingsCapability != 0
@@ -86,7 +122,9 @@ public final class KeymapCompanionModel {
     }
 
     /// Updates lighting state while preserving the model's write coalescing.
-    public func updateRGBSettings(_ update: (inout RGBSettings) -> Void) {
+    ///
+    /// - Parameter update: A mutation to apply to a copy of the current settings.
+    public func updateRGBSettings(_ update: (_ settings: inout RGBSettings) -> Void) {
         guard supportsRGBSettings else { return }
         var settings = rgbSettings
         update(&settings)
@@ -100,6 +138,7 @@ public final class KeymapCompanionModel {
         hardware.stop()
     }
 
+    /// Schedules a coalesced RGB write after the editing delay.
     private func scheduleRGBSettingsUpdate() {
         guard !isApplyingKeyboardRGBSettings, supportsRGBSettings else { return }
 
@@ -112,20 +151,25 @@ public final class KeymapCompanionModel {
                 return
             }
             guard let self,
-                  !Task.isCancelled,
-                  self.rgbSettings == settings else { return }
+                !Task.isCancelled,
+                self.rgbSettings == settings
+            else { return }
             self.pendingRGBUpdate = nil
             self.rgbSettingsAwaitingAcknowledgement = settings
             self.hardware.applyRGBSettings(settings)
         }
     }
 
+    /// Cancels pending RGB work and acknowledgement tracking.
     private func cancelRGBSettingsUpdate() {
         pendingRGBUpdate?.cancel()
         pendingRGBUpdate = nil
         rgbSettingsAwaitingAcknowledgement = nil
     }
 
+    /// Reduces one hardware event into observable model state.
+    ///
+    /// - Parameter event: The event emitted by the platform hardware implementation.
     private func receive(_ event: KeyboardMonitorEvent) {
         let keymapMayHaveChanged: Bool
         switch event {
@@ -143,7 +187,8 @@ public final class KeymapCompanionModel {
         case let .state(report):
             keymapMayHaveChanged = false
             guard keymapDefinition?.keyboardKind == report.keyboardKind else { return }
-            let acceptsRGBSettings = pendingRGBUpdate == nil
+            let acceptsRGBSettings =
+                pendingRGBUpdate == nil
                 && report.rgbSettings != nil
                 && (rgbSettingsAwaitingAcknowledgement == nil
                     || rgbSettingsAwaitingAcknowledgement == report.rgbSettings)
@@ -159,8 +204,11 @@ public final class KeymapCompanionModel {
         synchronizeObservableState(includeKeymapDefinition: keymapMayHaveChanged)
     }
 
-    /// Copies reduced state into independently observable properties. This
-    /// prevents sequence-only HID reports from invalidating unrelated UI.
+    /// Copies reduced state into independently observable properties.
+    ///
+    /// This prevents sequence-only HID reports from invalidating unrelated UI.
+    ///
+    /// - Parameter includeKeymapDefinition: Whether to compare and copy renderer input.
     private func synchronizeObservableState(includeKeymapDefinition: Bool = true) {
         if connectionStatus != state.connectionStatus {
             connectionStatus = state.connectionStatus
@@ -192,29 +240,36 @@ public final class KeymapCompanionModel {
 }
 
 #if DEBUG
-public extension KeymapCompanionModel {
-    /// Creates deterministic preview state without starting a hardware client.
-    static func preview(
-        connectionStatus: ConnectionStatus = .connected,
-        keyboardKind: KeyboardKind? = .elora,
-        activeLayers: [KeymapLayer] = [],
-        rgbSettings: RGBSettings = .default
-    ) -> KeymapCompanionModel {
-        let layerStateMask = activeLayers.reduce(into: UInt32.zero) { mask, layer in
-            mask |= UInt32(1) << UInt32(layer.rawValue)
+    public extension KeymapCompanionModel {
+        /// Creates deterministic preview state without starting a hardware client.
+        ///
+        /// - Parameters:
+        ///   - connectionStatus: The simulated hardware connection state.
+        ///   - keyboardKind: The simulated keyboard model.
+        ///   - activeLayers: The simulated momentary active layers.
+        ///   - rgbSettings: The simulated RGB Matrix settings.
+        /// - Returns: A deterministic model for previews and tests.
+        static func makePreview(
+            connectionStatus: ConnectionStatus = .connected,
+            keyboardKind: KeyboardKind? = .elora,
+            activeLayers: [KeymapLayer] = [],
+            rgbSettings: RGBSettings = .default
+        ) -> KeymapCompanionModel {
+            let layerStateMask = activeLayers.reduce(into: UInt32.zero) { mask, layer in
+                mask |= UInt32(1) << UInt32(layer.rawValue)
+            }
+            return KeymapCompanionModel(
+                state: CompanionState(
+                    connectionStatus: connectionStatus,
+                    keyboardKind: keyboardKind,
+                    keymapDefinition: keyboardKind.map { KeymapDefinition.makePreview(for: $0) },
+                    layerStateMask: layerStateMask,
+                    defaultLayerStateMask: UInt32(1) << UInt32(KeymapLayer.base.rawValue),
+                    capabilities: connectionStatus.isConnected ? 7 : 0,
+                    rgbSettings: rgbSettings
+                ),
+                layerHUD: LayerHUDModel()
+            )
         }
-        return KeymapCompanionModel(
-            state: CompanionState(
-                connectionStatus: connectionStatus,
-                keyboardKind: keyboardKind,
-                keymapDefinition: keyboardKind.map { KeymapDefinition.preview(for: $0) },
-                layerStateMask: layerStateMask,
-                defaultLayerStateMask: UInt32(1) << UInt32(KeymapLayer.base.rawValue),
-                capabilities: connectionStatus.isConnected ? 7 : 0,
-                rgbSettings: rgbSettings
-            ),
-            layerHUD: LayerHUDModel()
-        )
     }
-}
 #endif

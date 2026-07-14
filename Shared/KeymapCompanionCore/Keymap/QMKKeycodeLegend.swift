@@ -1,62 +1,30 @@
 import Foundation
 
-/// A platform-neutral symbol that native renderers can map to their own iconography.
-public enum KeySymbol: Equatable, Sendable {
-    case returnKey
-    case escape
-    case deleteBackward
-    case tab
-    case space
-    case capsLock
-    case deleteForward
-    case arrowRight
-    case arrowLeft
-    case arrowDown
-    case arrowUp
-    case mute
-    case volumeUp
-    case volumeDown
-    case nextTrack
-    case previousTrack
-    case playPause
-    case control
-    case shift
-    case option
-    case command
-}
-
-/// A key label and its layer-specific presentation category.
-public struct KeyLegend: Equatable, Sendable {
-    public let label: String
-    public let symbol: KeySymbol?
-    public let style: KeyStyle
-
-    public init(
-        label: String,
-        symbol: KeySymbol? = nil,
-        style: KeyStyle = .standard
-    ) {
-        self.label = label
-        self.symbol = symbol
-        self.style = style
-    }
-}
-
 /// Converts compiled QMK keycodes and firmware semantics into compact legends.
 public enum QMKKeycodeLegend {
+    /// Returns the renderer legend for a firmware keymap entry.
+    ///
+    /// - Parameter entry: The firmware keymap entry to describe.
+    ///
+    /// - Returns: A compact renderer legend.
     public static func legend(for entry: FirmwareKeymapEntry) -> KeyLegend {
         KeyLegend(
             label: label(for: entry),
-            symbol: entry.semantic == 0 ? symbol(for: entry.keycode) : nil,
+            symbol: entry.semantic == .none ? symbol(for: entry.keycode) : nil,
             style: entry.style
         )
     }
 
+    /// Returns the fallback text for a firmware keymap entry.
+    ///
+    /// - Parameter entry: The firmware keymap entry to describe.
+    ///
+    /// - Returns: Compact fallback text.
     private static func label(for entry: FirmwareKeymapEntry) -> String {
         switch entry.semantic {
-        case 1: return "Screenshot"
-        case 2: return "Aerospace"
-        default: break
+        case .screenshot: return "Screenshot"
+        case .aerospace: return "Aerospace"
+        case .none: break
         }
 
         let keycode = entry.keycode
@@ -85,10 +53,16 @@ public enum QMKKeycodeLegend {
         }
     }
 
+    /// Returns the fallback text for an unmodified QMK keycode.
+    ///
+    /// - Parameter keycode: The compiled QMK keycode.
+    ///
+    /// - Returns: Compact text, or `nil` when the keycode is not recognized.
     private static func basicLabel(for keycode: UInt16) -> String? {
-        switch keycode {
+        return switch keycode {
         case 0x0000, 0x0001: ""
-        case 0x0004...0x001D: String(UnicodeScalar(Int(keycode - 0x0004) + 65)!)
+            case 0x0004...0x001D:
+                UnicodeScalar(Int(keycode - 0x0004) + 65).map { String($0) }
         case 0x001E...0x0026: String(Int(keycode - 0x001D))
         case 0x0027: "0"
         case 0x0028: "Return"
@@ -136,6 +110,11 @@ public enum QMKKeycodeLegend {
         }
     }
 
+    /// Returns the semantic symbol for a compiled QMK keycode.
+    ///
+    /// - Parameter keycode: The compiled QMK keycode.
+    ///
+    /// - Returns: A semantic symbol, or `nil` when native iconography is unsuitable.
     private static func symbol(for keycode: UInt16) -> KeySymbol? {
         switch keycode {
         case 0x0028: .returnKey
@@ -163,6 +142,11 @@ public enum QMKKeycodeLegend {
         }
     }
 
+    /// Returns the compact legend for a QMK keycode with encoded modifiers.
+    ///
+    /// - Parameter keycode: The compiled QMK keycode.
+    ///
+    /// - Returns: A modifier prefix followed by the basic key legend.
     private static func modifiedLabel(for keycode: UInt16) -> String {
         let modifiers = UInt8((keycode >> 8) & 0x1F)
         var prefix = ""
@@ -170,21 +154,28 @@ public enum QMKKeycodeLegend {
         if modifiers & 0x02 != 0 { prefix += "⇧" }
         if modifiers & 0x04 != 0 { prefix += "⌥" }
         if modifiers & 0x08 != 0 { prefix += "⌘" }
-        let base = basicLabel(for: keycode & 0x00FF)
+        let base =
+            basicLabel(for: keycode & 0x00FF)
             ?? String(format: "%02X", keycode & 0x00FF)
         return prefix + base
     }
 
+    /// Returns the display name for the layer encoded in a QMK layer keycode.
+    ///
+    /// - Parameter keycode: The compiled QMK layer keycode.
+    ///
+    /// - Returns: The layer name, or `nil` when the layer is unknown.
     private static func layerName(for keycode: UInt16) -> String? {
         KeymapLayer(rawValue: UInt8(keycode & 0x1F))?.legendName
     }
 
+    /// Shifted keycodes and their printable legends.
     private static let shiftedSymbols: [UInt16: String] = [
         0x021E: "!", 0x021F: "@", 0x0220: "#", 0x0221: "$",
         0x0222: "%", 0x0223: "^", 0x0224: "&", 0x0225: "*",
         0x0226: "(", 0x0227: ")", 0x022D: "_", 0x022E: "+",
         0x022F: "{", 0x0230: "}", 0x0231: "|", 0x0233: ":",
         0x0234: "\"", 0x0235: "~", 0x0236: "<", 0x0237: ">",
-        0x0238: "?"
+        0x0238: "?",
     ]
 }

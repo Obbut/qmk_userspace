@@ -19,8 +19,8 @@ struct MenuBarKeyboardIcon: View {
         )
         .renderingMode(.template)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(keyboardKind.displayName))
-        .accessibilityValue(Text(activeLayer.displayName))
+        .accessibilityLabel(Text(keyboardKind.localizedDisplayName))
+        .accessibilityValue(Text(activeLayer.localizedDisplayName))
     }
 }
 
@@ -82,10 +82,11 @@ private enum MenuBarKeyboardIconRenderer {
         renderer.scale = 2
 
         guard let image = renderer.nsImage else {
-            let fallbackImage = NSImage(
-                systemSymbolName: "keyboard",
-                accessibilityDescription: nil
-            ) ?? NSImage(size: iconSize)
+            let fallbackImage =
+                NSImage(
+                    systemSymbolName: "keyboard",
+                    accessibilityDescription: nil
+                ) ?? NSImage(size: iconSize)
             fallbackImage.isTemplate = true
             return fallbackImage
         }
@@ -268,12 +269,13 @@ private enum MenuBarKeyboardIconRenderer {
     ///   - rect: The destination rectangle.
     /// - Returns: A closed plate silhouette.
     private static func platePath(for keyboardKind: KeyboardKind, in rect: CGRect) -> Path {
-        let points = switch keyboardKind {
-        case .kyria:
-            kyriaOutline
-        case .elora:
-            eloraOutline
-        }
+        let points =
+            switch keyboardKind {
+            case .kyria:
+                kyriaOutline
+            case .elora:
+                eloraOutline
+            }
         var path = Path()
         guard let firstPoint = points.first else { return path }
 
@@ -330,7 +332,7 @@ private enum MenuBarKeyboardIconRenderer {
         CGPoint(x: 0.729271, y: 0.945048),
         CGPoint(x: 0.828957, y: 0.945048),
         CGPoint(x: 0.835188, y: 0.935799),
-        CGPoint(x: 0.835188, y: 0.474765)
+        CGPoint(x: 0.835188, y: 0.474765),
     ]
 
     /// The normalized left-half Elora Rev2 plate outline.
@@ -358,7 +360,7 @@ private enum MenuBarKeyboardIconRenderer {
         CGPoint(x: 0.718436, y: 1.000000),
         CGPoint(x: 0.730484, y: 0.980933),
         CGPoint(x: 0.730484, y: 0.806483),
-        CGPoint(x: 0.736711, y: 0.798653)
+        CGPoint(x: 0.736711, y: 0.798653),
     ]
 }
 
@@ -367,7 +369,7 @@ private enum MenuBarKeyboardIconRenderer {
         ForEach(KeymapLayer.allCases) { layer in
             VStack(spacing: 4) {
                 MenuBarKeyboardIcon(keyboardKind: .kyria, activeLayer: layer)
-                Text(layer.displayName)
+                Text(layer.localizedDisplayName)
                     .font(.caption2)
             }
         }

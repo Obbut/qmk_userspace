@@ -2,6 +2,7 @@
 
 import PackageDescription
 
+/// The shared keymap-companion package manifest.
 let package = Package(
     name: "KeymapCompanionShared",
     platforms: [
@@ -29,7 +30,7 @@ let package = Package(
         .package(
             url: "https://github.com/pointfreeco/combine-schedulers",
             exact: "1.0.3"
-        )
+        ),
     ],
     targets: [
         .target(
@@ -45,20 +46,26 @@ let package = Package(
                     name: "CombineSchedulers",
                     package: "combine-schedulers",
                     condition: .when(platforms: [.windows])
-                )
+                ),
             ],
             path: ".",
             exclude: ["KeymapCompanionCoreTests"],
             sources: [
                 "KeymapProtocol",
-                "KeymapCompanionCore"
+                "KeymapCompanionCore",
+            ],
+            swiftSettings: [
+                .treatAllWarnings(as: .error)
             ]
         ),
         .testTarget(
             name: "KeymapCompanionCoreTests",
             dependencies: ["KeymapCompanionCore"],
-            path: "KeymapCompanionCoreTests"
-        )
+            path: "KeymapCompanionCoreTests",
+            swiftSettings: [
+                .treatAllWarnings(as: .error)
+            ]
+        ),
     ],
     swiftLanguageModes: [.v6]
 )

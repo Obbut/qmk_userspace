@@ -1,4 +1,4 @@
 import KeymapCompanionCore
 
-/// Compatibility name retained for the macOS tests and AppKit HUD controller.
+/// The delayed layer-HUD presentation state.
 typealias LayerHUDModel = KeymapCompanionCore.LayerHUDModel

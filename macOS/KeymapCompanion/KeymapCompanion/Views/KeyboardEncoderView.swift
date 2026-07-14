@@ -53,7 +53,7 @@ struct KeyboardEncoderView: View {
                     comment: "Label for turning a keyboard encoder counter-clockwise."
                 ),
                 directionSystemImageName: "arrow.counterclockwise",
-                key: encoder.counterClockwiseKey,
+                key: encoder.counterclockwiseKey,
                 activeLayer: activeLayer,
                 activeLayerMask: activeLayerMask
             )
@@ -177,7 +177,7 @@ fileprivate struct EncoderActionView: View {
 
     /// The two-line physical interaction and action label.
     var body: some View {
-        let legend = key.resolvedLegend(activeLayerMask: activeLayerMask)
+        let legend = key.resolvedLegend(forActiveLayerMask: activeLayerMask)
         let isDirectMapping = key.isDirectlyMapped(on: activeLayer)
 
         VStack(spacing: 3) {
@@ -230,41 +230,41 @@ fileprivate extension KeyLegend {
 }
 
 #if DEBUG
-#Preview("Right Encoder — Lower") {
-    let definition = KeymapDefinition.preview(for: .kyria)
+    #Preview("Right Encoder — Lower") {
+        let definition = KeymapDefinition.makePreview(for: .kyria)
 
-    KeyboardEncoderView(
-        encoder: definition.rightEncoder,
-        activeLayer: .lower,
-        activeLayerMask: 0b0_0101
-    )
-    .frame(
-        width: CGFloat(definition.geometry.canvasWidth),
-        height: CGFloat(definition.geometry.canvasHeight)
-    )
-    .padding()
-}
-
-#Preview("Encoder Knob") {
-    let definition = KeymapDefinition.preview(for: .kyria)
-    let legend = definition.rightEncoder.pressKey.resolvedLegend(
-        activeLayerMask: 0b0_0101
-    )
-
-    EncoderKnobView(pressLegend: legend)
+        KeyboardEncoderView(
+            encoder: definition.rightEncoder,
+            activeLayer: .lower,
+            activeLayerMask: 0b0_0101
+        )
+        .frame(
+            width: CGFloat(definition.geometry.canvasWidth),
+            height: CGFloat(definition.geometry.canvasHeight)
+        )
         .padding()
-}
+    }
 
-#Preview("Encoder Action") {
-    let definition = KeymapDefinition.preview(for: .kyria)
+    #Preview("Encoder Knob") {
+        let definition = KeymapDefinition.makePreview(for: .kyria)
+        let legend = definition.rightEncoder.pressKey.resolvedLegend(
+            activeLayerMask: 0b0_0101
+        )
 
-    EncoderActionView(
-        direction: "CCW",
-        directionSystemImageName: "arrow.counterclockwise",
-        key: definition.rightEncoder.counterClockwiseKey,
-        activeLayer: .lower,
-        activeLayerMask: 0b0_0101
-    )
-    .padding()
-}
+        EncoderKnobView(pressLegend: legend)
+            .padding()
+    }
+
+    #Preview("Encoder Action") {
+        let definition = KeymapDefinition.makePreview(for: .kyria)
+
+        EncoderActionView(
+            direction: "CCW",
+            directionSystemImageName: "arrow.counterclockwise",
+            key: definition.rightEncoder.counterclockwiseKey,
+            activeLayer: .lower,
+            activeLayerMask: 0b0_0101
+        )
+        .padding()
+    }
 #endif

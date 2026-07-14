@@ -70,7 +70,7 @@ private final class WindowsAppController: @unchecked Sendable {
 
     init() {
         let hardware = WindowsKeyboardHardwareClient()
-        model = KeymapCompanionModel.live(hardware: hardware)
+        model = KeymapCompanionModel.makeLive(hardware: hardware)
     }
 
     func launch() {
@@ -390,7 +390,7 @@ private final class WindowsAppController: @unchecked Sendable {
         strip.orientation = .horizontal
         strip.spacing = 8
         for layer in KeymapLayer.allCases {
-            let isActive = layer.isActive(in: model.effectiveLayerMask)
+            let isActive = layer.isActive(inLayerMask: model.effectiveLayerMask)
             let pill = Border()
             pill.cornerRadius = WindowsTheme.corners(10)
             pill.padding = Thickness(left: 10, top: 4, right: 10, bottom: 4)
@@ -414,7 +414,7 @@ private final class WindowsAppController: @unchecked Sendable {
     private func synchronizeLayerPills(activeLayerMask: UInt32) {
         for (index, layer) in KeymapLayer.allCases.enumerated() {
             guard index < layerPillBorders.count, index < layerPillLabels.count else { break }
-            let isActive = layer.isActive(in: activeLayerMask)
+            let isActive = layer.isActive(inLayerMask: activeLayerMask)
             layerPillBorders[index].background = isActive
                 ? WindowsTheme.brush(73, 105, 184, alpha: 210)
                 : WindowsTheme.brush(255, 255, 255, alpha: 14)
@@ -722,8 +722,14 @@ private extension RGBSettings {
             selectedHue /= 6
             if selectedHue < 0 { selectedHue += 1 }
         }
-        hue = Self.byte(from: selectedHue, maximum: 255)
-        saturation = Self.byte(from: maximum == 0 ? 0 : delta / maximum, maximum: 255)
-        brightness = Self.byte(from: maximum, maximum: Self.maximumBrightness)
+        hue = Self.byte(fromNormalizedComponent: selectedHue, maximumByteValue: 255)
+        saturation = Self.byte(
+            fromNormalizedComponent: maximum == 0 ? 0 : delta / maximum,
+            maximumByteValue: 255
+        )
+        brightness = Self.byte(
+            fromNormalizedComponent: maximum,
+            maximumByteValue: Self.maximumBrightness
+        )
     }
 }

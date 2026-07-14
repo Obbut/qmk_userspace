@@ -1,8 +1,9 @@
 import KeymapCompanionCore
 
+/// A key label and its layer-specific presentation category.
 typealias KeyLegend = KeymapCompanionCore.KeyLegend
-typealias KeySymbol = KeymapCompanionCore.KeySymbol
 
+/// SF Symbol presentation for shared key legends.
 extension KeymapCompanionCore.KeyLegend {
     /// The SF Symbol used by the existing SwiftUI renderer.
     var systemImageName: String? {
@@ -10,7 +11,9 @@ extension KeymapCompanionCore.KeyLegend {
     }
 }
 
-private extension KeymapCompanionCore.KeySymbol {
+/// SF Symbol names for platform-neutral key symbols.
+fileprivate extension KeymapCompanionCore.KeySymbol {
+    /// The SF Symbol name for this semantic symbol.
     var systemImageName: String {
         switch self {
         case .returnKey: "return"

@@ -2,8 +2,10 @@ import AppKit
 import CoreGraphics
 import KeymapCompanionCore
 
+/// A persistent base-layer RGB Matrix configuration.
 typealias RGBSettings = KeymapCompanionCore.RGBSettings
 
+/// AppKit color conversion for the shared RGB Matrix configuration.
 extension KeymapCompanionCore.RGBSettings {
     /// A native color-picker representation of QMK HSV components.
     var color: CGColor {
@@ -29,11 +31,14 @@ extension KeymapCompanionCore.RGBSettings {
                 brightness: &selectedBrightness,
                 alpha: &selectedAlpha
             )
-            hue = Self.byte(from: Double(selectedHue), maximum: 255)
-            saturation = Self.byte(from: Double(selectedSaturation), maximum: 255)
+            hue = Self.byte(fromNormalizedComponent: Double(selectedHue), maximumByteValue: 255)
+            saturation = Self.byte(
+                fromNormalizedComponent: Double(selectedSaturation),
+                maximumByteValue: 255
+            )
             brightness = Self.byte(
-                from: Double(selectedBrightness),
-                maximum: Self.maximumBrightness
+                fromNormalizedComponent: Double(selectedBrightness),
+                maximumByteValue: Self.maximumBrightness
             )
         }
     }

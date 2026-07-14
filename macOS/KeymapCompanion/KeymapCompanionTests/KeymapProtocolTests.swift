@@ -34,7 +34,7 @@ func parsesKeyboardStateReport() {
     packet.replaceSubrange(16..<20, with: [42, 0, 0, 0])
     packet.replaceSubrange(20..<24, with: [3, 0, 0, 0])
 
-    let report = KeymapProtocol.parseStateReport(packet)
+    let report = KeymapProtocol.stateReport(from: packet)
 
     #expect(report?.keyboardKind == .elora)
     #expect(report?.layerStateMask == 6)
@@ -60,7 +60,7 @@ func parsesKeymapMetadataReport() {
     packet[18] = 1
     packet[19] = 2
 
-    let metadata = KeymapProtocol.parseKeymapMetadataReport(packet)
+    let metadata = KeymapProtocol.keymapMetadataReport(from: packet)
 
     #expect(metadata?.keyboardKind == .kyria)
     #expect(metadata?.layerCount == 5)
@@ -89,7 +89,7 @@ func sharedMetadataEncoderRoundTripsProtocolV3() {
         )
     }
 
-    let metadata = KeymapProtocol.parseKeymapMetadataReport(packet)
+    let metadata = KeymapProtocol.keymapMetadataReport(from: packet)
 
     #expect(encoded)
     #expect(metadata?.keyboardKind == .elora)
@@ -110,14 +110,15 @@ func parsesKeymapChunkReport() {
     packet.replaceSubrange(12..<16, with: [0x1E, 0x02, 0, KeyStyle.yellow.rawValue])
     packet.replaceSubrange(16..<20, with: [0x20, 0x52, 1, KeyStyle.purple.rawValue])
 
-    let chunk = KeymapProtocol.parseKeymapChunkReport(packet)
+    let chunk = KeymapProtocol.keymapChunkReport(from: packet)
 
     #expect(chunk?.startIndex == 5)
     #expect(chunk?.totalEntryCount == 360)
-    #expect(chunk?.entries == [
-        FirmwareKeymapEntry(keycode: 0x021E, semantic: 0, style: .yellow),
-        FirmwareKeymapEntry(keycode: 0x5220, semantic: 1, style: .purple)
-    ])
+    #expect(
+        chunk?.entries == [
+            FirmwareKeymapEntry(keycode: 0x021E, semantic: .none, style: .yellow),
+            FirmwareKeymapEntry(keycode: 0x5220, semantic: .screenshot, style: .purple),
+        ])
 }
 
 /// Verifies the app uses the same byte-wise FNV-1a fingerprint as firmware.
@@ -131,9 +132,9 @@ func validatesFirmwareKeymapFingerprint() {
         encoderCount: 1,
         fingerprint: 0x8DF5_1499,
         entries: [
-            FirmwareKeymapEntry(keycode: 0x1234, semantic: 2, style: .red),
-            FirmwareKeymapEntry(keycode: 0x00AC, semantic: 0, style: .standard),
-            FirmwareKeymapEntry(keycode: 0x00AB, semantic: 0, style: .standard)
+            FirmwareKeymapEntry(keycode: 0x1234, semantic: .aerospace, style: .red),
+            FirmwareKeymapEntry(keycode: 0x00AC, semantic: .none, style: .standard),
+            FirmwareKeymapEntry(keycode: 0x00AB, semantic: .none, style: .standard),
         ]
     )
 
@@ -152,7 +153,7 @@ func rgbSettingsRequestUsesExplicitValues() {
         speed: 149
     )
 
-    let request = KeymapProtocol.makeRGBSettingsRequest(settings)
+    let request = KeymapProtocol.makeRGBSettingsRequest(applying: settings)
 
     #expect(request.count == 32)
     #expect(Array(request[0..<4]) == Array("KMAP".utf8))
@@ -180,17 +181,18 @@ func parsesRGBSettingsFromStateReport() {
     packet[29] = 137
     packet[30] = UInt8(RGBEffect.allCases.count)
 
-    let report = KeymapProtocol.parseStateReport(packet)
+    let report = KeymapProtocol.stateReport(from: packet)
 
     #expect(
-        report?.rgbSettings == RGBSettings(
-            isEnabled: true,
-            effect: .pixelFlow,
-            hue: 47,
-            saturation: 219,
-            brightness: 96,
-            speed: 137
-        )
+        report?.rgbSettings
+            == RGBSettings(
+                isEnabled: true,
+                effect: .pixelFlow,
+                hue: 47,
+                saturation: 219,
+                brightness: 96,
+                speed: 137
+            )
     )
 }
 
@@ -206,12 +208,13 @@ func rgbEffectIdentifiersAreContiguous() {
 func nativeColorSelectionUpdatesQMKComponents() {
     var settings = RGBSettings.default
 
-    settings.color = NSColor(
-        hue: 0.5,
-        saturation: 0.25,
-        brightness: 0.75,
-        alpha: 1
-    ).cgColor
+    settings.color =
+        NSColor(
+            hue: 0.5,
+            saturation: 0.25,
+            brightness: 0.75,
+            alpha: 1
+        ).cgColor
 
     #expect(settings.hue == 128)
     #expect(settings.saturation == 64)
@@ -237,9 +240,9 @@ func normalizedRGBControlsUpdateQMKValues() {
 func rejectsUnknownRawHIDPacket() {
     let unknownPacket = [UInt8](repeating: 0xFF, count: 32)
 
-    #expect(KeymapProtocol.parseStateReport(unknownPacket) == nil)
-    #expect(KeymapProtocol.parseKeymapMetadataReport(unknownPacket) == nil)
-    #expect(KeymapProtocol.parseKeymapChunkReport(unknownPacket) == nil)
+    #expect(KeymapProtocol.stateReport(from: unknownPacket) == nil)
+    #expect(KeymapProtocol.keymapMetadataReport(from: unknownPacket) == nil)
+    #expect(KeymapProtocol.keymapChunkReport(from: unknownPacket) == nil)
 }
 
 /// Creates one zero-filled protocol v3 packet with a selected message type.

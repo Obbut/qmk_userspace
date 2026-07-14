@@ -3,11 +3,11 @@ import Foundation
 @preconcurrency import IOKit.hid
 import KeymapCompanionCore
 
-/// Discovers QMK Raw HID endpoints and keeps their state callbacks on the main run loop.
+/// A main-actor monitor for QMK Raw HID endpoints and state callbacks.
 @MainActor
 final class KeyboardHIDMonitor: KeyboardHardwareClient {
     /// Receives validated device-monitor events on the main actor.
-    private var eventHandler: @MainActor @Sendable (KeyboardMonitorEvent) -> Void = { _ in }
+    private var eventHandler: @MainActor @Sendable (_ event: KeyboardMonitorEvent) -> Void = { _ in }
 
     /// The macOS HID manager retained for the application's lifetime.
     private let manager: IOHIDManager
@@ -26,13 +26,16 @@ final class KeyboardHIDMonitor: KeyboardHardwareClient {
         manager = IOHIDManagerCreate(kCFAllocatorDefault, IOOptionBits(kIOHIDOptionsTypeNone))
         let matching: [String: Any] = [
             kIOHIDDeviceUsagePageKey: KeymapProtocol.usagePage,
-            kIOHIDDeviceUsageKey: KeymapProtocol.usage
+            kIOHIDDeviceUsageKey: KeymapProtocol.usage,
         ]
         IOHIDManagerSetDeviceMatching(manager, matching as CFDictionary)
     }
 
+    /// Installs the main-actor device-event receiver.
+    ///
+    /// - Parameter handler: The receiver for hardware lifecycle and state events.
     func setEventHandler(
-        _ handler: @escaping @MainActor @Sendable (KeyboardMonitorEvent) -> Void
+        _ handler: @escaping @MainActor @Sendable (_ event: KeyboardMonitorEvent) -> Void
     ) {
         eventHandler = handler
     }
@@ -43,26 +46,30 @@ final class KeyboardHIDMonitor: KeyboardHardwareClient {
 
         eventHandler(.searching)
         let context = Unmanaged.passUnretained(self).toOpaque()
-        IOHIDManagerRegisterDeviceMatchingCallback(manager, { context, result, _, device in
-            guard result == kIOReturnSuccess, let context else { return }
-            MainActor.assumeIsolated {
-                let monitor = Unmanaged<KeyboardHIDMonitor>.fromOpaque(context).takeUnretainedValue()
-                monitor.add(device)
-            }
-        }, context)
-        IOHIDManagerRegisterDeviceRemovalCallback(manager, { context, result, _, device in
-            guard result == kIOReturnSuccess, let context else { return }
-            MainActor.assumeIsolated {
-                let monitor = Unmanaged<KeyboardHIDMonitor>.fromOpaque(context).takeUnretainedValue()
-                monitor.remove(device)
-            }
-        }, context)
+        IOHIDManagerRegisterDeviceMatchingCallback(
+            manager,
+            { context, result, _, device in
+                guard result == kIOReturnSuccess, let context else { return }
+                MainActor.assumeIsolated {
+                    let monitor = Unmanaged<KeyboardHIDMonitor>.fromOpaque(context).takeUnretainedValue()
+                    monitor.add(device)
+                }
+            }, context)
+        IOHIDManagerRegisterDeviceRemovalCallback(
+            manager,
+            { context, result, _, device in
+                guard result == kIOReturnSuccess, let context else { return }
+                MainActor.assumeIsolated {
+                    let monitor = Unmanaged<KeyboardHIDMonitor>.fromOpaque(context).takeUnretainedValue()
+                    monitor.remove(device)
+                }
+            }, context)
         IOHIDManagerScheduleWithRunLoop(manager, CFRunLoopGetMain(), CFRunLoopMode.commonModes.rawValue)
 
         let result = IOHIDManagerOpen(manager, IOOptionBits(kIOHIDOptionsTypeNone))
         guard result == kIOReturnSuccess else {
             IOHIDManagerUnscheduleFromRunLoop(manager, CFRunLoopGetMain(), CFRunLoopMode.commonModes.rawValue)
-            eventHandler(.failed("IOHIDManagerOpen failed with code \(result)"))
+            eventHandler(.failed(message: "IOHIDManagerOpen failed with code \(result)"))
             return
         }
         isRunning = true
@@ -75,10 +82,12 @@ final class KeyboardHIDMonitor: KeyboardHardwareClient {
     }
 
     /// Sends a complete RGB Matrix configuration to the active keyboard.
+    ///
     /// - Parameter settings: The persistent configuration to apply.
     func applyRGBSettings(_ settings: RGBSettings) {
         guard let activeSessionID,
-              let session = sessions[activeSessionID] else { return }
+            let session = sessions[activeSessionID]
+        else { return }
         session.applyRGBSettings(settings)
     }
 
@@ -95,6 +104,7 @@ final class KeyboardHIDMonitor: KeyboardHardwareClient {
     }
 
     /// Opens a newly matched Raw HID endpoint and starts its keymap transfer.
+    ///
     /// - Parameter device: The matched IOHID device.
     private func add(_ device: IOHIDDevice) {
         let id = ObjectIdentifier(device)
@@ -107,6 +117,7 @@ final class KeyboardHIDMonitor: KeyboardHardwareClient {
     }
 
     /// Removes a device endpoint and updates visible connection state when needed.
+    ///
     /// - Parameter device: The removed IOHID device.
     private func remove(_ device: IOHIDDevice) {
         let id = ObjectIdentifier(device)
@@ -118,8 +129,9 @@ final class KeyboardHIDMonitor: KeyboardHardwareClient {
         if let replacement = sessions.first(where: {
             $0.value.latestReport != nil && $0.value.latestKeymap != nil
         }),
-           let keymap = replacement.value.latestKeymap,
-           let report = replacement.value.latestReport {
+            let keymap = replacement.value.latestKeymap,
+            let report = replacement.value.latestReport
+        {
             activeSessionID = replacement.key
             eventHandler(.keymap(keymap))
             eventHandler(.state(report))
@@ -129,6 +141,7 @@ final class KeyboardHIDMonitor: KeyboardHardwareClient {
     }
 
     /// Accepts a validated report from one open session.
+    ///
     /// - Parameters:
     ///   - report: The parsed QMK state packet.
     ///   - session: The endpoint that delivered it.
@@ -139,6 +152,7 @@ final class KeyboardHIDMonitor: KeyboardHardwareClient {
     }
 
     /// Accepts a complete keymap from one open session.
+    ///
     /// - Parameters:
     ///   - keymap: The downloaded and fingerprint-validated keymap.
     ///   - session: The endpoint that delivered it.
@@ -148,16 +162,16 @@ final class KeyboardHIDMonitor: KeyboardHardwareClient {
     }
 
     /// Surfaces a malformed or inconsistent firmware transfer.
+    ///
     /// - Parameter message: The transfer validation failure.
     fileprivate func receiveTransferFailure(_ message: String) {
-        eventHandler(.failed(message))
+        eventHandler(.failed(message: message))
     }
-
 }
 
 /// One open QMK Raw HID endpoint and its stable input-report buffer.
 @MainActor
-private final class HIDDeviceSession {
+fileprivate final class HIDDeviceSession {
     /// The underlying IOHID device.
     let device: IOHIDDevice
 
@@ -180,6 +194,7 @@ private final class HIDDeviceSession {
     private var isOpen = false
 
     /// Creates a device session and allocates its callback buffer.
+    ///
     /// - Parameters:
     ///   - device: The IOHID endpoint to wrap.
     ///   - monitor: The owning monitor.
@@ -196,6 +211,7 @@ private final class HIDDeviceSession {
     }
 
     /// Opens the endpoint and registers its input callback.
+    ///
     /// - Returns: The IOKit open result.
     func open() -> IOReturn {
         let result = IOHIDDeviceOpen(device, IOOptionBits(kIOHIDOptionsTypeNone))
@@ -207,9 +223,10 @@ private final class HIDDeviceSession {
             KeymapProtocol.reportSize,
             { context, result, _, _, _, report, reportLength in
                 guard result == kIOReturnSuccess,
-                      reportLength >= 0,
-                      reportLength <= KeymapProtocol.reportSize,
-                      let context else { return }
+                    reportLength >= 0,
+                    reportLength <= KeymapProtocol.reportSize,
+                    let context
+                else { return }
                 let bytes = Array(UnsafeBufferPointer(start: report, count: reportLength))
 
                 MainActor.assumeIsolated {
@@ -224,24 +241,28 @@ private final class HIDDeviceSession {
     }
 
     /// Sends a complete RGB Matrix configuration to this keyboard.
+    ///
     /// - Parameter settings: The persistent configuration to apply.
     func applyRGBSettings(_ settings: RGBSettings) {
-        send(transferSession.rgbSettingsRequest(settings))
+        send(transferSession.rgbSettingsRequest(for: settings))
     }
 
     /// Starts the protocol handshake by requesting dimensions and a fingerprint.
     func requestKeymapMetadata() {
-        handle(transferSession.start())
+        perform(transferSession.start())
     }
 
     /// Routes one input packet into the state or paginated keymap flow.
+    ///
     /// - Parameter bytes: One complete Raw HID input report.
     private func receive(_ bytes: [UInt8]) {
-        handle(transferSession.receive(bytes))
+        perform(transferSession.receive(bytes))
     }
 
-    /// Applies protocol actions to this platform HID endpoint and its owning monitor.
-    private func handle(_ actions: [KeymapSessionAction]) {
+    /// Performs protocol actions on this HID endpoint and its owning monitor.
+    ///
+    /// - Parameter actions: The protocol actions to perform in order.
+    private func perform(_ actions: [KeymapSessionAction]) {
         for action in actions {
             switch action {
             case let .write(request):
@@ -257,6 +278,7 @@ private final class HIDDeviceSession {
     }
 
     /// Writes one fixed-size output report to the device.
+    ///
     /// - Parameter request: A complete protocol request.
     private func send(_ request: [UInt8]) {
         request.withUnsafeBufferPointer { buffer in

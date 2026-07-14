@@ -3,6 +3,7 @@ import SwiftUI
 /// The shared wire-level key style.
 typealias KeyStyle = KeymapProtocol.KeyStyle
 
+/// SwiftUI presentation for shared firmware key styles.
 extension KeymapProtocol.KeyStyle {
     /// The color used for this category in the app.
     var color: Color {

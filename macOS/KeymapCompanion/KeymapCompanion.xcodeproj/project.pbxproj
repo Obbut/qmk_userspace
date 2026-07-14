@@ -39,6 +39,8 @@
 		96F185CC9B61DE09E943E872 /* KeymapLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0C67F14A16EEF85D9575417 /* KeymapLayer.swift */; };
 		9DB0118E6D559CBF5E0DFFF0 /* KeymapProtocolTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16D9C02416D2201C1C52F3DC /* KeymapProtocolTests.swift */; };
 		A11DC6723B969E8D7D1F6820 /* KeymapDefinition.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55E58D948312641152C32289 /* KeymapDefinition.swift */; };
+		AA1000000000000000000001 /* KeymapProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA2000000000000000000001 /* KeymapProtocol.swift */; };
+		AA1000000000000000000002 /* KeySemantic.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA2000000000000000000002 /* KeySemantic.swift */; };
 		B0B9414FA9DF5349608BBC14 /* KeymapMetadataReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F4F26D51CF4D75FAD787FD /* KeymapMetadataReport.swift */; };
 		C58FA95910476439281623E7 /* LayerHUDModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A198319728DE35BAC30DD79 /* LayerHUDModel.swift */; };
 		C5B0FA2506C4A8EC9CB0E265 /* FirmwareKeymap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AD6F3DBD8BF71AB5E053DBB /* FirmwareKeymap.swift */; };
@@ -91,6 +93,8 @@
 		8E63FDC0FCED9B3B52B3C394 /* QMKKeycodeLegend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QMKKeycodeLegend.swift; sourceTree = "<group>"; };
 		958459E40F97A70F7E6F6492 /* KeyStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyStyle.swift; sourceTree = "<group>"; };
 		A10ADEE907AFDE77CA53BA97 /* KeyboardKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardKind.swift; sourceTree = "<group>"; };
+		AA2000000000000000000001 /* KeymapProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeymapProtocol.swift; sourceTree = "<group>"; };
+		AA2000000000000000000002 /* KeySemantic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeySemantic.swift; sourceTree = "<group>"; };
 		A7A3C488E002048FE5CC4D6F /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		B0A6F7576259DED108B40CD1 /* KeymapEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeymapEncoder.swift; sourceTree = "<group>"; };
 		B0C67F14A16EEF85D9575417 /* KeymapLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeymapLayer.swift; sourceTree = "<group>"; };
@@ -177,6 +181,8 @@
 				B0A6F7576259DED108B40CD1 /* KeymapEncoder.swift */,
 				454C212125BFA8101CD194A7 /* KeymapKey.swift */,
 				B0C67F14A16EEF85D9575417 /* KeymapLayer.swift */,
+				AA2000000000000000000001 /* KeymapProtocol.swift */,
+				AA2000000000000000000002 /* KeySemantic.swift */,
 				958459E40F97A70F7E6F6492 /* KeyStyle.swift */,
 				DB90D7DEB62126947620F807 /* LayerHUDPresentation.swift */,
 				5C9D02E1FA834839E68F4D21 /* MatrixPosition.swift */,
@@ -354,6 +360,8 @@
 				03DCA79E3D390357F881CDA8 /* KeymapEncoder.swift in Sources */,
 				58938B5A10AF65BF45ADC644 /* KeymapKey.swift in Sources */,
 				96F185CC9B61DE09E943E872 /* KeymapLayer.swift in Sources */,
+				AA1000000000000000000001 /* KeymapProtocol.swift in Sources */,
+				AA1000000000000000000002 /* KeySemantic.swift in Sources */,
 				B0B9414FA9DF5349608BBC14 /* KeymapMetadataReport.swift in Sources */,
 				F7A29F13ACAABFF3CD7779D6 /* LayerHUDController.swift in Sources */,
 				C58FA95910476439281623E7 /* LayerHUDModel.swift in Sources */,

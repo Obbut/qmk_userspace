@@ -37,10 +37,10 @@ final class WindowsKeymapSurface {
     func update(activeLayerMask: UInt32) {
         guard renderedLayerMask != activeLayerMask else { return }
         renderedLayerMask = activeLayerMask
-        let activeLayer = KeymapLayer.highestActiveLayer(in: activeLayerMask)
+        let activeLayer = KeymapLayer.highestActiveLayer(inLayerMask: activeLayerMask)
 
         for index in keys.indices {
-            let legend = keys[index].key.resolvedLegend(activeLayerMask: activeLayerMask)
+            let legend = keys[index].key.resolvedLegend(forActiveLayerMask: activeLayerMask)
             let isDirect = keys[index].key.isDirectlyMapped(on: activeLayer)
             if keys[index].legend != legend {
                 keys[index].legend = legend
@@ -65,7 +65,7 @@ final class WindowsKeymapSurface {
     }
 
     private func updateEncoder(activeLayerMask: UInt32, activeLayer: KeymapLayer) {
-        let pressLegend = encoder.pressKey.resolvedLegend(activeLayerMask: activeLayerMask)
+        let pressLegend = encoder.pressKey.resolvedLegend(forActiveLayerMask: activeLayerMask)
         if encoder.pressLegend != pressLegend {
             encoder.pressLegend = pressLegend
             encoder.pressLabel.text = Self.displayText(for: pressLegend)
@@ -75,7 +75,7 @@ final class WindowsKeymapSurface {
             )
         }
         updateEncoderAction(
-            &encoder.counterClockwise,
+            &encoder.counterclockwise,
             activeLayerMask: activeLayerMask,
             activeLayer: activeLayer
         )
@@ -91,7 +91,7 @@ final class WindowsKeymapSurface {
         activeLayerMask: UInt32,
         activeLayer: KeymapLayer
     ) {
-        let legend = action.key.resolvedLegend(activeLayerMask: activeLayerMask)
+        let legend = action.key.resolvedLegend(forActiveLayerMask: activeLayerMask)
         let isDirect = action.key.isDirectlyMapped(on: activeLayer)
         if action.legend != legend {
             action.legend = legend
@@ -161,14 +161,14 @@ final class WindowsKeymapSurface {
         // Keep both turn actions in the center gap to the left of the knob. The
         // first key in the right half begins too close to the physical encoder
         // for a trailing action pill without overlap.
-        let counterClockwise = makeEncoderAction(
+        let counterclockwise = makeEncoderAction(
             arrow: "↶",
-            key: definition.counterClockwiseKey,
+            key: definition.counterclockwiseKey,
             x: centerX - 186 * scale,
             y: centerY - 18 * scale,
             scale: scale
         )
-        canvas.children.append(counterClockwise.border)
+        canvas.children.append(counterclockwise.border)
         let clockwise = makeEncoderAction(
             arrow: "↷",
             key: definition.clockwiseKey,
@@ -182,7 +182,7 @@ final class WindowsKeymapSurface {
             pressKey: definition.pressKey,
             knob: knob,
             pressLabel: pressLabel,
-            counterClockwise: counterClockwise,
+            counterclockwise: counterclockwise,
             clockwise: clockwise
         )
     }
@@ -270,7 +270,7 @@ private struct RenderedEncoder {
     let knob: Border
     let pressLabel: TextBlock
     var pressLegend: KeyLegend?
-    var counterClockwise: RenderedEncoderAction
+    var counterclockwise: RenderedEncoderAction
     var clockwise: RenderedEncoderAction
 }
 

@@ -3,6 +3,7 @@
 
 extension KeymapProtocol {
     /// Encodes one complete keyboard-state report.
+    ///
     /// - Parameters:
     ///   - bytes: Storage for exactly one report.
     ///   - keyboardKind: The keyboard identifier byte.
@@ -57,6 +58,7 @@ extension KeymapProtocol {
     }
 
     /// Encodes the metadata that begins a keymap transfer.
+    ///
     /// - Parameters:
     ///   - bytes: Storage for exactly one report.
     ///   - keyboardKind: The keyboard identifier byte.
@@ -78,7 +80,7 @@ extension KeymapProtocol {
         entryCount: UInt16,
         encoderCount: UInt8
     ) -> Bool {
-        guard initializeReport(bytes, as: .keymapInfo) else { return false }
+        guard initializeReport(bytes, as: .keymapMetadata) else { return false }
         bytes[6] = keyboardKind
         bytes[7] = layerCount
         bytes[8] = matrixRowCount
@@ -93,6 +95,7 @@ extension KeymapProtocol {
     }
 
     /// Encodes the envelope and pagination fields for a keymap chunk.
+    ///
     /// - Parameters:
     ///   - bytes: Storage for exactly one report.
     ///   - keyboardKind: The keyboard identifier byte.
@@ -109,9 +112,10 @@ extension KeymapProtocol {
         totalEntryCount: UInt16
     ) -> Bool {
         guard entryCount > 0,
-              Int(entryCount) <= entriesPerChunk,
-              Int(startIndex) + Int(entryCount) <= Int(totalEntryCount),
-              initializeReport(bytes, as: .keymapChunk) else {
+            Int(entryCount) <= entriesPerChunk,
+            Int(startIndex) + Int(entryCount) <= Int(totalEntryCount),
+            initializeReport(bytes, as: .keymapChunk)
+        else {
             return false
         }
         bytes[6] = keyboardKind
@@ -122,6 +126,7 @@ extension KeymapProtocol {
     }
 
     /// Encodes one entry into an initialized keymap chunk.
+    ///
     /// - Parameters:
     ///   - keycode: The compiled QMK keycode.
     ///   - semantic: The semantic override byte.
@@ -138,8 +143,9 @@ extension KeymapProtocol {
         to bytes: UnsafeMutableBufferPointer<UInt8>
     ) -> Bool {
         guard bytes.count == reportSize,
-              hasValidHeader(UnsafeBufferPointer(bytes), type: .keymapChunk),
-              entryIndex < bytes[7] else {
+            hasValidHeader(in: UnsafeBufferPointer(bytes), messageType: .keymapChunk),
+            entryIndex < bytes[7]
+        else {
             return false
         }
         let offset = keymapChunkOffset + Int(entryIndex) * keymapEntrySize
@@ -150,7 +156,9 @@ extension KeymapProtocol {
     }
 
     /// Maps a zero-based QMK effect-table position to its stable wire identifier.
+    ///
     /// - Parameter index: The zero-based effect-table position.
+    ///
     /// - Returns: The stable identifier, or zero when the index is unsupported.
     public static func rgbEffectIdentifier(at index: UInt8) -> UInt8 {
         guard index < rgbEffectCount else { return 0 }

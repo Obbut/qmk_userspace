@@ -219,7 +219,7 @@ private final class WindowsHIDSession: @unchecked Sendable {
     func applyRGBSettings(_ settings: RGBSettings) {
         queue.async { [self] in
             guard !closed else { return }
-            send(transferSession.rgbSettingsRequest(settings))
+            send(transferSession.rgbSettingsRequest(for: settings))
         }
     }
 
@@ -248,7 +248,7 @@ private final class WindowsHIDSession: @unchecked Sendable {
                 stateLock.unlock()
                 handleActions(actions)
             } else if !closed {
-                eventHandler(.failed("The keyboard stopped responding over Raw HID."))
+                eventHandler(.failed(message: "The keyboard stopped responding over Raw HID."))
                 close()
             }
         }
@@ -264,7 +264,7 @@ private final class WindowsHIDSession: @unchecked Sendable {
             case let .state(report):
                 eventHandler(.state(report))
             case let .failed(message):
-                eventHandler(.failed(message))
+                eventHandler(.failed(message: message))
             }
         }
     }
@@ -275,7 +275,7 @@ private final class WindowsHIDSession: @unchecked Sendable {
             keymap_hid_write_report(handle, buffer.baseAddress, UInt32(buffer.count))
         }
         if result != Int32(bytes.count), !closed {
-            eventHandler(.failed("Could not write to the keyboard's Raw HID endpoint."))
+            eventHandler(.failed(message: "Could not write to the keyboard's Raw HID endpoint."))
         }
     }
 }

@@ -1,28 +1,8 @@
-/// The keyboard identifier shared by firmware and companion apps.
-public typealias KeyboardKind = KeymapProtocol.KeyboardKind
-
-/// The encoder direction shared by firmware and companion apps.
-public typealias EncoderDirection = KeymapProtocol.EncoderDirection
-
-/// The key presentation category shared by firmware and companion apps.
-public typealias KeyStyle = KeymapProtocol.KeyStyle
-
 /// The RGB effect identifier shared by firmware and companion apps.
 public typealias RGBEffect = KeymapProtocol.RGBEffect
 
-extension KeymapProtocol.KeyboardKind {
-    /// The product name shown by companion apps.
-    public var displayName: String {
-        switch self {
-        case .kyria:
-            "Kyria Rev4"
-        case .elora:
-            "Elora Rev2"
-        }
-    }
-}
-
 extension KeymapProtocol.RGBEffect: Identifiable {
+    /// The stable firmware effect identifier.
     public var id: UInt8 { rawValue }
 
     /// The effect name shown by companion apps.
