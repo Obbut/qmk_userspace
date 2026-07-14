@@ -8,10 +8,26 @@ struct KeymapCompanionApp: App {
 
     /// The main keymap window and persistent menu-bar extra.
     var body: some Scene {
-        WindowGroup("Keymap Companion", id: "keymap") {
+        MenuBarExtra {
+            MenuBarView(model: model)
+        } label: {
+            if model.connectionStatus.isConnected, let keyboardKind = model.keyboardKind {
+                MenuBarKeyboardIcon(
+                    keyboardKind: keyboardKind,
+                    activeLayer: model.activeLayer
+                )
+            } else {
+                Image(systemName: "keyboard")
+                    .accessibilityLabel("Keymap Companion")
+            }
+        }
+        .menuBarExtraStyle(.menu)
+
+        Window("Keymap Companion", id: "keymap") {
             ContentView(model: model)
         }
         .defaultSize(width: 1_180, height: 720)
+        .defaultLaunchBehavior(.presented)
         .commands {
             CommandGroup(replacing: .newItem) { }
             CommandGroup(after: .appInfo) {
@@ -21,20 +37,5 @@ struct KeymapCompanionApp: App {
                 .keyboardShortcut("r", modifiers: [.command, .shift])
             }
         }
-
-        MenuBarExtra {
-            MenuBarView(model: model)
-        } label: {
-            if model.connectionStatus.isConnected {
-                Label {
-                    Text(model.activeLayer.displayName)
-                } icon: {
-                    Image(systemName: "keyboard.fill")
-                }
-            } else {
-                Label("Keymap Companion", systemImage: "keyboard")
-            }
-        }
-        .menuBarExtraStyle(.menu)
     }
 }
