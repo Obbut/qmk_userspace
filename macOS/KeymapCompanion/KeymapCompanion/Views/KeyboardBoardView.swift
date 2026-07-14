@@ -29,6 +29,16 @@ struct KeyboardBoardView: View {
                             y: CGFloat(positionedKey.placement.centerY)
                         )
                     }
+
+                    KeyboardEncoderView(
+                        encoder: definition.rightEncoder,
+                        activeLayer: activeLayer,
+                        activeLayerMask: activeLayerMask
+                    )
+                    .frame(
+                        width: CGFloat(definition.geometry.canvasWidth),
+                        height: CGFloat(definition.geometry.canvasHeight)
+                    )
                 }
                 .frame(
                     width: CGFloat(definition.geometry.canvasWidth),

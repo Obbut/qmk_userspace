@@ -141,7 +141,43 @@ func physicalGeometryMatchesReadmeRenders() throws {
     #expect(eloraAlphaKey.centerY == 84)
 }
 
-/// Creates a dimensionally accurate firmware matrix for tests.
+/// Verifies the right encoder uses transferred rotary mappings and the module-row push switch.
+@Test
+func rightEncoderMatchesFirmwareAndPhysicalGeometry() throws {
+    let kyria = try #require(
+        KeymapDefinition(firmwareKeymap: makeFirmwareKeymap(for: .kyria))
+    )
+    let elora = try #require(
+        KeymapDefinition(firmwareKeymap: makeFirmwareKeymap(for: .elora))
+    )
+    let lowerMask = UInt32(1 << KeymapLayer.base.rawValue)
+        | UInt32(1 << KeymapLayer.lower.rawValue)
+
+    #expect(kyria.rightEncoder.placement.centerX == 583)
+    #expect(kyria.rightEncoder.placement.centerY == 105)
+    #expect(kyria.rightEncoder.pressKey.id == "r9c0")
+    #expect(
+        kyria.rightEncoder.counterClockwiseKey
+            .resolvedLegend(activeLayerMask: lowerMask)
+            .label == "Previous Track"
+    )
+    #expect(
+        kyria.rightEncoder.pressKey
+            .resolvedLegend(activeLayerMask: lowerMask)
+            .label == "Play or Pause"
+    )
+    #expect(
+        kyria.rightEncoder.clockwiseKey
+            .resolvedLegend(activeLayerMask: lowerMask)
+            .label == "Next Track"
+    )
+
+    #expect(elora.rightEncoder.placement.centerX == 583)
+    #expect(elora.rightEncoder.placement.centerY == 161)
+    #expect(elora.rightEncoder.pressKey.id == "r11c0")
+}
+
+/// Creates a dimensionally accurate firmware matrix and encoder map for tests.
 /// - Parameters:
 ///   - keyboardKind: The matrix shape to create.
 ///   - customize: Optional entry mutations applied before returning.
@@ -152,9 +188,22 @@ private func makeFirmwareKeymap(
 ) -> FirmwareKeymap {
     let rows = keyboardKind == .kyria ? 10 : 12
     let columns = 7
-    let transparent = FirmwareKeymapEntry(keycode: 0x0001, semantic: 0, style: .standard)
-    let unassigned = FirmwareKeymapEntry(keycode: 0x0000, semantic: 0, style: .standard)
-    var entries = Array(repeating: transparent, count: KeymapLayer.allCases.count * rows * columns)
+    let layerCount = KeymapLayer.allCases.count
+    let matrixEntryCount = layerCount * rows * columns
+    let transparent = FirmwareKeymapEntry(
+        keycode: 0x0001,
+        semantic: 0,
+        style: .standard
+    )
+    let unassigned = FirmwareKeymapEntry(
+        keycode: 0x0000,
+        semantic: 0,
+        style: .standard
+    )
+    var entries = Array(
+        repeating: transparent,
+        count: matrixEntryCount + layerCount * EncoderDirection.allCases.count
+    )
     for row in 0..<rows {
         for column in 0..<columns {
             setEntry(
@@ -168,12 +217,47 @@ private func makeFirmwareKeymap(
             )
         }
     }
+    setEntry(
+        keycode: 0x00AE,
+        layer: .lower,
+        row: rows - 1,
+        column: 0,
+        in: &entries,
+        rows: rows,
+        columns: columns
+    )
+
+    let encoderKeycodes: [
+        (counterClockwise: UInt16, clockwise: UInt16)
+    ] = [
+        (0x00AA, 0x00A9),
+        (0x00AA, 0x00A9),
+        (0x00AC, 0x00AB),
+        (0x00AA, 0x00A9),
+        (0x7844, 0x7843)
+    ]
+    for (layerIndex, keycodes) in encoderKeycodes.enumerated() {
+        let encoderOffset = matrixEntryCount
+            + layerIndex * EncoderDirection.allCases.count
+        entries[encoderOffset] = FirmwareKeymapEntry(
+            keycode: keycodes.counterClockwise,
+            semantic: 0,
+            style: .standard
+        )
+        entries[encoderOffset + 1] = FirmwareKeymapEntry(
+            keycode: keycodes.clockwise,
+            semantic: 0,
+            style: .standard
+        )
+    }
+
     customize(&entries, rows, columns)
     return FirmwareKeymap(
         keyboardKind: keyboardKind,
-        layerCount: KeymapLayer.allCases.count,
+        layerCount: layerCount,
         matrixRowCount: rows,
         matrixColumnCount: columns,
+        encoderCount: 1,
         fingerprint: 0,
         entries: entries
     )

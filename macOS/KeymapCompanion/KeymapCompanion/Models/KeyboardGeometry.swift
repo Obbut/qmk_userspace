@@ -11,4 +11,7 @@ struct KeyboardGeometry: Equatable, Sendable {
 
     /// QMK matrix coordinates in the same order as `placements`.
     let matrixPositions: [MatrixPosition]
+
+    /// The right encoder center immediately to the left of the home-row inner key.
+    let rightEncoderPlacement: PhysicalKeyPlacement
 }

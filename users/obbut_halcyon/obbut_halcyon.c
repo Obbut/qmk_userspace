@@ -18,7 +18,7 @@ static bool rgb_preview_mode = false;
 #    define OBBUT_HID_MAGIC_1 'M'
 #    define OBBUT_HID_MAGIC_2 'A'
 #    define OBBUT_HID_MAGIC_3 'P'
-#    define OBBUT_HID_PROTOCOL_VERSION 2
+#    define OBBUT_HID_PROTOCOL_VERSION 3
 #    define OBBUT_HID_GET_STATE 1
 #    define OBBUT_HID_STATE 2
 #    define OBBUT_HID_GET_KEYMAP_INFO 3
@@ -34,6 +34,8 @@ static bool rgb_preview_mode = false;
 #    define OBBUT_HID_KEYMAP_ENTRY_SIZE 4
 #    define OBBUT_HID_KEYMAP_CHUNK_OFFSET 12
 #    define OBBUT_HID_KEYMAP_ENTRIES_PER_CHUNK ((OBBUT_HID_REPORT_SIZE - OBBUT_HID_KEYMAP_CHUNK_OFFSET) / OBBUT_HID_KEYMAP_ENTRY_SIZE)
+#    define OBBUT_HID_ENCODER_COUNT 1
+#    define OBBUT_HID_ENCODER_DIRECTION_COUNT 2
 
 enum keymap_companion_semantic {
     OBBUT_HID_SEMANTIC_NONE,
@@ -150,12 +152,51 @@ static uint16_t keymap_companion_read_u16(const uint8_t *data, uint8_t offset) {
     return (uint16_t)data[offset] | ((uint16_t)data[offset + 1] << 8);
 }
 
-static uint16_t keymap_companion_entry_count(void) {
+static uint16_t keymap_companion_matrix_entry_count(void) {
     return (uint16_t)OBBUT_KEYMAP_LAYER_COUNT * MATRIX_ROWS * MATRIX_COLS;
 }
 
-static uint16_t keymap_companion_keycode_at(uint16_t index) {
+static uint16_t keymap_companion_encoder_keycode(uint8_t layer, uint8_t direction) {
+    bool clockwise = direction == 1;
+    switch (layer) {
+        case _DEFAULT:
+            return clockwise ? ENCODER_DEFAULT_CW : ENCODER_DEFAULT_CCW;
+        case _QWERTY:
+            return clockwise ? ENCODER_QWERTY_CW : ENCODER_QWERTY_CCW;
+        case _LOWER:
+            return clockwise ? ENCODER_LOWER_CW : ENCODER_LOWER_CCW;
+        case _RAISE:
+            return clockwise ? ENCODER_RAISE_CW : ENCODER_RAISE_CCW;
+        case _FUNCTION:
+            return clockwise ? ENCODER_FUNCTION_CW : ENCODER_FUNCTION_CCW;
+        default:
+            return KC_NO;
+    }
+}
+
+static uint16_t keymap_companion_entry_count(void) {
+    return keymap_companion_matrix_entry_count() + (uint16_t)OBBUT_KEYMAP_LAYER_COUNT * OBBUT_HID_ENCODER_COUNT * OBBUT_HID_ENCODER_DIRECTION_COUNT;
+}
+
+static uint8_t keymap_companion_layer_at(uint16_t index) {
     uint16_t matrix_size = MATRIX_ROWS * MATRIX_COLS;
+    uint16_t matrix_entry_count = keymap_companion_matrix_entry_count();
+    if (index < matrix_entry_count) {
+        return index / matrix_size;
+    }
+    return (index - matrix_entry_count) / (OBBUT_HID_ENCODER_COUNT * OBBUT_HID_ENCODER_DIRECTION_COUNT);
+}
+
+static uint16_t keymap_companion_keycode_at(uint16_t index) {
+    uint16_t matrix_size        = MATRIX_ROWS * MATRIX_COLS;
+    uint16_t matrix_entry_count = keymap_companion_matrix_entry_count();
+    if (index >= matrix_entry_count) {
+        uint16_t encoder_offset = index - matrix_entry_count;
+        uint8_t  layer          = encoder_offset / (OBBUT_HID_ENCODER_COUNT * OBBUT_HID_ENCODER_DIRECTION_COUNT);
+        uint8_t  direction      = encoder_offset % OBBUT_HID_ENCODER_DIRECTION_COUNT;
+        return keymap_companion_encoder_keycode(layer, direction);
+    }
+
     uint8_t  layer       = index / matrix_size;
     uint16_t position    = index % matrix_size;
     keypos_t key         = {
@@ -235,11 +276,13 @@ static uint32_t keymap_companion_fingerprint(void) {
     OBBUT_HID_FINGERPRINT_BYTE(OBBUT_KEYMAP_LAYER_COUNT);
     OBBUT_HID_FINGERPRINT_BYTE(MATRIX_ROWS);
     OBBUT_HID_FINGERPRINT_BYTE(MATRIX_COLS);
+    OBBUT_HID_FINGERPRINT_BYTE(OBBUT_HID_ENCODER_COUNT);
+    OBBUT_HID_FINGERPRINT_BYTE(OBBUT_HID_ENCODER_DIRECTION_COUNT);
 
     uint16_t entry_count = keymap_companion_entry_count();
     for (uint16_t index = 0; index < entry_count; index++) {
         uint16_t keycode = keymap_companion_keycode_at(index);
-        uint8_t  layer   = index / (MATRIX_ROWS * MATRIX_COLS);
+        uint8_t  layer   = keymap_companion_layer_at(index);
         OBBUT_HID_FINGERPRINT_BYTE(keycode);
         OBBUT_HID_FINGERPRINT_BYTE(keycode >> 8);
         OBBUT_HID_FINGERPRINT_BYTE(keymap_companion_semantic_for_keycode(keycode));
@@ -316,6 +359,8 @@ static void keymap_companion_send_keymap_info(void) {
     response[11]                            = OBBUT_HID_KEYMAP_ENTRIES_PER_CHUNK;
     keymap_companion_write_u32(response, 12, keymap_companion_fingerprint());
     keymap_companion_write_u16(response, 16, keymap_companion_entry_count());
+    response[18] = OBBUT_HID_ENCODER_COUNT;
+    response[19] = OBBUT_HID_ENCODER_DIRECTION_COUNT;
     raw_hid_send(response, OBBUT_HID_REPORT_SIZE);
 }
 
@@ -343,7 +388,7 @@ static void keymap_companion_send_keymap_chunk(uint16_t start_index) {
     for (uint8_t entry = 0; entry < count; entry++) {
         uint16_t index   = start_index + entry;
         uint16_t keycode = keymap_companion_keycode_at(index);
-        uint8_t  layer   = index / (MATRIX_ROWS * MATRIX_COLS);
+        uint8_t  layer   = keymap_companion_layer_at(index);
         uint8_t  offset  = OBBUT_HID_KEYMAP_CHUNK_OFFSET + entry * OBBUT_HID_KEYMAP_ENTRY_SIZE;
         keymap_companion_write_u16(response, offset, keycode);
         response[offset + 2] = keymap_companion_semantic_for_keycode(keycode);
