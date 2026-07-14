@@ -1,4 +1,5 @@
 #include "CWindowsShell.h"
+#include "CWindowsTrayIcon.h"
 
 #include <windows.h>
 #include <commdlg.h>
@@ -11,32 +12,112 @@
 struct keymap_tray_handle {
     HWND window;
     NOTIFYICONDATAW icon;
+    HICON owned_icon;
     keymap_tray_callback callback;
     void *context;
+    uint32_t connection_state;
+    uint32_t keyboard_kind;
+    uint32_t active_layer;
+    BOOL uses_version_four;
 };
 
-static void keymap_tray_show_menu(keymap_tray_handle *handle) {
+static const wchar_t *keymap_tray_keyboard_name(uint32_t keyboard_kind) {
+    switch (keyboard_kind) {
+    case KEYMAP_TRAY_KEYBOARD_KYRIA:
+        return L"Kyria Rev4";
+    case KEYMAP_TRAY_KEYBOARD_ELORA:
+        return L"Elora Rev2";
+    default:
+        return L"Keyboard Connected";
+    }
+}
+
+static const wchar_t *keymap_tray_layer_name(uint32_t active_layer) {
+    switch (active_layer) {
+    case KEYMAP_TRAY_LAYER_QWERTY:
+        return L"QWERTY";
+    case KEYMAP_TRAY_LAYER_LOWER:
+        return L"Lower";
+    case KEYMAP_TRAY_LAYER_RAISE:
+        return L"Raise";
+    case KEYMAP_TRAY_LAYER_FUNCTION:
+        return L"Function";
+    default:
+        return L"Default";
+    }
+}
+
+static const wchar_t *keymap_tray_status_name(keymap_tray_handle *handle) {
+    switch (handle->connection_state) {
+    case KEYMAP_TRAY_CONNECTION_CONNECTED:
+        return keymap_tray_keyboard_name(handle->keyboard_kind);
+    case KEYMAP_TRAY_CONNECTION_DISCONNECTED:
+        return L"Keyboard Disconnected";
+    case KEYMAP_TRAY_CONNECTION_FAILED:
+        return L"Keyboard Connection Error";
+    default:
+        return L"Searching for Keyboard";
+    }
+}
+
+static void keymap_tray_update_tip(keymap_tray_handle *handle) {
+    if (handle->connection_state == KEYMAP_TRAY_CONNECTION_CONNECTED) {
+        swprintf_s(
+            handle->icon.szTip,
+            ARRAYSIZE(handle->icon.szTip),
+            L"%s - %s layer",
+            keymap_tray_keyboard_name(handle->keyboard_kind),
+            keymap_tray_layer_name(handle->active_layer)
+        );
+    } else {
+        wcscpy_s(
+            handle->icon.szTip,
+            ARRAYSIZE(handle->icon.szTip),
+            keymap_tray_status_name(handle)
+        );
+    }
+}
+
+static void keymap_tray_show_menu(
+    keymap_tray_handle *handle,
+    POINT anchor
+) {
     HMENU menu = CreatePopupMenu();
     if (menu == NULL) {
         return;
     }
+
+    AppendMenuW(
+        menu,
+        MF_STRING | MF_DISABLED | MF_GRAYED,
+        0,
+        keymap_tray_status_name(handle)
+    );
+    if (handle->connection_state == KEYMAP_TRAY_CONNECTION_CONNECTED) {
+        AppendMenuW(
+            menu,
+            MF_STRING | MF_DISABLED | MF_GRAYED,
+            0,
+            keymap_tray_layer_name(handle->active_layer)
+        );
+    }
+    AppendMenuW(menu, MF_SEPARATOR, 0, NULL);
     AppendMenuW(menu, MF_STRING | MF_DEFAULT, KEYMAP_TRAY_OPEN, L"Open Keymap Companion");
     AppendMenuW(menu, MF_STRING, KEYMAP_TRAY_RECONNECT, L"Reconnect keyboard");
     AppendMenuW(menu, MF_SEPARATOR, 0, NULL);
-    AppendMenuW(menu, MF_STRING, KEYMAP_TRAY_EXIT, L"Exit");
+    AppendMenuW(menu, MF_STRING, KEYMAP_TRAY_EXIT, L"Quit Keymap Companion");
 
-    POINT point;
-    GetCursorPos(&point);
     SetForegroundWindow(handle->window);
     UINT command = TrackPopupMenu(
         menu,
         TPM_RETURNCMD | TPM_RIGHTBUTTON | TPM_NONOTIFY,
-        point.x,
-        point.y,
+        anchor.x,
+        anchor.y,
         0,
         handle->window,
         NULL
     );
+    PostMessageW(handle->window, WM_NULL, 0, 0);
     DestroyMenu(menu);
     if (command != 0 && handle->callback != NULL) {
         handle->callback(command, handle->context);
@@ -61,9 +142,25 @@ static LRESULT CALLBACK keymap_tray_window_proc(
     }
 
     if (message == KEYMAP_TRAY_MESSAGE && handle != NULL) {
-        if (lparam == WM_RBUTTONUP || lparam == WM_CONTEXTMENU) {
-            keymap_tray_show_menu(handle);
-        } else if (lparam == WM_LBUTTONUP || lparam == WM_LBUTTONDBLCLK) {
+        UINT notification = handle->uses_version_four
+            ? LOWORD((DWORD_PTR)lparam)
+            : (UINT)lparam;
+        POINT anchor;
+        if (handle->uses_version_four) {
+            anchor.x = (LONG)(SHORT)LOWORD((DWORD_PTR)wparam);
+            anchor.y = (LONG)(SHORT)HIWORD((DWORD_PTR)wparam);
+        } else {
+            GetCursorPos(&anchor);
+        }
+
+        if (notification == WM_RBUTTONUP || notification == WM_CONTEXTMENU) {
+            if (anchor.x == -1 && anchor.y == -1) {
+                GetCursorPos(&anchor);
+            }
+            keymap_tray_show_menu(handle, anchor);
+        } else if (notification == WM_LBUTTONUP
+                || notification == NIN_SELECT
+                || notification == NIN_KEYSELECT) {
             if (handle->callback != NULL) {
                 handle->callback(KEYMAP_TRAY_OPEN, handle->context);
             }
@@ -96,13 +193,16 @@ keymap_tray_handle *keymap_tray_create(
     }
     handle->callback = callback;
     handle->context = context;
+    handle->connection_state = KEYMAP_TRAY_CONNECTION_SEARCHING;
+    handle->keyboard_kind = KEYMAP_TRAY_KEYBOARD_UNKNOWN;
+    handle->active_layer = KEYMAP_TRAY_LAYER_DEFAULT;
     HWND window = CreateWindowExW(
-        0,
+        WS_EX_TOOLWINDOW,
         KEYMAP_TRAY_WINDOW_CLASS,
         L"Keymap Companion Tray",
-        0,
+        WS_POPUP,
         0, 0, 0, 0,
-        HWND_MESSAGE,
+        NULL,
         NULL,
         instance,
         handle
@@ -117,15 +217,72 @@ keymap_tray_handle *keymap_tray_create(
     handle->icon.uID = 1;
     handle->icon.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP | NIF_SHOWTIP;
     handle->icon.uCallbackMessage = KEYMAP_TRAY_MESSAGE;
-    handle->icon.hIcon = LoadIconW(NULL, IDI_APPLICATION);
-    wcscpy_s(handle->icon.szTip, ARRAYSIZE(handle->icon.szTip), L"Keymap Companion");
+    handle->owned_icon = keymap_create_tray_icon(
+        handle->connection_state,
+        handle->keyboard_kind,
+        handle->active_layer
+    );
+    if (handle->owned_icon == NULL) {
+        handle->owned_icon = CopyIcon(LoadIconW(NULL, IDI_APPLICATION));
+    }
+    handle->icon.hIcon = handle->owned_icon;
+    keymap_tray_update_tip(handle);
     if (!Shell_NotifyIconW(NIM_ADD, &handle->icon)) {
+        DestroyIcon(handle->owned_icon);
+        handle->owned_icon = NULL;
         DestroyWindow(window);
         return NULL;
     }
     handle->icon.uVersion = NOTIFYICON_VERSION_4;
-    Shell_NotifyIconW(NIM_SETVERSION, &handle->icon);
+    handle->uses_version_four = Shell_NotifyIconW(NIM_SETVERSION, &handle->icon);
     return handle;
+}
+
+void keymap_tray_update_state(
+    keymap_tray_handle *handle,
+    uint32_t connection_state,
+    uint32_t keyboard_kind,
+    uint32_t active_layer
+) {
+    if (handle == NULL
+            || (handle->connection_state == connection_state
+                && handle->keyboard_kind == keyboard_kind
+                && handle->active_layer == active_layer)) {
+        return;
+    }
+
+    HICON updated_icon = keymap_create_tray_icon(
+        connection_state,
+        keyboard_kind,
+        active_layer
+    );
+    if (updated_icon == NULL) {
+        return;
+    }
+
+    HICON previous_icon = handle->owned_icon;
+    uint32_t previous_connection_state = handle->connection_state;
+    uint32_t previous_keyboard_kind = handle->keyboard_kind;
+    uint32_t previous_active_layer = handle->active_layer;
+    handle->owned_icon = updated_icon;
+    handle->connection_state = connection_state;
+    handle->keyboard_kind = keyboard_kind;
+    handle->active_layer = active_layer;
+    handle->icon.hIcon = updated_icon;
+    handle->icon.uFlags = NIF_ICON | NIF_TIP | NIF_SHOWTIP;
+    keymap_tray_update_tip(handle);
+
+    if (Shell_NotifyIconW(NIM_MODIFY, &handle->icon)) {
+        DestroyIcon(previous_icon);
+    } else {
+        handle->owned_icon = previous_icon;
+        handle->connection_state = previous_connection_state;
+        handle->keyboard_kind = previous_keyboard_kind;
+        handle->active_layer = previous_active_layer;
+        handle->icon.hIcon = previous_icon;
+        keymap_tray_update_tip(handle);
+        DestroyIcon(updated_icon);
+    }
 }
 
 void keymap_tray_destroy(keymap_tray_handle *handle) {
@@ -133,6 +290,8 @@ void keymap_tray_destroy(keymap_tray_handle *handle) {
         return;
     }
     Shell_NotifyIconW(NIM_DELETE, &handle->icon);
+    DestroyIcon(handle->owned_icon);
+    handle->owned_icon = NULL;
     DestroyWindow(handle->window);
 }
 

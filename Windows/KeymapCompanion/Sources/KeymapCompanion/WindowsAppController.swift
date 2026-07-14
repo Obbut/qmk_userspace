@@ -110,6 +110,7 @@ final class WindowsAppController {
             },
             Unmanaged.passUnretained(self).toOpaque()
         )
+        synchronizeTrayPresentation()
     }
 
     /// Stops shared hardware work and releases Windows presentation resources.
@@ -172,6 +173,29 @@ final class WindowsAppController {
             definition: model.keymapDefinition,
             presentation: model.layerHUD.presentation,
             mainWindowIsActive: isMainWindowActive
+        )
+        synchronizeTrayPresentation()
+    }
+
+    /// Synchronizes the native tray icon, tooltip, and menu state with the shared model.
+    private func synchronizeTrayPresentation() {
+        guard let tray else { return }
+        let connectionState =
+            switch model.connectionStatus {
+            case .searching:
+                UInt32(KEYMAP_TRAY_CONNECTION_SEARCHING)
+            case .connected:
+                UInt32(KEYMAP_TRAY_CONNECTION_CONNECTED)
+            case .disconnected:
+                UInt32(KEYMAP_TRAY_CONNECTION_DISCONNECTED)
+            case .failed:
+                UInt32(KEYMAP_TRAY_CONNECTION_FAILED)
+            }
+        keymap_tray_update_state(
+            tray,
+            connectionState,
+            UInt32(model.keyboardKind?.rawValue ?? 0),
+            UInt32(model.activeLayer.rawValue)
         )
     }
 
@@ -247,7 +271,7 @@ final class WindowsAppController {
         window.content = makeContent()
     }
 
-    /// Clears weak references to controls owned by the current lighting flyout.
+    /// Releases projections for controls owned by the current lighting flyout.
     private func clearRGBControlReferences() {
         if rgbFlyout?.isOpen == true {
             try? rgbFlyout?.hide()
