@@ -6,6 +6,9 @@ enum KeyboardMonitorEvent: Equatable, Sendable {
     /// A validated keyboard state arrived.
     case state(KeyboardStateReport)
 
+    /// A complete firmware-owned keymap was downloaded and validated.
+    case keymap(FirmwareKeymap)
+
     /// The active compatible keyboard was disconnected.
     case disconnected
 

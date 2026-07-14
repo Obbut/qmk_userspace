@@ -10,6 +10,9 @@ final class AppModel {
     /// The last compatible keyboard that sent a validated packet.
     private(set) var keyboardKind: KeyboardKind?
 
+    /// The visual keymap built exclusively from the downloaded firmware matrix.
+    private(set) var keymapDefinition: KeymapDefinition?
+
     /// The current QMK layer-state mask.
     private(set) var layerStateMask: UInt32 = 1
 
@@ -48,6 +51,8 @@ final class AppModel {
     /// Restarts discovery and requests fresh state from matching devices.
     func reconnect() {
         connectionStatus = .searching
+        keyboardKind = nil
+        keymapDefinition = nil
         monitor.restart()
     }
 
@@ -57,7 +62,17 @@ final class AppModel {
         switch event {
         case .searching:
             connectionStatus = .searching
+            keyboardKind = nil
+            keymapDefinition = nil
+        case let .keymap(firmwareKeymap):
+            guard let definition = KeymapDefinition(firmwareKeymap: firmwareKeymap) else {
+                connectionStatus = .failed("Firmware matrix does not match the supported keyboard geometry.")
+                return
+            }
+            keyboardKind = firmwareKeymap.keyboardKind
+            keymapDefinition = definition
         case let .state(report):
+            guard keymapDefinition?.keyboardKind == report.keyboardKind else { return }
             keyboardKind = report.keyboardKind
             layerStateMask = report.layerStateMask
             defaultLayerStateMask = report.defaultLayerStateMask
@@ -103,6 +118,7 @@ final class AppModel {
         monitor = KeyboardHIDMonitor()
         connectionStatus = previewConnectionStatus
         self.keyboardKind = keyboardKind
+        keymapDefinition = keyboardKind.map { KeymapDefinition.preview(for: $0) }
         layerStateMask = activeLayers.reduce(into: UInt32.zero) { mask, layer in
             mask |= UInt32(1) << UInt32(layer.rawValue)
         }

@@ -17,6 +17,8 @@ enum layers {
     _FUNCTION,
 };
 
+#define OBBUT_KEYMAP_LAYER_COUNT (_FUNCTION + 1)
+
 #define LOWER    MO(_LOWER)
 #define RAISE    MO(_RAISE)
 #define FKEYS    MO(_FUNCTION)

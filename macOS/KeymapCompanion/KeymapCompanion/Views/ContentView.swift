@@ -26,13 +26,13 @@ struct ContentView: View {
                     activeLayer: model.activeLayer
                 )
 
-                if let keyboardKind = model.keyboardKind {
+                if let definition = model.keymapDefinition {
                     LayerStrip(
                         activeLayer: model.activeLayer,
                         activeLayerMask: model.effectiveLayerMask
                     )
                     KeyboardBoardView(
-                        keyboardKind: keyboardKind,
+                        definition: definition,
                         activeLayerMask: model.effectiveLayerMask
                     )
                 } else {

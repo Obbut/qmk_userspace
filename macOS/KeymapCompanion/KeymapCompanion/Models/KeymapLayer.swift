@@ -36,6 +36,22 @@ enum KeymapLayer: UInt8, CaseIterable, Equatable, Hashable, Identifiable, Sendab
         }
     }
 
+    /// The compact unlocalized name used inside downloaded key legends.
+    var legendName: String {
+        switch self {
+        case .base:
+            "Default"
+        case .qwerty:
+            "QWERTY"
+        case .lower:
+            "Lower"
+        case .raise:
+            "Raise"
+        case .function:
+            "Fn"
+        }
+    }
+
     /// Returns whether this layer is active in a QMK layer-state mask.
     /// - Parameter mask: A QMK layer-state bitmask.
     /// - Returns: `true` when this layer's bit is set.
