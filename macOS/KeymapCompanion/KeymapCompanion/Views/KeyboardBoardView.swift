@@ -8,47 +8,66 @@ struct KeyboardBoardView: View {
     /// The complete active-layer mask.
     let activeLayerMask: UInt32
 
+    /// Whether the complete keyboard should shrink to the available viewport.
+    let scalesToFit: Bool
+
+    /// Creates a physical keymap visualization.
+    /// - Parameters:
+    ///   - definition: The downloaded visual keymap.
+    ///   - activeLayerMask: The complete active-layer mask.
+    ///   - scalesToFit: Whether to shrink the complete keyboard instead of scrolling it.
+    init(
+        definition: KeymapDefinition,
+        activeLayerMask: UInt32,
+        scalesToFit: Bool = false
+    ) {
+        self.definition = definition
+        self.activeLayerMask = activeLayerMask
+        self.scalesToFit = scalesToFit
+    }
+
     /// The physically positioned board content.
     var body: some View {
-        let activeLayer = KeymapLayer.highestActiveLayer(in: activeLayerMask)
-
         GeometryReader { viewport in
-            ScrollView([.horizontal, .vertical]) {
-                ZStack(alignment: .topLeading) {
-                    ForEach(definition.positionedKeys) { positionedKey in
-                        KeyCap(
-                            key: positionedKey.key,
-                            activeLayer: activeLayer,
-                            activeLayerMask: activeLayerMask
-                        )
-                        .rotationEffect(
-                            .degrees(positionedKey.placement.rotationDegrees)
-                        )
-                        .position(
-                            x: CGFloat(positionedKey.placement.centerX),
-                            y: CGFloat(positionedKey.placement.centerY)
-                        )
-                    }
+            let canvasWidth = CGFloat(definition.geometry.canvasWidth)
+            let canvasHeight = CGFloat(definition.geometry.canvasHeight)
+            let paddedWidth = canvasWidth + 40
+            let paddedHeight = canvasHeight + 40
 
-                    KeyboardEncoderView(
-                        encoder: definition.rightEncoder,
-                        activeLayer: activeLayer,
-                        activeLayerMask: activeLayerMask
-                    )
-                    .frame(
-                        width: CGFloat(definition.geometry.canvasWidth),
-                        height: CGFloat(definition.geometry.canvasHeight)
-                    )
-                }
+            if scalesToFit {
+                let scale = min(
+                    1,
+                    viewport.size.width / paddedWidth,
+                    viewport.size.height / paddedHeight
+                )
+
+                KeyboardDiagramView(
+                    definition: definition,
+                    activeLayerMask: activeLayerMask
+                )
                 .frame(
-                    width: CGFloat(definition.geometry.canvasWidth),
-                    height: CGFloat(definition.geometry.canvasHeight)
+                    width: canvasWidth,
+                    height: canvasHeight
                 )
                 .padding(20)
+                .scaleEffect(scale)
                 .frame(
-                    minWidth: viewport.size.width,
-                    minHeight: viewport.size.height
+                    width: viewport.size.width,
+                    height: viewport.size.height
                 )
+            } else {
+                ScrollView([.horizontal, .vertical]) {
+                    KeyboardDiagramView(
+                        definition: definition,
+                        activeLayerMask: activeLayerMask
+                    )
+                    .frame(width: canvasWidth, height: canvasHeight)
+                    .padding(20)
+                    .frame(
+                        minWidth: viewport.size.width,
+                        minHeight: viewport.size.height
+                    )
+                }
             }
         }
         .background(
@@ -59,6 +78,47 @@ struct KeyboardBoardView: View {
         .overlay {
             RoundedRectangle(cornerRadius: 22, style: .continuous)
                 .strokeBorder(Color.primary.opacity(0.08))
+        }
+    }
+}
+
+/// The keyboard and encoder positioned inside the board's fixed coordinate space.
+fileprivate struct KeyboardDiagramView: View {
+    /// The downloaded visual keymap.
+    let definition: KeymapDefinition
+
+    /// The complete active-layer mask.
+    let activeLayerMask: UInt32
+
+    /// Every physical key and the right encoder.
+    var body: some View {
+        let activeLayer = KeymapLayer.highestActiveLayer(in: activeLayerMask)
+
+        ZStack(alignment: .topLeading) {
+            ForEach(definition.positionedKeys) { positionedKey in
+                KeyCap(
+                    key: positionedKey.key,
+                    activeLayer: activeLayer,
+                    activeLayerMask: activeLayerMask
+                )
+                .rotationEffect(
+                    .degrees(positionedKey.placement.rotationDegrees)
+                )
+                .position(
+                    x: CGFloat(positionedKey.placement.centerX),
+                    y: CGFloat(positionedKey.placement.centerY)
+                )
+            }
+
+            KeyboardEncoderView(
+                encoder: definition.rightEncoder,
+                activeLayer: activeLayer,
+                activeLayerMask: activeLayerMask
+            )
+            .frame(
+                width: CGFloat(definition.geometry.canvasWidth),
+                height: CGFloat(definition.geometry.canvasHeight)
+            )
         }
     }
 }

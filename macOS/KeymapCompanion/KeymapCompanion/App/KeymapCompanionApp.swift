@@ -4,7 +4,17 @@ import SwiftUI
 @main
 struct KeymapCompanionApp: App {
     /// Shared process-lifetime state; closing a window does not release it.
-    @State private var model = AppModel()
+    @State private var model: AppModel
+
+    /// The AppKit owner that keeps the nonactivating layer HUD alive without a window scene.
+    private let layerHUDController: LayerHUDController
+
+    /// Creates shared state and its process-lifetime overlay controller together.
+    init() {
+        let model = AppModel()
+        _model = State(initialValue: model)
+        layerHUDController = LayerHUDController(model: model)
+    }
 
     /// The main keymap window and persistent menu-bar extra.
     var body: some Scene {

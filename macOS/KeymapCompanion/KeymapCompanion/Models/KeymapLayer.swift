@@ -52,6 +52,16 @@ enum KeymapLayer: UInt8, CaseIterable, Equatable, Hashable, Identifiable, Sendab
         }
     }
 
+    /// Whether dwelling on this momentary layer should present the keymap HUD.
+    var isHUDLayer: Bool {
+        switch self {
+        case .base, .qwerty:
+            false
+        case .lower, .raise, .function:
+            true
+        }
+    }
+
     /// Returns whether this layer is active in a QMK layer-state mask.
     /// - Parameter mask: A QMK layer-state bitmask.
     /// - Returns: `true` when this layer's bit is set.
