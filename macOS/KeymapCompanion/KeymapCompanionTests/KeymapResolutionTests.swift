@@ -66,6 +66,36 @@ func firmwareSemanticOverridesNumericKeycodeLabel() throws {
     #expect(key.resolvedLegend(activeLayerMask: 1).label == "Screenshot")
 }
 
+/// Verifies standard macOS keys use native Apple glyphs instead of abbreviations.
+@Test
+func standardMacKeysUseNativeAppleGlyphs() {
+    let expectedLegends: [
+        (keycode: UInt16, label: String, systemImageName: String)
+    ] = [
+        (0x00E0, "Control", "control"),
+        (0x00E2, "Option", "option"),
+        (0x00E3, "Command", "command"),
+        (0x00E1, "Shift", "shift"),
+        (0x0029, "Escape", "escape"),
+        (0x002B, "Tab", "arrow.right.to.line"),
+        (0x002A, "Delete", "delete.left"),
+        (0x0028, "Return", "return")
+    ]
+
+    for expected in expectedLegends {
+        let legend = QMKKeycodeLegend.legend(
+            for: FirmwareKeymapEntry(
+                keycode: expected.keycode,
+                semantic: 0,
+                style: .standard
+            )
+        )
+
+        #expect(legend.label == expected.label)
+        #expect(legend.systemImageName == expected.systemImageName)
+    }
+}
+
 /// Verifies that every visible switch has one unique firmware matrix coordinate.
 @Test
 func everyVisibleKeyHasAUniquePhysicalPosition() throws {

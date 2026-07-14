@@ -90,36 +90,96 @@ private struct KeyCap: View {
         let legend = key.resolvedLegend(activeLayerMask: activeLayerMask)
         let isDirectMapping = key.isDirectlyMapped(on: activeLayer)
         let accent = isDirectMapping ? legend.style.color : Color.secondary
+        let font = Font.callout.weight(isDirectMapping ? .semibold : .regular)
 
-        Text(verbatim: legend.label)
-            .font(.callout.weight(isDirectMapping ? .semibold : .regular))
-            .foregroundStyle(
-                legend.label.isEmpty
-                    ? Color.secondary.opacity(0.35)
-                    : Color.primary
-            )
-            .lineLimit(1)
-            .minimumScaleFactor(0.55)
-            .frame(width: 52, height: 52)
-            .background(
-                accent.opacity(isDirectMapping ? 0.16 : 0.05),
-                in: RoundedRectangle(cornerRadius: 9, style: .continuous)
-            )
-            .overlay {
-                RoundedRectangle(cornerRadius: 9, style: .continuous)
-                    .strokeBorder(
-                        accent.opacity(isDirectMapping ? 0.78 : 0.16),
-                        lineWidth: isDirectMapping ? 1.5 : 1
-                    )
+        Group {
+            if let systemImageName = legend.systemImageName {
+                Image(systemName: systemImageName)
+                    .symbolRenderingMode(.monochrome)
+            } else {
+                Text(verbatim: legend.label)
             }
-            .shadow(
-                color: Color.black.opacity(isDirectMapping ? 0.10 : 0.03),
-                radius: 2,
-                y: 1
+        }
+        .font(font)
+        .foregroundStyle(
+            legend.label.isEmpty
+                ? Color.secondary.opacity(0.35)
+                : Color.primary
+        )
+        .lineLimit(1)
+        .minimumScaleFactor(0.55)
+        .frame(width: 52, height: 52)
+        .background(
+            accent.opacity(isDirectMapping ? 0.16 : 0.05),
+            in: RoundedRectangle(cornerRadius: 9, style: .continuous)
+        )
+        .overlay {
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                .strokeBorder(
+                    accent.opacity(isDirectMapping ? 0.78 : 0.16),
+                    lineWidth: isDirectMapping ? 1.5 : 1
+                )
+        }
+        .shadow(
+            color: Color.black.opacity(isDirectMapping ? 0.10 : 0.03),
+            radius: 2,
+            y: 1
+        )
+        .animation(.snappy(duration: 0.16), value: activeLayerMask)
+        .accessibilityLabel(
+            legend.label.isEmpty ? "Unassigned key" : legend.label
+        )
+        .help(
+            LocalizedStringResource(
+                "Firmware matrix position: \(key.id)",
+                comment: "Tooltip for a keycap; the value is its firmware row-and-column identifier."
             )
-            .animation(.snappy(duration: 0.16), value: activeLayerMask)
-            .accessibilityLabel(
-                legend.label.isEmpty ? "Unassigned key" : legend.label
-            )
+        )
     }
 }
+
+#if DEBUG
+#Preview("Native Apple Key Glyphs") {
+    let keycodes: [UInt16] = [
+        0x00E0, 0x00E2, 0x00E3, 0x00E1, 0x0029, 0x002B, 0x0004,
+        0x002A, 0x0028, 0x002C, 0x0039, 0x004C, 0x0080, 0x003A
+    ]
+    let keys = keycodes.map { keycode in
+        let entry = FirmwareKeymapEntry(
+            keycode: keycode,
+            semantic: 0,
+            style: .standard
+        )
+        return KeymapKey(
+            id: "\(keycode)",
+            entries: Array(
+                repeating: entry,
+                count: KeymapLayer.allCases.count
+            )
+        )
+    }
+
+    Grid(horizontalSpacing: 8, verticalSpacing: 8) {
+        GridRow {
+            ForEach(keys.prefix(7)) { key in
+                KeyCap(
+                    key: key,
+                    activeLayer: .base,
+                    activeLayerMask: 1
+                )
+            }
+        }
+
+        GridRow {
+            ForEach(keys.suffix(7)) { key in
+                KeyCap(
+                    key: key,
+                    activeLayer: .base,
+                    activeLayerMask: 1
+                )
+            }
+        }
+    }
+    .padding()
+}
+#endif

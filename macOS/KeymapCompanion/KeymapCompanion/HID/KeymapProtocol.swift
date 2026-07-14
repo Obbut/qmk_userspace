@@ -15,6 +15,9 @@ enum KeymapProtocol {
     /// The byte count of one keycode, semantic, and style tuple.
     static let keymapEntrySize = 4
 
+    /// The firmware capability bit for explicit RGB Matrix settings.
+    static let rgbSettingsCapability: UInt32 = 1 << 2
+
     /// Creates a request for the keyboard's current state.
     /// - Returns: One complete Raw HID output report.
     static func makeStateRequest() -> [UInt8] {
@@ -36,14 +39,43 @@ enum KeymapProtocol {
         return report
     }
 
+    /// Creates a request that persists an explicit RGB Matrix configuration.
+    /// - Parameter settings: The complete base-layer configuration to apply.
+    /// - Returns: One complete Raw HID output report.
+    static func makeRGBSettingsRequest(_ settings: RGBSettings) -> [UInt8] {
+        var report = makeRequest(type: .setRGBSettings)
+        report[6] = settings.isEnabled ? 1 : 0
+        report[7] = settings.effect.rawValue
+        report[8] = settings.hue
+        report[9] = settings.saturation
+        report[10] = min(settings.brightness, RGBSettings.maximumBrightness)
+        report[11] = settings.speed
+        return report
+    }
+
     /// Parses a state packet while rejecting unrelated Raw HID traffic.
     /// - Parameter bytes: A complete Raw HID input report.
     /// - Returns: A validated state report, or `nil` for another protocol or version.
     static func parseStateReport(_ bytes: [UInt8]) -> KeyboardStateReport? {
         guard hasValidHeader(bytes, type: .state),
-              bytes[5] == MessageType.state.rawValue,
               let keyboardKind = KeyboardKind(rawValue: bytes[6]) else {
             return nil
+        }
+
+        let capabilities = readUInt32(from: bytes, at: 20)
+        let rgbSettings: RGBSettings?
+        if capabilities & rgbSettingsCapability != 0,
+           let effect = RGBEffect(rawValue: bytes[24]) {
+            rgbSettings = RGBSettings(
+                isEnabled: bytes[28] != 0,
+                effect: effect,
+                hue: bytes[25],
+                saturation: bytes[26],
+                brightness: min(bytes[27], RGBSettings.maximumBrightness),
+                speed: bytes[29]
+            )
+        } else {
+            rgbSettings = nil
         }
 
         return KeyboardStateReport(
@@ -51,7 +83,8 @@ enum KeymapProtocol {
             layerStateMask: readUInt32(from: bytes, at: 8),
             defaultLayerStateMask: readUInt32(from: bytes, at: 12),
             sequence: readUInt32(from: bytes, at: 16),
-            capabilities: readUInt32(from: bytes, at: 20)
+            capabilities: capabilities,
+            rgbSettings: rgbSettings
         )
     }
 
@@ -209,4 +242,7 @@ private enum MessageType: UInt8 {
 
     /// Firmware page of keymap entries.
     case keymapChunk = 6
+
+    /// Host request to persist a complete RGB Matrix configuration.
+    case setRGBSettings = 7
 }

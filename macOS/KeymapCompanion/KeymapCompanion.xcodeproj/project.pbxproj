@@ -22,12 +22,15 @@
 		5A2827B5EC1779B975D4FCB7 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCA0F9996E9EC9F36E8F62A4 /* AppModel.swift */; };
 		5B98481C5B0F9EE671BCF4A5 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5C2B78C8E45E5F551FAEC3C3 /* IOKit.framework */; };
 		642F91FD50C785027F37EFAF /* KeyboardGeometry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68A71C66E1A8E21AECB6FD32 /* KeyboardGeometry.swift */; };
+		682D48C51F8ECC1B8092299C /* RGBEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59D13D209D3D8757B9961057 /* RGBEffect.swift */; };
 		684A404F7CD514FD9B7C5009 /* KeyboardHIDMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44B56321EDD42DA585D56D2B /* KeyboardHIDMonitor.swift */; };
 		6B5853CAFDC1C1F553332DFC /* ConnectionStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5310C44ED6927D9D733726C /* ConnectionStatus.swift */; };
 		74DF517B849F82E99D96E186 /* PhysicalKeyPlacement.swift in Sources */ = {isa = PBXBuildFile; fileRef = 68442F7799E715820606A2E9 /* PhysicalKeyPlacement.swift */; };
 		7A9598E5FF030C8587EC7FB0 /* KeyboardStateReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2859B233D8BBAC29555753D /* KeyboardStateReport.swift */; };
+		7D9B3B6B276E07ABCA2BC2E8 /* RGBSettingsPopoverButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 670902A1AF4074C283DFE454 /* RGBSettingsPopoverButton.swift */; };
 		830AFE3A4B7C4C3DE49C3992 /* QMKKeycodeLegend.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E63FDC0FCED9B3B52B3C394 /* QMKKeycodeLegend.swift */; };
 		8EECFC85F71EC0F6EC8FF2C0 /* KeyboardBoardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 73D760FEFF36161898E22C76 /* KeyboardBoardView.swift */; };
+		8F7D4AF505C96007AA116A34 /* RGBSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FAE75ECB9C65ED17F8FCBEF /* RGBSettings.swift */; };
 		95AFF2EC905E8537B449C12A /* KeyboardMonitorEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9F061E4523ED74CCFB91F9B /* KeyboardMonitorEvent.swift */; };
 		96F185CC9B61DE09E943E872 /* KeymapLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0C67F14A16EEF85D9575417 /* KeymapLayer.swift */; };
 		9DB0118E6D559CBF5E0DFFF0 /* KeymapProtocolTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16D9C02416D2201C1C52F3DC /* KeymapProtocolTests.swift */; };
@@ -59,10 +62,13 @@
 		44B56321EDD42DA585D56D2B /* KeyboardHIDMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardHIDMonitor.swift; sourceTree = "<group>"; };
 		454C212125BFA8101CD194A7 /* KeymapKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeymapKey.swift; sourceTree = "<group>"; };
 		55E58D948312641152C32289 /* KeymapDefinition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeymapDefinition.swift; sourceTree = "<group>"; };
+		59D13D209D3D8757B9961057 /* RGBEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RGBEffect.swift; sourceTree = "<group>"; };
 		5BC3DC22731B86F9C60EB81B /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		5C2B78C8E45E5F551FAEC3C3 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		5C9D02E1FA834839E68F4D21 /* MatrixPosition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatrixPosition.swift; sourceTree = "<group>"; };
 		5E651E44642ED6E9DF498929 /* KeymapCompanionTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = KeymapCompanionTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		5FAE75ECB9C65ED17F8FCBEF /* RGBSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RGBSettings.swift; sourceTree = "<group>"; };
+		670902A1AF4074C283DFE454 /* RGBSettingsPopoverButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RGBSettingsPopoverButton.swift; sourceTree = "<group>"; };
 		68442F7799E715820606A2E9 /* PhysicalKeyPlacement.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhysicalKeyPlacement.swift; sourceTree = "<group>"; };
 		68A71C66E1A8E21AECB6FD32 /* KeyboardGeometry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardGeometry.swift; sourceTree = "<group>"; };
 		6AD51209B0F791038DBCF46B /* KeymapCompanion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = KeymapCompanion.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -114,6 +120,7 @@
 				73D760FEFF36161898E22C76 /* KeyboardBoardView.swift */,
 				7EFF93D9F5FE314CD455DA4F /* MenuBarKeyboardIcon.swift */,
 				EF34605EA194EAA9D892FB88 /* MenuBarView.swift */,
+				670902A1AF4074C283DFE454 /* RGBSettingsPopoverButton.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -154,6 +161,8 @@
 				68442F7799E715820606A2E9 /* PhysicalKeyPlacement.swift */,
 				BE13A2191E27B1FAD2169D94 /* PositionedKey.swift */,
 				8E63FDC0FCED9B3B52B3C394 /* QMKKeycodeLegend.swift */,
+				59D13D209D3D8757B9961057 /* RGBEffect.swift */,
+				5FAE75ECB9C65ED17F8FCBEF /* RGBSettings.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -323,6 +332,9 @@
 				74DF517B849F82E99D96E186 /* PhysicalKeyPlacement.swift in Sources */,
 				1AEE007C573628DA987A923E /* PositionedKey.swift in Sources */,
 				830AFE3A4B7C4C3DE49C3992 /* QMKKeycodeLegend.swift in Sources */,
+				682D48C51F8ECC1B8092299C /* RGBEffect.swift in Sources */,
+				8F7D4AF505C96007AA116A34 /* RGBSettings.swift in Sources */,
+				7D9B3B6B276E07ABCA2BC2E8 /* RGBSettingsPopoverButton.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

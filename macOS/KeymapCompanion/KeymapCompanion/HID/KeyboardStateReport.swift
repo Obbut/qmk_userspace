@@ -15,6 +15,9 @@ struct KeyboardStateReport: Equatable, Sendable {
     /// The protocol capabilities advertised by the firmware.
     let capabilities: UInt32
 
+    /// The current persistent RGB Matrix configuration, when supported.
+    let rgbSettings: RGBSettings?
+
     /// The union used to resolve transparent keys in the UI.
     var effectiveLayerMask: UInt32 {
         layerStateMask | defaultLayerStateMask
