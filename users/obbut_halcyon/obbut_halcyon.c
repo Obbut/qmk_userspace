@@ -4,6 +4,7 @@
 #include "obbut_halcyon.h"
 
 #if defined(RAW_ENABLE)
+#    include "keymap_protocol_bridge.h"
 #    include "raw_hid.h"
 #endif
 
@@ -14,65 +15,11 @@ static bool rgb_preview_mode = false;
 
 #if defined(RAW_ENABLE)
 
-#    define OBBUT_HID_MAGIC_0 'K'
-#    define OBBUT_HID_MAGIC_1 'M'
-#    define OBBUT_HID_MAGIC_2 'A'
-#    define OBBUT_HID_MAGIC_3 'P'
-#    define OBBUT_HID_PROTOCOL_VERSION 3
-#    define OBBUT_HID_GET_STATE 1
-#    define OBBUT_HID_STATE 2
-#    define OBBUT_HID_GET_KEYMAP_INFO 3
-#    define OBBUT_HID_KEYMAP_INFO 4
-#    define OBBUT_HID_GET_KEYMAP_CHUNK 5
-#    define OBBUT_HID_KEYMAP_CHUNK 6
-#    define OBBUT_HID_SET_RGB_SETTINGS 7
-#    define OBBUT_HID_REPORT_SIZE 32
-#    define OBBUT_HID_CAPABILITY_LAYER_STATE (1UL << 0)
-#    define OBBUT_HID_CAPABILITY_KEYMAP_READ (1UL << 1)
-#    define OBBUT_HID_CAPABILITY_RGB_SETTINGS (1UL << 2)
-#    define OBBUT_HID_MINIMUM_SEND_INTERVAL 5
-#    define OBBUT_HID_KEYMAP_ENTRY_SIZE 4
-#    define OBBUT_HID_KEYMAP_CHUNK_OFFSET 12
-#    define OBBUT_HID_KEYMAP_ENTRIES_PER_CHUNK ((OBBUT_HID_REPORT_SIZE - OBBUT_HID_KEYMAP_CHUNK_OFFSET) / OBBUT_HID_KEYMAP_ENTRY_SIZE)
-#    define OBBUT_HID_ENCODER_COUNT 1
-#    define OBBUT_HID_ENCODER_DIRECTION_COUNT 2
-
-enum keymap_companion_semantic {
-    OBBUT_HID_SEMANTIC_NONE,
-    OBBUT_HID_SEMANTIC_SCREENSHOT,
-    OBBUT_HID_SEMANTIC_AEROSPACE,
-};
-
-enum keymap_companion_style {
-    OBBUT_HID_STYLE_STANDARD,
-    OBBUT_HID_STYLE_PURPLE,
-    OBBUT_HID_STYLE_MAGENTA,
-    OBBUT_HID_STYLE_BLUE,
-    OBBUT_HID_STYLE_YELLOW,
-    OBBUT_HID_STYLE_CYAN,
-    OBBUT_HID_STYLE_GREEN,
-    OBBUT_HID_STYLE_DARK_GREEN,
-    OBBUT_HID_STYLE_RED,
-    OBBUT_HID_STYLE_ORANGE,
-};
-
-static bool     keymap_companion_connected                = false;
-static bool     keymap_companion_state_is_dirty           = true;
-static uint32_t keymap_companion_sequence                 = 0;
-static uint32_t keymap_companion_last_send                = 0;
-static uint32_t keymap_companion_last_layer_state         = UINT32_MAX;
-static uint32_t keymap_companion_last_default_layer_state = UINT32_MAX;
+#    define KEYMAP_COMPANION_ENCODER_COUNT 1
 
 #    if defined(RGB_MATRIX_ENABLE)
 
-static uint8_t keymap_companion_last_rgb_enabled    = UINT8_MAX;
-static uint8_t keymap_companion_last_rgb_effect     = UINT8_MAX;
-static uint8_t keymap_companion_last_rgb_hue        = UINT8_MAX;
-static uint8_t keymap_companion_last_rgb_saturation = UINT8_MAX;
-static uint8_t keymap_companion_last_rgb_brightness = UINT8_MAX;
-static uint8_t keymap_companion_last_rgb_speed      = UINT8_MAX;
-
-// Stable companion-protocol IDs mapped to QMK's build-dependent effect enum.
+// QMK's build-dependent effects ordered to match Swift's stable identifiers.
 static const uint8_t keymap_companion_rgb_effects[] = {
     RGB_MATRIX_SOLID_COLOR,
     RGB_MATRIX_ALPHAS_MODS,
@@ -106,50 +53,34 @@ static const uint8_t keymap_companion_rgb_effects[] = {
     RGB_MATRIX_PIXEL_FRACTAL,
 };
 
-#        define OBBUT_HID_RGB_EFFECT_COUNT (sizeof(keymap_companion_rgb_effects) / sizeof(keymap_companion_rgb_effects[0]))
+#        define KEYMAP_COMPANION_QMK_RGB_EFFECT_COUNT (sizeof(keymap_companion_rgb_effects) / sizeof(keymap_companion_rgb_effects[0]))
 
-static uint8_t keymap_companion_protocol_effect(uint8_t qmk_effect) {
-    for (uint8_t index = 0; index < OBBUT_HID_RGB_EFFECT_COUNT; index++) {
+static uint8_t keymap_companion_rgb_effect_index(uint8_t qmk_effect) {
+    for (uint8_t index = 0; index < KEYMAP_COMPANION_QMK_RGB_EFFECT_COUNT; index++) {
         if (keymap_companion_rgb_effects[index] == qmk_effect) {
-            return index + 1;
+            return index;
         }
     }
-    return 0;
+    return UINT8_MAX;
 }
 
-static uint8_t keymap_companion_qmk_effect(uint8_t protocol_effect) {
-    if (protocol_effect == 0 || protocol_effect > OBBUT_HID_RGB_EFFECT_COUNT) {
-        return RGB_MATRIX_NONE;
+static uint8_t keymap_companion_qmk_effect(uint8_t effect_index) {
+    if (effect_index < KEYMAP_COMPANION_QMK_RGB_EFFECT_COUNT) {
+        return keymap_companion_rgb_effects[effect_index];
     }
-    return keymap_companion_rgb_effects[protocol_effect - 1];
+    return RGB_MATRIX_NONE;
 }
 
 #    endif
 
-static uint8_t keymap_companion_keyboard_kind(void) {
+static uint8_t keymap_companion_platform_keyboard(void) {
 #    if defined(KEYBOARD_splitkb_halcyon_kyria_rev4)
-    return 1;
+    return KEYMAP_PROTOCOL_PLATFORM_KEYBOARD_KYRIA;
 #    elif defined(KEYBOARD_splitkb_halcyon_elora_rev2)
-    return 2;
+    return KEYMAP_PROTOCOL_PLATFORM_KEYBOARD_ELORA;
 #    else
-    return 0;
+#        error "The keymap protocol requires a supported Halcyon keyboard"
 #    endif
-}
-
-static void keymap_companion_write_u32(uint8_t *data, uint8_t offset, uint32_t value) {
-    data[offset]     = (uint8_t)(value & 0xFF);
-    data[offset + 1] = (uint8_t)((value >> 8) & 0xFF);
-    data[offset + 2] = (uint8_t)((value >> 16) & 0xFF);
-    data[offset + 3] = (uint8_t)((value >> 24) & 0xFF);
-}
-
-static void keymap_companion_write_u16(uint8_t *data, uint8_t offset, uint16_t value) {
-    data[offset]     = (uint8_t)(value & 0xFF);
-    data[offset + 1] = (uint8_t)((value >> 8) & 0xFF);
-}
-
-static uint16_t keymap_companion_read_u16(const uint8_t *data, uint8_t offset) {
-    return (uint16_t)data[offset] | ((uint16_t)data[offset + 1] << 8);
 }
 
 static uint16_t keymap_companion_matrix_entry_count(void) {
@@ -174,17 +105,13 @@ static uint16_t keymap_companion_encoder_keycode(uint8_t layer, uint8_t directio
     }
 }
 
-static uint16_t keymap_companion_entry_count(void) {
-    return keymap_companion_matrix_entry_count() + (uint16_t)OBBUT_KEYMAP_LAYER_COUNT * OBBUT_HID_ENCODER_COUNT * OBBUT_HID_ENCODER_DIRECTION_COUNT;
-}
-
 static uint8_t keymap_companion_layer_at(uint16_t index) {
-    uint16_t matrix_size = MATRIX_ROWS * MATRIX_COLS;
+    uint16_t matrix_size        = MATRIX_ROWS * MATRIX_COLS;
     uint16_t matrix_entry_count = keymap_companion_matrix_entry_count();
     if (index < matrix_entry_count) {
         return index / matrix_size;
     }
-    return (index - matrix_entry_count) / (OBBUT_HID_ENCODER_COUNT * OBBUT_HID_ENCODER_DIRECTION_COUNT);
+    return (index - matrix_entry_count) / (KEYMAP_COMPANION_ENCODER_COUNT * 2);
 }
 
 static uint16_t keymap_companion_keycode_at(uint16_t index) {
@@ -192,28 +119,28 @@ static uint16_t keymap_companion_keycode_at(uint16_t index) {
     uint16_t matrix_entry_count = keymap_companion_matrix_entry_count();
     if (index >= matrix_entry_count) {
         uint16_t encoder_offset = index - matrix_entry_count;
-        uint8_t  layer          = encoder_offset / (OBBUT_HID_ENCODER_COUNT * OBBUT_HID_ENCODER_DIRECTION_COUNT);
-        uint8_t  direction      = encoder_offset % OBBUT_HID_ENCODER_DIRECTION_COUNT;
+        uint8_t  layer          = encoder_offset / (KEYMAP_COMPANION_ENCODER_COUNT * 2);
+        uint8_t  direction      = encoder_offset % 2;
         return keymap_companion_encoder_keycode(layer, direction);
     }
 
-    uint8_t  layer       = index / matrix_size;
-    uint16_t position    = index % matrix_size;
-    keypos_t key         = {
-                .row = position / MATRIX_COLS,
-                .col = position % MATRIX_COLS,
+    uint8_t  layer    = index / matrix_size;
+    uint16_t position = index % matrix_size;
+    keypos_t key      = {
+             .row = position / MATRIX_COLS,
+             .col = position % MATRIX_COLS,
     };
     return keymap_key_to_keycode(layer, key);
 }
 
 static uint8_t keymap_companion_semantic_for_keycode(uint16_t keycode) {
     if (keycode == SCREENSHOT) {
-        return OBBUT_HID_SEMANTIC_SCREENSHOT;
+        return KEYMAP_PROTOCOL_PLATFORM_SEMANTIC_SCREENSHOT;
     }
     if (keycode == AEROSPACE) {
-        return OBBUT_HID_SEMANTIC_AEROSPACE;
+        return KEYMAP_PROTOCOL_PLATFORM_SEMANTIC_AEROSPACE;
     }
-    return OBBUT_HID_SEMANTIC_NONE;
+    return KEYMAP_PROTOCOL_PLATFORM_SEMANTIC_NONE;
 }
 
 static bool keymap_companion_is_raise_symbol(uint16_t keycode) {
@@ -224,252 +151,120 @@ static uint8_t keymap_companion_style_for_keycode(uint8_t layer, uint16_t keycod
     switch (layer) {
         case _QWERTY:
             if (keycode == KC_W || keycode == KC_A || keycode == KC_S || keycode == KC_D || keycode == KC_LCTL || keycode == KC_LALT || keycode == KC_SPC) {
-                return OBBUT_HID_STYLE_PURPLE;
+                return KEYMAP_PROTOCOL_PLATFORM_STYLE_PURPLE;
             }
             break;
         case _LOWER:
             if (keycode == KC_LEFT || keycode == KC_DOWN || keycode == KC_UP || keycode == KC_RGHT) {
-                return OBBUT_HID_STYLE_MAGENTA;
+                return KEYMAP_PROTOCOL_PLATFORM_STYLE_MAGENTA;
             }
             if (keycode == KC_DEL || keycode == KC_BSPC) {
-                return OBBUT_HID_STYLE_ORANGE;
+                return KEYMAP_PROTOCOL_PLATFORM_STYLE_ORANGE;
             }
             break;
         case _RAISE:
             if (keycode >= KC_1 && keycode <= KC_0) {
-                return OBBUT_HID_STYLE_BLUE;
+                return KEYMAP_PROTOCOL_PLATFORM_STYLE_BLUE;
             }
             if (keymap_companion_is_raise_symbol(keycode)) {
-                return OBBUT_HID_STYLE_YELLOW;
+                return KEYMAP_PROTOCOL_PLATFORM_STYLE_YELLOW;
             }
             break;
         case _FUNCTION:
             if ((keycode >= KC_F1 && keycode <= KC_F12) || (keycode >= KC_F13 && keycode <= KC_F15)) {
-                return OBBUT_HID_STYLE_CYAN;
+                return KEYMAP_PROTOCOL_PLATFORM_STYLE_CYAN;
             }
             if (keycode == RM_TOGG || keycode == RM_NEXT || keycode == RM_HUEU || keycode == RM_SATU || keycode == RM_VALU) {
-                return OBBUT_HID_STYLE_GREEN;
+                return KEYMAP_PROTOCOL_PLATFORM_STYLE_GREEN;
             }
             if (keycode == RM_PREV || keycode == RM_HUED || keycode == RM_SATD || keycode == RM_VALD) {
-                return OBBUT_HID_STYLE_DARK_GREEN;
+                return KEYMAP_PROTOCOL_PLATFORM_STYLE_DARK_GREEN;
             }
             if (keycode == QK_BOOT) {
-                return OBBUT_HID_STYLE_RED;
+                return KEYMAP_PROTOCOL_PLATFORM_STYLE_RED;
             }
             if (keycode == TG_QWERTY) {
-                return OBBUT_HID_STYLE_PURPLE;
+                return KEYMAP_PROTOCOL_PLATFORM_STYLE_PURPLE;
             }
             break;
     }
-    return OBBUT_HID_STYLE_STANDARD;
+    return KEYMAP_PROTOCOL_PLATFORM_STYLE_STANDARD;
 }
 
-static uint32_t keymap_companion_fingerprint(void) {
-    uint32_t hash = 2166136261UL;
-#    define OBBUT_HID_FINGERPRINT_BYTE(value) \
-        do {                                    \
-            hash ^= (uint8_t)(value);           \
-            hash *= 16777619UL;                 \
-        } while (0)
+keymap_protocol_platform_snapshot_t keymap_protocol_platform_get_snapshot(void) {
+    keymap_protocol_platform_snapshot_t snapshot = {
+        .timestamp                = timer_read32(),
+        .layer_state_mask         = (uint32_t)layer_state,
+        .default_layer_state_mask = (uint32_t)default_layer_state,
+        .keyboard                 = keymap_companion_platform_keyboard(),
+        .highest_active_layer     = get_highest_layer(layer_state | default_layer_state),
+        .layer_count              = OBBUT_KEYMAP_LAYER_COUNT,
+        .matrix_row_count         = MATRIX_ROWS,
+        .matrix_column_count      = MATRIX_COLS,
+        .encoder_count            = KEYMAP_COMPANION_ENCODER_COUNT,
+        .rgb_effect_index         = UINT8_MAX,
+    };
 
-    OBBUT_HID_FINGERPRINT_BYTE(keymap_companion_keyboard_kind());
-    OBBUT_HID_FINGERPRINT_BYTE(OBBUT_KEYMAP_LAYER_COUNT);
-    OBBUT_HID_FINGERPRINT_BYTE(MATRIX_ROWS);
-    OBBUT_HID_FINGERPRINT_BYTE(MATRIX_COLS);
-    OBBUT_HID_FINGERPRINT_BYTE(OBBUT_HID_ENCODER_COUNT);
-    OBBUT_HID_FINGERPRINT_BYTE(OBBUT_HID_ENCODER_DIRECTION_COUNT);
-
-    uint16_t entry_count = keymap_companion_entry_count();
-    for (uint16_t index = 0; index < entry_count; index++) {
-        uint16_t keycode = keymap_companion_keycode_at(index);
-        uint8_t  layer   = keymap_companion_layer_at(index);
-        OBBUT_HID_FINGERPRINT_BYTE(keycode);
-        OBBUT_HID_FINGERPRINT_BYTE(keycode >> 8);
-        OBBUT_HID_FINGERPRINT_BYTE(keymap_companion_semantic_for_keycode(keycode));
-        OBBUT_HID_FINGERPRINT_BYTE(keymap_companion_style_for_keycode(layer, keycode));
-    }
-
-#    undef OBBUT_HID_FINGERPRINT_BYTE
-    return hash;
-}
-
-static bool keymap_companion_has_valid_header(const uint8_t *data, uint8_t length) {
-    return length == OBBUT_HID_REPORT_SIZE && data[0] == OBBUT_HID_MAGIC_0 && data[1] == OBBUT_HID_MAGIC_1 && data[2] == OBBUT_HID_MAGIC_2 && data[3] == OBBUT_HID_MAGIC_3 && data[4] == OBBUT_HID_PROTOCOL_VERSION;
-}
-
-static void keymap_companion_send_state(void) {
-    uint8_t response[OBBUT_HID_REPORT_SIZE] = {0};
-    uint32_t current_layer_state         = (uint32_t)layer_state;
-    uint32_t current_default_layer_state = (uint32_t)default_layer_state;
-    uint32_t capabilities                = OBBUT_HID_CAPABILITY_LAYER_STATE | OBBUT_HID_CAPABILITY_KEYMAP_READ;
-
-    response[0] = OBBUT_HID_MAGIC_0;
-    response[1] = OBBUT_HID_MAGIC_1;
-    response[2] = OBBUT_HID_MAGIC_2;
-    response[3] = OBBUT_HID_MAGIC_3;
-    response[4] = OBBUT_HID_PROTOCOL_VERSION;
-    response[5] = OBBUT_HID_STATE;
-    response[6] = keymap_companion_keyboard_kind();
-    response[7] = get_highest_layer(layer_state | default_layer_state);
-    keymap_companion_write_u32(response, 8, current_layer_state);
-    keymap_companion_write_u32(response, 12, current_default_layer_state);
-    keymap_companion_write_u32(response, 16, ++keymap_companion_sequence);
 #    if defined(RGB_MATRIX_ENABLE)
-    hsv_t rgb_hsv = rgb_matrix_get_hsv();
-    capabilities |= OBBUT_HID_CAPABILITY_RGB_SETTINGS;
-    response[24] = keymap_companion_protocol_effect(rgb_matrix_get_mode());
-    response[25] = rgb_hsv.h;
-    response[26] = rgb_hsv.s;
-    response[27] = rgb_hsv.v;
-    response[28] = rgb_matrix_is_enabled();
-    response[29] = rgb_matrix_get_speed();
-    response[30] = OBBUT_HID_RGB_EFFECT_COUNT;
+    hsv_t rgb_hsv                  = rgb_matrix_get_hsv();
+    snapshot.includes_rgb_settings = 1;
+    snapshot.rgb_effect_index       = keymap_companion_rgb_effect_index(rgb_matrix_get_mode());
+    snapshot.rgb_hue                = rgb_hsv.h;
+    snapshot.rgb_saturation         = rgb_hsv.s;
+    snapshot.rgb_brightness         = rgb_hsv.v;
+    snapshot.is_rgb_enabled         = rgb_matrix_is_enabled();
+    snapshot.rgb_speed              = rgb_matrix_get_speed();
 #    endif
 
-    keymap_companion_write_u32(response, 20, capabilities);
+    return snapshot;
+}
 
-    raw_hid_send(response, OBBUT_HID_REPORT_SIZE);
-    keymap_companion_last_send                = timer_read32();
-    keymap_companion_last_layer_state         = current_layer_state;
-    keymap_companion_last_default_layer_state = current_default_layer_state;
+keymap_protocol_platform_entry_t keymap_protocol_platform_get_entry(uint16_t index) {
+    uint16_t keycode = keymap_companion_keycode_at(index);
+    uint8_t  layer   = keymap_companion_layer_at(index);
+    keymap_protocol_platform_entry_t entry = {
+        .keycode       = keycode,
+        .semantic_role = keymap_companion_semantic_for_keycode(keycode),
+        .style_role    = keymap_companion_style_for_keycode(layer, keycode),
+    };
+    return entry;
+}
+
+void keymap_protocol_platform_send(uint8_t *data, uint8_t length) {
+    raw_hid_send(data, length);
+}
+
+uint8_t keymap_protocol_platform_apply_rgb(uint8_t effect_index, uint8_t hue, uint8_t saturation, uint8_t brightness, uint8_t is_enabled, uint8_t speed) {
 #    if defined(RGB_MATRIX_ENABLE)
-    keymap_companion_last_rgb_enabled          = rgb_matrix_is_enabled();
-    keymap_companion_last_rgb_effect           = response[24];
-    keymap_companion_last_rgb_hue              = response[25];
-    keymap_companion_last_rgb_saturation       = response[26];
-    keymap_companion_last_rgb_brightness       = response[27];
-    keymap_companion_last_rgb_speed            = response[29];
-#    endif
-    keymap_companion_state_is_dirty           = false;
-}
-
-static void keymap_companion_send_keymap_info(void) {
-    uint8_t response[OBBUT_HID_REPORT_SIZE] = {0};
-    response[0]                             = OBBUT_HID_MAGIC_0;
-    response[1]                             = OBBUT_HID_MAGIC_1;
-    response[2]                             = OBBUT_HID_MAGIC_2;
-    response[3]                             = OBBUT_HID_MAGIC_3;
-    response[4]                             = OBBUT_HID_PROTOCOL_VERSION;
-    response[5]                             = OBBUT_HID_KEYMAP_INFO;
-    response[6]                             = keymap_companion_keyboard_kind();
-    response[7]                             = OBBUT_KEYMAP_LAYER_COUNT;
-    response[8]                             = MATRIX_ROWS;
-    response[9]                             = MATRIX_COLS;
-    response[10]                            = OBBUT_HID_KEYMAP_ENTRY_SIZE;
-    response[11]                            = OBBUT_HID_KEYMAP_ENTRIES_PER_CHUNK;
-    keymap_companion_write_u32(response, 12, keymap_companion_fingerprint());
-    keymap_companion_write_u16(response, 16, keymap_companion_entry_count());
-    response[18] = OBBUT_HID_ENCODER_COUNT;
-    response[19] = OBBUT_HID_ENCODER_DIRECTION_COUNT;
-    raw_hid_send(response, OBBUT_HID_REPORT_SIZE);
-}
-
-static void keymap_companion_send_keymap_chunk(uint16_t start_index) {
-    uint8_t  response[OBBUT_HID_REPORT_SIZE] = {0};
-    uint16_t entry_count                    = keymap_companion_entry_count();
-    if (start_index >= entry_count) {
-        return;
-    }
-
-    uint16_t remaining = entry_count - start_index;
-    uint8_t  count     = remaining > OBBUT_HID_KEYMAP_ENTRIES_PER_CHUNK ? OBBUT_HID_KEYMAP_ENTRIES_PER_CHUNK : (uint8_t)remaining;
-
-    response[0] = OBBUT_HID_MAGIC_0;
-    response[1] = OBBUT_HID_MAGIC_1;
-    response[2] = OBBUT_HID_MAGIC_2;
-    response[3] = OBBUT_HID_MAGIC_3;
-    response[4] = OBBUT_HID_PROTOCOL_VERSION;
-    response[5] = OBBUT_HID_KEYMAP_CHUNK;
-    response[6] = keymap_companion_keyboard_kind();
-    response[7] = count;
-    keymap_companion_write_u16(response, 8, start_index);
-    keymap_companion_write_u16(response, 10, entry_count);
-
-    for (uint8_t entry = 0; entry < count; entry++) {
-        uint16_t index   = start_index + entry;
-        uint16_t keycode = keymap_companion_keycode_at(index);
-        uint8_t  layer   = keymap_companion_layer_at(index);
-        uint8_t  offset  = OBBUT_HID_KEYMAP_CHUNK_OFFSET + entry * OBBUT_HID_KEYMAP_ENTRY_SIZE;
-        keymap_companion_write_u16(response, offset, keycode);
-        response[offset + 2] = keymap_companion_semantic_for_keycode(keycode);
-        response[offset + 3] = keymap_companion_style_for_keycode(layer, keycode);
-    }
-
-    raw_hid_send(response, OBBUT_HID_REPORT_SIZE);
-}
-
-#    if defined(RGB_MATRIX_ENABLE)
-
-static bool keymap_companion_apply_rgb_settings(const uint8_t *data) {
-    uint8_t qmk_effect = keymap_companion_qmk_effect(data[7]);
+    uint8_t qmk_effect = keymap_companion_qmk_effect(effect_index);
     if (qmk_effect == RGB_MATRIX_NONE) {
-        return false;
+        return 0;
     }
 
     rgb_matrix_enable_noeeprom();
     rgb_matrix_mode_noeeprom(qmk_effect);
-    rgb_matrix_sethsv_noeeprom(data[8], data[9], data[10]);
-    rgb_matrix_set_speed_noeeprom(data[11]);
-    if (data[6] == 0) {
+    rgb_matrix_sethsv_noeeprom(hue, saturation, brightness);
+    rgb_matrix_set_speed_noeeprom(speed);
+    if (!is_enabled) {
         rgb_matrix_disable_noeeprom();
     }
     eeconfig_force_flush_rgb_matrix();
     rgb_preview_mode = get_highest_layer(layer_state) == _FUNCTION;
-    return true;
-}
-
+    return 1;
+#    else
+    (void)effect_index;
+    (void)hue;
+    (void)saturation;
+    (void)brightness;
+    (void)is_enabled;
+    (void)speed;
+    return 0;
 #    endif
+}
 
 void obbut_raw_hid_receive(uint8_t *data, uint8_t length) {
-    if (!is_keyboard_master() || !keymap_companion_has_valid_header(data, length)) {
-        return;
-    }
-
-    switch (data[5]) {
-        case OBBUT_HID_GET_STATE:
-            keymap_companion_connected = true;
-            keymap_companion_send_state();
-            break;
-        case OBBUT_HID_GET_KEYMAP_INFO:
-            keymap_companion_connected = true;
-            keymap_companion_send_keymap_info();
-            break;
-        case OBBUT_HID_GET_KEYMAP_CHUNK:
-            keymap_companion_send_keymap_chunk(keymap_companion_read_u16(data, 6));
-            break;
-#    if defined(RGB_MATRIX_ENABLE)
-        case OBBUT_HID_SET_RGB_SETTINGS:
-            if (keymap_companion_apply_rgb_settings(data)) {
-                keymap_companion_connected = true;
-                keymap_companion_send_state();
-            }
-            break;
-#    endif
-    }
-}
-
-static void keymap_companion_housekeeping_task(void) {
-    uint32_t current_layer_state         = (uint32_t)layer_state;
-    uint32_t current_default_layer_state = (uint32_t)default_layer_state;
-
-    if (!is_keyboard_master() || !keymap_companion_connected) {
-        return;
-    }
-
-    if (current_layer_state != keymap_companion_last_layer_state || current_default_layer_state != keymap_companion_last_default_layer_state) {
-        keymap_companion_state_is_dirty = true;
-    }
-
-#    if defined(RGB_MATRIX_ENABLE)
-    hsv_t current_rgb_hsv    = rgb_matrix_get_hsv();
-    uint8_t current_rgb_mode = keymap_companion_protocol_effect(rgb_matrix_get_mode());
-    if (rgb_matrix_is_enabled() != keymap_companion_last_rgb_enabled || current_rgb_mode != keymap_companion_last_rgb_effect || current_rgb_hsv.h != keymap_companion_last_rgb_hue || current_rgb_hsv.s != keymap_companion_last_rgb_saturation || current_rgb_hsv.v != keymap_companion_last_rgb_brightness || rgb_matrix_get_speed() != keymap_companion_last_rgb_speed) {
-        keymap_companion_state_is_dirty = true;
-    }
-#    endif
-
-    if (keymap_companion_state_is_dirty && timer_elapsed32(keymap_companion_last_send) >= OBBUT_HID_MINIMUM_SEND_INTERVAL) {
-        keymap_companion_send_state();
+    if (is_keyboard_master()) {
+        keymap_protocol_receive(data, length);
     }
 }
 
@@ -520,7 +315,9 @@ void obbut_housekeeping_task(void) {
     }
 
 #if defined(RAW_ENABLE)
-    keymap_companion_housekeeping_task();
+    if (is_keyboard_master()) {
+        keymap_protocol_housekeeping();
+    }
 #endif
 }
 
@@ -610,9 +407,6 @@ layer_state_t obbut_layer_state_set(layer_state_t state) {
     if (get_highest_layer(state) != _FUNCTION) {
         rgb_preview_mode = false;
     }
-#if defined(RAW_ENABLE)
-    keymap_companion_state_is_dirty = true;
-#endif
     return state;
 }
 

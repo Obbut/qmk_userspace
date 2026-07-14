@@ -25,6 +25,7 @@ targets:
     platform: macOS
     sources:
       - path: KeymapCompanion
+      - path: ../../Shared/KeymapProtocol
     dependencies:
       - sdk: IOKit.framework
     settings:

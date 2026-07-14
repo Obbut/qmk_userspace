@@ -1,8 +1,2 @@
-/// One rotary direction in the firmware encoder map.
-enum EncoderDirection: Int, CaseIterable, Equatable, Sendable {
-    /// Counter-clockwise rotation.
-    case counterClockwise = 0
-
-    /// Clockwise rotation.
-    case clockwise = 1
-}
+/// The shared wire-level encoder direction.
+typealias EncoderDirection = KeymapProtocol.EncoderDirection

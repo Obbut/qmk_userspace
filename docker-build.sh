@@ -8,7 +8,7 @@ set -e
 export MSYS_NO_PATHCONV=1
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-IMAGE_NAME="qmk-userspace-builder"
+IMAGE_NAME="qmk-userspace-swift-builder"
 KEYCHRON_IMAGE_NAME="qmk-keychron-builder"
 ZSA_IMAGE_NAME="qmk-zsa-builder"
 BUILD_CACHE="$SCRIPT_DIR/.docker-build-cache"

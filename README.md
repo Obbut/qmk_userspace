@@ -192,7 +192,7 @@ F-keys, RGB controls, and bootloader.
 
 ## Build Commands
 
-All builds use Docker - no local QMK installation required.
+All firmware builds use Docker. Kyria and Elora firmware share the same Swift protocol source with the Keymap Companion app.
 
 ### Kyria Rev4
 

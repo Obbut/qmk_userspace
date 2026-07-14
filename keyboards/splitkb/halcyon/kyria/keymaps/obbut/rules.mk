@@ -5,6 +5,5 @@ RAW_ENABLE = yes
 # This adds module functionality to your keyboard (files found in users/halcyon_modules)
 USER_NAME := halcyon_modules
 
-# Include shared obbut code
-VPATH += $(QMK_USERSPACE)/users/obbut_halcyon
-SRC += obbut_halcyon.c
+# Include shared Obbut firmware and Embedded Swift protocol rules.
+include $(QMK_USERSPACE)/users/obbut_halcyon/rules.mk
