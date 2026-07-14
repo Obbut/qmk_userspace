@@ -1,7 +1,20 @@
-# QMK Firmware build environment with qmk_firmware included
-# This allows compilation without local QMK installation
+# QMK and Embedded Swift toolchains for the RP2040 firmware build.
+
+FROM swift:6.3.3-noble AS swift-toolchain
+
+# Debian's QMK image ships only the wide-character ncurses library, while the
+# official Swift driver is linked against the regular ncurses soname.
+RUN cp -L /usr/lib/*/libncurses.so.6 /tmp/libncurses.so.6
 
 FROM ghcr.io/qmk/qmk_cli
+
+# The official Swift toolchain contains the ARMv6-M Embedded Swift standard
+# library. Only compiler executables and their runtime resources are needed.
+COPY --from=swift-toolchain /usr/bin/swift-driver /usr/bin/swift-driver
+COPY --from=swift-toolchain /usr/bin/swift-frontend /usr/bin/swift-frontend
+COPY --from=swift-toolchain /usr/lib/swift /usr/lib/swift
+COPY --from=swift-toolchain /tmp/libncurses.so.6 /usr/local/lib/libncurses.so.6
+RUN ldconfig && ln -s swift-driver /usr/bin/swiftc && swiftc --version
 
 # Clone QMK firmware (shallow clone to save space)
 RUN git clone --depth 1 https://github.com/qmk/qmk_firmware.git /qmk_firmware

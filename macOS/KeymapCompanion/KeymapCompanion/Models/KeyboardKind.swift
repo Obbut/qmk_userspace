@@ -1,13 +1,9 @@
 import Foundation
 
-/// A Halcyon keyboard model supported by the companion protocol.
-enum KeyboardKind: UInt8, CaseIterable, Equatable, Sendable {
-    /// The splitkb Kyria Rev4.
-    case kyria = 1
+/// The shared wire-level keyboard identifier.
+typealias KeyboardKind = KeymapProtocol.KeyboardKind
 
-    /// The splitkb Elora Rev2.
-    case elora = 2
-
+extension KeymapProtocol.KeyboardKind {
     /// The localized product name shown by the app.
     var displayName: LocalizedStringResource {
         switch self {

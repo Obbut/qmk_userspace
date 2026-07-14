@@ -72,6 +72,33 @@ func parsesKeymapMetadataReport() {
     #expect(metadata?.fingerprint == 0x1234_5678)
 }
 
+/// Proves that the firmware-side shared encoder produces metadata the host-side decoder accepts.
+@Test
+func sharedMetadataEncoderRoundTripsProtocolV3() {
+    var packet = [UInt8](repeating: 0xFF, count: KeymapProtocol.reportSize)
+    let encoded = packet.withUnsafeMutableBufferPointer {
+        KeymapProtocol.encodeKeymapMetadataReport(
+            to: $0,
+            keyboardKind: KeyboardKind.elora.rawValue,
+            layerCount: 1,
+            matrixRowCount: 1,
+            matrixColumnCount: 1,
+            fingerprint: 0xCAFE_BABE,
+            entryCount: 3,
+            encoderCount: 1
+        )
+    }
+
+    let metadata = KeymapProtocol.parseKeymapMetadataReport(packet)
+
+    #expect(encoded)
+    #expect(metadata?.keyboardKind == .elora)
+    #expect(metadata?.entryCount == 3)
+    #expect(metadata?.encoderCount == 1)
+    #expect(packet[19] == UInt8(EncoderDirection.allCases.count))
+    #expect(metadata?.fingerprint == 0xCAFE_BABE)
+}
+
 /// Verifies keycodes, firmware semantics, and styles within a transfer page.
 @Test
 func parsesKeymapChunkReport() {

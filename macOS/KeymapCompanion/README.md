@@ -57,6 +57,12 @@ Then flash each half with the existing commands:
 
 Once a flashed board enumerates, the app finds QMK's vendor usage page `0xFF60` and usage `0x61`, opens the matching endpoint, downloads and fingerprint-validates the keymap, and then requests current state. The keyboard identity comes from the validated responses, so the host does not depend on hardcoded USB vendor or product IDs.
 
+## Shared Swift implementation
+
+Protocol v3 has one source of truth: `Shared/KeymapProtocol`. The same files are included directly in the Keymap Companion target and compiled as Embedded Swift for the RP2040. Swift owns message dispatch, connection state, report encoding and decoding, transfer pagination, and fingerprinting. QMK's C code provides the narrow platform adapter in `users/obbut_halcyon/keymap_protocol_bridge.h`: it exposes keyboard state and compiled keymap entries, sends completed reports, applies RGB settings, and forwards receive and housekeeping callbacks into Swift. The C side contains no protocol version, message identifiers, packet offsets, capability bits, wire semantic/style identifiers, RGB identifiers, or fingerprint algorithm.
+
+The firmware compiler stays inside Docker. `Dockerfile.qmk` combines the official Swift 6.3.3 toolchain with QMK's image, and `users/obbut_halcyon/rules.mk` compiles the shared sources for `armv6m-none-none-eabi` with Embedded Swift enabled. QMK archives that object as `embedded_keymap_protocol.a` and links it into each Kyria and Elora firmware image.
+
 ## Protocol
 
 Every Raw HID report is exactly 32 bytes and starts with `KMAP` plus protocol version `3`.

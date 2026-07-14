@@ -73,25 +73,22 @@ struct FirmwareKeymap: Equatable, Sendable {
         return entries[index]
     }
 
-    /// The FNV-1a checksum shared with protocol v3 firmware.
+    /// The checksum calculated by the shared protocol definition.
     private var calculatedFingerprint: UInt32 {
-        var hash: UInt32 = 2_166_136_261
-
-        func adding(_ byte: UInt8, to value: UInt32) -> UInt32 {
-            (value ^ UInt32(byte)) &* 16_777_619
-        }
-
-        hash = adding(keyboardKind.rawValue, to: hash)
-        hash = adding(UInt8(layerCount), to: hash)
-        hash = adding(UInt8(matrixRowCount), to: hash)
-        hash = adding(UInt8(matrixColumnCount), to: hash)
-        hash = adding(UInt8(encoderCount), to: hash)
-        hash = adding(UInt8(EncoderDirection.allCases.count), to: hash)
+        var hash = KeymapProtocol.fingerprintSeed(
+            keyboardKind: keyboardKind.rawValue,
+            layerCount: UInt8(layerCount),
+            matrixRowCount: UInt8(matrixRowCount),
+            matrixColumnCount: UInt8(matrixColumnCount),
+            encoderCount: UInt8(encoderCount)
+        )
         for entry in entries {
-            hash = adding(UInt8(truncatingIfNeeded: entry.keycode), to: hash)
-            hash = adding(UInt8(truncatingIfNeeded: entry.keycode >> 8), to: hash)
-            hash = adding(entry.semantic, to: hash)
-            hash = adding(entry.style.rawValue, to: hash)
+            hash = KeymapProtocol.fingerprint(
+                afterAddingKeycode: entry.keycode,
+                semantic: entry.semantic,
+                style: entry.style.rawValue,
+                to: hash
+            )
         }
         return hash
     }
