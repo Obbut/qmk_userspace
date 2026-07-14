@@ -3,6 +3,29 @@ import Dispatch
 import Foundation
 import KeymapCompanionCore
 
+/// Main-actor adapter that satisfies the shared hardware dependency while the
+/// underlying Windows HID monitor keeps blocking reads on private queues.
+@MainActor
+final class WindowsKeyboardHardwareClient: KeyboardHardwareClient {
+    private var eventHandler: @MainActor @Sendable (KeyboardMonitorEvent) -> Void = { _ in }
+    private lazy var monitor = WindowsHIDMonitor { [weak self] event in
+        DispatchQueue.main.async { [weak self] in
+            self?.eventHandler(event)
+        }
+    }
+
+    func setEventHandler(
+        _ handler: @escaping @MainActor @Sendable (KeyboardMonitorEvent) -> Void
+    ) {
+        eventHandler = handler
+    }
+
+    func start() { monitor.start() }
+    func restart() { monitor.restart() }
+    func applyRGBSettings(_ settings: RGBSettings) { monitor.applyRGBSettings(settings) }
+    func stop() { monitor.stop() }
+}
+
 /// Discovers QMK Raw HID endpoints with Windows SetupAPI and feeds their packets
 /// through the platform-neutral keymap transfer engine.
 final class WindowsHIDMonitor: @unchecked Sendable {

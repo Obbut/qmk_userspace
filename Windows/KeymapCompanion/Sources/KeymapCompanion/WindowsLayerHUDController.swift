@@ -11,56 +11,19 @@ final class WindowsLayerHUDController: @unchecked Sendable {
     private static let windowTitle = "Keymap Companion — Layer HUD"
 
     private var window: Window?
-    private var transitionTimer: Timer?
-    private var pendingPresentation: LayerHUDPresentation?
     private var presentation: LayerHUDPresentation?
     private var definition: KeymapDefinition?
     private var mainWindowIsActive = true
 
     func update(
         definition: KeymapDefinition?,
-        activeLayer: KeymapLayer,
-        activeLayerMask: UInt32,
+        presentation: LayerHUDPresentation?,
         mainWindowIsVisible: Bool
     ) {
         self.definition = definition
+        self.presentation = presentation
         mainWindowIsActive = mainWindowIsVisible
-        let next = LayerHUDPresentation(layer: activeLayer, activeLayerMask: activeLayerMask)
-
-        guard activeLayer.isHUDLayer else {
-            pendingPresentation = nil
-            transitionTimer?.invalidate()
-            transitionTimer = nil
-            guard presentation != nil else { return }
-            presentation = next
-            renderIfVisible()
-            transitionTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: false) { [weak self] _ in
-                self?.hideImmediately()
-            }
-            return
-        }
-
-        if presentation != nil {
-            transitionTimer?.invalidate()
-            transitionTimer = nil
-            presentation = next
-            renderIfVisible()
-            return
-        }
-        if pendingPresentation?.layer == activeLayer {
-            pendingPresentation = next
-            return
-        }
-
-        transitionTimer?.invalidate()
-        pendingPresentation = next
-        transitionTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: false) { [weak self] _ in
-            guard let self, let pending = self.pendingPresentation else { return }
-            self.transitionTimer = nil
-            self.pendingPresentation = nil
-            self.presentation = pending
-            self.renderIfVisible()
-        }
+        renderIfVisible()
     }
 
     func mainWindowActivityDidChange(isActive: Bool) {
@@ -69,15 +32,11 @@ final class WindowsLayerHUDController: @unchecked Sendable {
     }
 
     func hideImmediately() {
-        transitionTimer?.invalidate()
-        transitionTimer = nil
-        pendingPresentation = nil
         presentation = nil
         try? window?.appWindow.hide()
     }
 
     func close() throws {
-        transitionTimer?.invalidate()
         try window?.close()
         window = nil
     }

@@ -2,12 +2,13 @@ import CWindowsShell
 import Dispatch
 import Foundation
 import KeymapCompanionCore
+import Observation
 import UWP
 import WinAppSDK
 import WinUI
 
 @main
-final class KeymapCompanionWindowsApp: SwiftApplication {
+final class KeymapCompanionWindowsApp: SwiftApplication, @unchecked Sendable {
     private var controller: WindowsAppController?
 
     required init() {
@@ -19,30 +20,30 @@ final class KeymapCompanionWindowsApp: SwiftApplication {
     }
 
     override func onLaunched(_ args: WinUI.LaunchActivatedEventArgs) {
-        let controller = WindowsAppController()
-        self.controller = controller
-        controller.launch()
+        MainActor.assumeIsolated {
+            let controller = WindowsAppController()
+            self.controller = controller
+            controller.launch()
+        }
     }
 
     override func onShutdown(exitCode: Int32) {
-        controller?.shutdown()
+        MainActor.assumeIsolated {
+            controller?.shutdown()
+        }
     }
 }
 
 /// Owns native Windows presentation and reduces shared transport events on the
 /// WinUI thread.
+@MainActor
 private final class WindowsAppController: @unchecked Sendable {
     private let window = Window()
-    private var state = CompanionState()
+    private let model: KeymapCompanionModel
     private var contentBody: StackPanel?
-    private lazy var monitor = WindowsHIDMonitor { [weak self] event in
-        guard let controller = self else { return }
-        DispatchQueue.main.async { controller.receive(event) }
-    }
     private lazy var hud = WindowsLayerHUDController()
     private var tray: OpaquePointer?
-    private var rgbTimer: Timer?
-    private var rgbSettingsAwaitingAcknowledgement: RGBSettings?
+    private var renderedSnapshot: WindowsViewSnapshot?
     private var isExiting = false
     private var isMainWindowActive = true
 
@@ -58,10 +59,17 @@ private final class WindowsAppController: @unchecked Sendable {
     private weak var speedMinus: Button?
     private weak var speedPlus: Button?
 
+    init() {
+        let hardware = WindowsKeyboardHardwareClient()
+        model = KeymapCompanionModel.live(hardware: hardware)
+    }
+
     func launch() {
         window.title = "Keymap Companion"
         try? window.appWindow.resize(SizeInt32(width: 1200, height: 780))
         window.content = makeContent()
+        renderedSnapshot = WindowsViewSnapshot(model)
+        observeModel()
         window.appWindow.closing.addHandler { [weak self] _, args in
             guard let self, !self.isExiting else { return }
             args?.cancel = true
@@ -79,16 +87,16 @@ private final class WindowsAppController: @unchecked Sendable {
                 let controller = Unmanaged<WindowsAppController>
                     .fromOpaque(context)
                     .takeUnretainedValue()
-                controller.handleTrayCommand(command)
+                DispatchQueue.main.async {
+                    controller.handleTrayCommand(command)
+                }
             },
             Unmanaged.passUnretained(self).toOpaque()
         )
-        monitor.start()
     }
 
     func shutdown() {
-        rgbTimer?.invalidate()
-        monitor.stop()
+        model.shutdown()
         hud.hideImmediately()
         if let tray {
             keymap_tray_destroy(tray)
@@ -101,7 +109,7 @@ private final class WindowsAppController: @unchecked Sendable {
         case UInt32(KEYMAP_TRAY_OPEN):
             try? window.appWindow.show(true)
         case UInt32(KEYMAP_TRAY_RECONNECT):
-            reconnect()
+            model.reconnect()
         case UInt32(KEYMAP_TRAY_EXIT):
             isExiting = true
             shutdown()
@@ -113,68 +121,40 @@ private final class WindowsAppController: @unchecked Sendable {
         }
     }
 
-    private func receive(_ event: KeyboardMonitorEvent) {
-        let previous = WindowsViewSnapshot(state)
-        switch event {
-        case .searching, .keymap, .disconnected, .failed:
-            if case .searching = event { cancelRGBUpdate() }
-            if case .disconnected = event { cancelRGBUpdate() }
-            if case .failed = event { cancelRGBUpdate() }
-            state.apply(event)
-            if case .keymap = event { hud.hideImmediately() }
-
-        case let .state(report):
-            guard state.keymapDefinition?.keyboardKind == report.keyboardKind else { return }
-            let acceptsRGB = rgbTimer == nil
-                && report.rgbSettings != nil
-                && (rgbSettingsAwaitingAcknowledgement == nil
-                    || rgbSettingsAwaitingAcknowledgement == report.rgbSettings)
-            state.apply(event, acceptRGBSettings: acceptsRGB)
-            if acceptsRGB { rgbSettingsAwaitingAcknowledgement = nil }
+    /// Re-arms one-shot Swift Observation tracking after every model change.
+    private func observeModel() {
+        withObservationTracking {
+            _ = model.connectionStatus
+            _ = model.keyboardKind
+            _ = model.keymapDefinition
+            _ = model.layerStateMask
+            _ = model.defaultLayerStateMask
+            _ = model.capabilities
+            _ = model.rgbSettings
+            _ = model.layerHUD.presentation
+        } onChange: { [weak self] in
+            DispatchQueue.main.async { [weak self] in
+                guard let self, !self.isExiting else { return }
+                self.modelDidChange()
+                self.observeModel()
+            }
         }
-        let current = WindowsViewSnapshot(state)
+    }
+
+    private func modelDidChange() {
+        let current = WindowsViewSnapshot(model)
+        let previous = renderedSnapshot ?? current
+        renderedSnapshot = current
         renderChanges(from: previous, to: current)
-        if previous.keymapDefinition != current.keymapDefinition
-            || previous.effectiveLayerMask != current.effectiveLayerMask
-            || previous.connectionStatus != current.connectionStatus {
-            hud.update(
-                definition: state.keymapDefinition,
-                activeLayer: state.activeLayer,
-                activeLayerMask: state.effectiveLayerMask,
-                mainWindowIsVisible: isMainWindowActive
-            )
-        }
-    }
-
-    private func reconnect() {
-        cancelRGBUpdate()
-        hud.hideImmediately()
-        state.apply(.searching)
-        renderAll()
-        monitor.restart()
-    }
-
-    private func cancelRGBUpdate() {
-        rgbTimer?.invalidate()
-        rgbTimer = nil
-        rgbSettingsAwaitingAcknowledgement = nil
+        hud.update(
+            definition: model.keymapDefinition,
+            presentation: model.layerHUD.presentation,
+            mainWindowIsVisible: isMainWindowActive
+        )
     }
 
     private func updateRGB(_ update: (inout RGBSettings) -> Void) {
-        guard state.supportsRGBSettings else { return }
-        var settings = state.rgbSettings
-        update(&settings)
-        guard settings != state.rgbSettings else { return }
-        state.setRGBSettings(settings)
-        synchronizeRGBControls()
-
-        rgbTimer?.invalidate()
-        rgbTimer = Timer.scheduledTimer(withTimeInterval: 0.15, repeats: false) { [weak self, settings] _ in
-            guard let self, self.state.rgbSettings == settings else { return }
-            self.rgbTimer = nil
-            self.rgbSettingsAwaitingAcknowledgement = settings
-            self.monitor.applyRGBSettings(settings)
-        }
+        model.updateRGBSettings(update)
     }
 
     private func makeContent() -> UIElement {
@@ -188,12 +168,12 @@ private final class WindowsAppController: @unchecked Sendable {
         body.children.append(makeHeader())
         body.children.append(makeConnectionInfo())
 
-        if let definition = state.keymapDefinition {
+        if let definition = model.keymapDefinition {
             body.children.append(makeKeyboardCard(definition))
         } else {
             body.children.append(makeEmptyState())
         }
-        if state.supportsRGBSettings {
+        if model.supportsRGBSettings {
             body.children.append(makeRGBCard())
         }
         contentBody = body
@@ -221,7 +201,7 @@ private final class WindowsAppController: @unchecked Sendable {
         }
 
         if previous.effectiveLayerMask != current.effectiveLayerMask,
-           let definition = state.keymapDefinition {
+           let definition = model.keymapDefinition {
             contentBody?.children.setAt(2, makeKeyboardCard(definition))
         }
         if previous.rgbSettings != current.rgbSettings {
@@ -262,14 +242,14 @@ private final class WindowsAppController: @unchecked Sendable {
         let reconnect = Button()
         reconnect.content = "Reconnect"
         reconnect.padding = Thickness(left: 16, top: 8, right: 16, bottom: 8)
-        reconnect.click.addHandler { [weak self] _, _ in self?.reconnect() }
+        reconnect.click.addHandler { [weak self] _, _ in self?.model.reconnect() }
         try? AutomationProperties.setName(reconnect, "Reconnect keyboard")
         header.children.append(reconnect)
         return header
     }
 
     private func makeStatusBadge() -> Border {
-        let (label, color): (String, Color) = switch state.connectionStatus {
+        let (label, color): (String, Color) = switch model.connectionStatus {
         case .searching: ("Searching", WindowsTheme.color(98, 170, 255))
         case .connected: ("Connected", WindowsTheme.color(74, 210, 140))
         case .disconnected: ("Disconnected", WindowsTheme.color(247, 184, 77))
@@ -292,14 +272,14 @@ private final class WindowsAppController: @unchecked Sendable {
         info.isOpen = true
         info.isClosable = false
         info.isIconVisible = true
-        switch state.connectionStatus {
+        switch model.connectionStatus {
         case .searching:
             info.severity = .informational
             info.title = "Looking for your keyboard"
             info.message = "Connect an Elora Rev2 or Kyria Rev4 running the companion protocol."
         case .connected:
             info.severity = .success
-            info.title = state.keyboardKind?.displayName ?? "Keyboard connected"
+            info.title = model.keyboardKind?.displayName ?? "Keyboard connected"
             info.message = "Live layer and lighting state is updating over Raw HID."
         case .disconnected:
             info.severity = .warning
@@ -342,7 +322,7 @@ private final class WindowsAppController: @unchecked Sendable {
         name.fontWeight = FontWeights.semiBold
         heading.children.append(name)
         heading.children.append(WindowsTheme.text(
-            "Active layer: \(state.activeLayer.displayName)",
+            "Active layer: \(model.activeLayer.displayName)",
             size: 14,
             color: WindowsTheme.color(158, 183, 255)
         ))
@@ -354,7 +334,7 @@ private final class WindowsAppController: @unchecked Sendable {
         boardScroll.verticalScrollBarVisibility = .disabled
         boardScroll.content = WindowsKeymapRenderer.make(
             definition: definition,
-            activeLayerMask: state.effectiveLayerMask
+            activeLayerMask: model.effectiveLayerMask
         )
         content.children.append(boardScroll)
         return WindowsTheme.card(content: content, padding: 22)
@@ -365,7 +345,7 @@ private final class WindowsAppController: @unchecked Sendable {
         strip.orientation = .horizontal
         strip.spacing = 8
         for layer in KeymapLayer.allCases {
-            let isActive = layer.isActive(in: state.effectiveLayerMask)
+            let isActive = layer.isActive(in: model.effectiveLayerMask)
             let pill = Border()
             pill.cornerRadius = WindowsTheme.corners(10)
             pill.padding = Thickness(left: 10, top: 4, right: 10, bottom: 4)
@@ -402,7 +382,7 @@ private final class WindowsAppController: @unchecked Sendable {
         enabled.header = "Lighting"
         enabled.onContent = "On"
         enabled.offContent = "Off"
-        enabled.isOn = state.rgbSettings.isEnabled
+        enabled.isOn = model.rgbSettings.isEnabled
         rgbEnabledControl = enabled
         enabled.toggled.addHandler { [weak self, weak enabled] _, _ in
             guard let self, let enabled else { return }
@@ -415,7 +395,7 @@ private final class WindowsAppController: @unchecked Sendable {
         effect.width = 250
         for item in RGBEffect.allCases { effect.items.append(item.displayName) }
         effect.selectedIndex = Int32(
-            RGBEffect.allCases.firstIndex(of: state.rgbSettings.effect) ?? 0
+            RGBEffect.allCases.firstIndex(of: model.rgbSettings.effect) ?? 0
         )
         rgbEffectControl = effect
         effect.selectionChanged.addHandler { [weak self, weak effect] _, _ in
@@ -434,14 +414,14 @@ private final class WindowsAppController: @unchecked Sendable {
         levels.spacing = 24
         levels.children.append(makeLevelControl(
             title: "Brightness",
-            value: state.rgbSettings.brightness,
+            value: model.rgbSettings.brightness,
             maximum: RGBSettings.maximumBrightness,
             step: 8,
             isBrightness: true
         ))
         levels.children.append(makeLevelControl(
             title: "Animation speed",
-            value: state.rgbSettings.speed,
+            value: model.rgbSettings.speed,
             maximum: RGBSettings.maximumSpeed,
             step: 16,
             isBrightness: false
@@ -461,7 +441,7 @@ private final class WindowsAppController: @unchecked Sendable {
         let row = StackPanel()
         row.orientation = .horizontal
         row.spacing = 9
-        let rgb = state.rgbSettings.rgbColor
+        let rgb = model.rgbSettings.rgbColor
         let swatch = Border()
         swatch.width = 22
         swatch.height = 22
@@ -479,7 +459,7 @@ private final class WindowsAppController: @unchecked Sendable {
     }
 
     private func chooseColor() {
-        var color = state.rgbSettings.rgbColor
+        var color = model.rgbSettings.rgbColor
         guard keymap_choose_color(&color.r, &color.g, &color.b) != 0 else { return }
         updateRGB { $0.setRGBColor(color) }
     }
@@ -565,7 +545,7 @@ private final class WindowsAppController: @unchecked Sendable {
     }
 
     private func synchronizeRGBControls() {
-        let settings = state.rgbSettings
+        let settings = model.rgbSettings
         if rgbEnabledControl?.isOn != settings.isEnabled {
             rgbEnabledControl?.isOn = settings.isEnabled
         }
@@ -610,6 +590,7 @@ private final class WindowsAppController: @unchecked Sendable {
     }
 }
 
+@MainActor
 private struct WindowsViewSnapshot: Equatable {
     let connectionStatus: ConnectionStatus
     let keyboardKind: KeyboardKind?
@@ -618,13 +599,13 @@ private struct WindowsViewSnapshot: Equatable {
     let supportsRGBSettings: Bool
     let rgbSettings: RGBSettings
 
-    init(_ state: CompanionState) {
-        connectionStatus = state.connectionStatus
-        keyboardKind = state.keyboardKind
-        keymapDefinition = state.keymapDefinition
-        effectiveLayerMask = state.effectiveLayerMask
-        supportsRGBSettings = state.supportsRGBSettings
-        rgbSettings = state.rgbSettings
+    init(_ model: KeymapCompanionModel) {
+        connectionStatus = model.connectionStatus
+        keyboardKind = model.keyboardKind
+        keymapDefinition = model.keymapDefinition
+        effectiveLayerMask = model.effectiveLayerMask
+        supportsRGBSettings = model.supportsRGBSettings
+        rgbSettings = model.rgbSettings
     }
 }
 
