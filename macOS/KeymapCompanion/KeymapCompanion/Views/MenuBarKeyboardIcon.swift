@@ -114,11 +114,8 @@ private enum MenuBarKeyboardIconRenderer {
         )
         let badgeInset = boardSize.width * 0.22
         let showsLayerBadge = activeLayer != .base
-        let combinedWidth = showsLayerBadge
-            ? boardSize.width + badgeSize.width - badgeInset
-            : boardSize.width
         let boardRect = CGRect(
-            x: (size.width - combinedWidth) / 2,
+            x: (size.width - boardSize.width) / 2,
             y: (size.height - boardSize.height) / 2,
             width: boardSize.width,
             height: boardSize.height
