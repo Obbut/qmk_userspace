@@ -54,6 +54,8 @@ per-monitor-v2 DPI manifest for sharp rendering at non-100% display scaling.
 
 - Closing the main window keeps the app available in the notification area.
 - The tray menu can reopen the window, reconnect Raw HID, or exit the app.
+- The compact **Lighting** header action opens RGB controls in a native flyout;
+  lighting controls do not occupy the main keymap view.
 - The layer HUD appears after a layer has remained active for three seconds and
   stays out of the way while the main window is active.
 - Lighting changes are coalesced before being written to firmware. Incoming

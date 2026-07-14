@@ -50,6 +50,7 @@ private final class WindowsAppController: @unchecked Sendable {
     private weak var rgbEnabledControl: ToggleSwitch?
     private weak var rgbEffectControl: ComboBox?
     private weak var rgbSwatch: Border?
+    private weak var rgbFlyout: Flyout?
     private weak var brightnessLabel: TextBlock?
     private weak var brightnessFill: Border?
     private weak var brightnessMinus: Button?
@@ -173,9 +174,6 @@ private final class WindowsAppController: @unchecked Sendable {
         } else {
             body.children.append(makeEmptyState())
         }
-        if model.supportsRGBSettings {
-            body.children.append(makeRGBCard())
-        }
         contentBody = body
 
         let scroll = ScrollViewer()
@@ -214,6 +212,10 @@ private final class WindowsAppController: @unchecked Sendable {
     }
 
     private func clearRGBControlReferences() {
+        if rgbFlyout?.isOpen == true {
+            try? rgbFlyout?.hide()
+        }
+        rgbFlyout = nil
         rgbEnabledControl = nil
         rgbEffectControl = nil
         rgbSwatch = nil
@@ -228,24 +230,63 @@ private final class WindowsAppController: @unchecked Sendable {
     }
 
     private func makeHeader() -> UIElement {
-        let header = StackPanel()
-        header.orientation = .horizontal
-        header.spacing = 14
+        let header = Grid()
+        header.columnSpacing = 18
         header.verticalAlignment = .center
+        let flexibleColumn = ColumnDefinition()
+        flexibleColumn.width = GridLength(value: 1, gridUnitType: .star)
+        header.columnDefinitions.append(flexibleColumn)
+        let actionsColumn = ColumnDefinition()
+        actionsColumn.width = GridLength(value: 1, gridUnitType: .auto)
+        header.columnDefinitions.append(actionsColumn)
+
+        let identity = StackPanel()
+        identity.orientation = .horizontal
+        identity.spacing = 14
+        identity.verticalAlignment = .center
 
         let title = WindowsTheme.text("Keymap Companion", size: 30)
         title.fontWeight = FontWeights.semiBold
         title.verticalAlignment = .center
-        header.children.append(title)
-        header.children.append(makeStatusBadge())
+        identity.children.append(title)
+        identity.children.append(makeStatusBadge())
+        header.children.append(identity)
+
+        let actions = StackPanel()
+        actions.orientation = .horizontal
+        actions.spacing = 10
+        actions.verticalAlignment = .center
+        actions.horizontalAlignment = .right
+        if model.supportsRGBSettings {
+            actions.children.append(makeLightingButton())
+        }
 
         let reconnect = Button()
         reconnect.content = "Reconnect"
         reconnect.padding = Thickness(left: 16, top: 8, right: 16, bottom: 8)
         reconnect.click.addHandler { [weak self] _, _ in self?.model.reconnect() }
         try? AutomationProperties.setName(reconnect, "Reconnect keyboard")
-        header.children.append(reconnect)
+        actions.children.append(reconnect)
+        try? Grid.setColumn(actions, 1)
+        header.children.append(actions)
         return header
+    }
+
+    private func makeLightingButton() -> Button {
+        let button = Button()
+        button.content = "Lighting"
+        button.padding = Thickness(left: 16, top: 8, right: 16, bottom: 8)
+        try? AutomationProperties.setName(button, "Keyboard lighting settings")
+
+        let flyout = Flyout()
+        flyout.placement = .bottomEdgeAlignedRight
+        flyout.content = makeRGBFlyoutContent()
+        flyout.opening.addHandler { [weak self] _, _ in
+            self?.synchronizeRGBControls()
+        }
+        rgbFlyout = flyout
+        button.flyout = flyout
+        return button
     }
 
     private func makeStatusBadge() -> Border {
@@ -364,14 +405,21 @@ private final class WindowsAppController: @unchecked Sendable {
         return strip
     }
 
-    private func makeRGBCard() -> Border {
+    private func makeRGBFlyoutContent() -> UIElement {
         let content = StackPanel()
         content.orientation = .vertical
         content.spacing = 16
+        content.width = 500
+        content.margin = Thickness(left: 4, top: 4, right: 4, bottom: 4)
 
         let title = WindowsTheme.text("Keyboard lighting", size: 21)
         title.fontWeight = FontWeights.semiBold
         content.children.append(title)
+        content.children.append(WindowsTheme.text(
+            "Changes are saved directly to the connected keyboard.",
+            size: 13,
+            color: WindowsTheme.color(177, 184, 201)
+        ))
 
         let controls = StackPanel()
         controls.orientation = .horizontal
@@ -410,8 +458,8 @@ private final class WindowsAppController: @unchecked Sendable {
         content.children.append(controls)
 
         let levels = StackPanel()
-        levels.orientation = .horizontal
-        levels.spacing = 24
+        levels.orientation = .vertical
+        levels.spacing = 14
         levels.children.append(makeLevelControl(
             title: "Brightness",
             value: model.rgbSettings.brightness,
@@ -427,7 +475,7 @@ private final class WindowsAppController: @unchecked Sendable {
             isBrightness: false
         ))
         content.children.append(levels)
-        return WindowsTheme.card(content: content, padding: 22)
+        return content
     }
 
     private func makeColorButton() -> StackPanel {
