@@ -24,6 +24,11 @@ RUN ldconfig \
 RUN git clone --depth 1 -b wireless_playground \
     https://github.com/Keychron/qmk_firmware.git /qmk_firmware
 
+# Add the missing keymap-level Raw HID extension point without replacing
+# Keychron's proprietary commands.
+COPY patches/keychron-raw-hid-user-hook.patch /tmp/keychron-raw-hid-user-hook.patch
+RUN git -C /qmk_firmware apply /tmp/keychron-raw-hid-user-hook.patch
+
 # Initialize submodules needed for the build
 WORKDIR /qmk_firmware
 
