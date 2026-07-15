@@ -193,7 +193,11 @@ void keymap_protocol_platform_send(uint8_t *data, uint8_t length) {
 }
 
 void keymap_protocol_platform_enter_bootloader(void) {
+#if defined(OBBUT_TEST_CRASH_RECOVERY)
+    __asm volatile("udf #0");
+#else
     reset_keyboard();
+#endif
 }
 
 uint8_t keymap_protocol_platform_apply_rgb(
