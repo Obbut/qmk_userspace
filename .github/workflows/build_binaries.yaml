@@ -38,24 +38,10 @@ jobs:
           retention-days: 7
 
       - name: Build Elora left half
-        run: |
-          docker run --rm \
-            -v "${{ github.workspace }}:/qmk_userspace" \
-            -e QMK_USERSPACE=/qmk_userspace \
-            -e SKIP_GIT=1 \
-            -e SKIP_VERSION=1 \
-            qmk-userspace-swift-builder \
-            sh -c 'make -C /qmk_userspace/SwiftKeymaps qmk-keymapc && /qmk_userspace/SwiftKeymaps/.build-direct/bin/qmk-keymapc --keyboard elora --output-root /qmk_userspace && qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/elora/rev2 -km obbut -e HLC_NONE=1 -e TARGET=elora_rev2_obbut_left'
+        run: ./docker-build.sh elora-left
 
       - name: Build Elora right half
-        run: |
-          docker run --rm \
-            -v "${{ github.workspace }}:/qmk_userspace" \
-            -e QMK_USERSPACE=/qmk_userspace \
-            -e SKIP_GIT=1 \
-            -e SKIP_VERSION=1 \
-            qmk-userspace-swift-builder \
-            sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/elora/rev2 -km obbut -e HLC_ENCODER=1 -e TARGET=elora_rev2_obbut_right_encoder'
+        run: ./docker-build.sh elora-right
 
       - name: Upload Halcyon firmware
         uses: actions/upload-artifact@v4
