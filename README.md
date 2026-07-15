@@ -9,7 +9,7 @@ Personal QMK firmware for four keyboards:
 
 ## Swift-first architecture
 
-Swift is the only authored source of truth for keymaps, domain semantics, styles,
+Swift is the only authored source of truth for keymaps, semantics, styles,
 firmware configuration, companion metadata, previews, and generated diagrams.
 The host compiler writes ignored QMK ABI artifacts before each build.
 
@@ -27,9 +27,9 @@ KyriaFirmware / EloraFirmware / Q15Firmware / PlanckFirmware
 macOS + Windows companions and Xcode previews
 ```
 
-`QMKKeymapKit` has no Obbut-specific vocabulary. `ObbutKeymaps` is the sole
-owner of stable semantic/style identifiers and shared behavior. Individual
-firmware modules select board composition and hardware policy only.
+`QMKKeymapKit` has no Obbut-specific vocabulary. `ObbutKeymaps` owns the shared
+Obbut semantics, named styles, and behavior. Individual firmware modules select
+board composition and hardware policy only.
 
 See [SwiftKeymaps/README.md](SwiftKeymaps/README.md) for the authored API,
 result-builder keymaps, previews, custom QMK tokens, and Embedded Swift
@@ -40,7 +40,7 @@ callback bridges.
 The repository includes native companion apps that visualize all four firmware
 definitions, follow a connected keyboard's layer changes in realtime, and
 control supported keyboard lighting. Platform UI remains native while the
-protocol-v4-only model, dynamic geometry, catalog resolution, and production
+protocol-v4-only model, dynamic geometry, metadata resolution, and production
 renderer are shared Swift code.
 
 - [Keymap Companion for macOS](macOS/KeymapCompanion/README.md) uses SwiftUI and its Canvas renderer.

@@ -1,4 +1,4 @@
-/// A renderer-ready RGB style resolved from a keymap domain catalog.
+/// A renderer-ready RGB style resolved from generated metadata.
 public struct KeymapRenderStyle: Equatable, Sendable {
     /// The red color component.
     public let red: UInt8
@@ -9,7 +9,7 @@ public struct KeymapRenderStyle: Equatable, Sendable {
     /// The blue color component.
     public let blue: UInt8
 
-    /// Whether the catalog recognized the style identifier.
+    /// Whether the metadata fingerprint allowed this style to be resolved.
     public let isKnown: Bool
 
     public init(red: UInt8, green: UInt8, blue: UInt8, isKnown: Bool = true) {

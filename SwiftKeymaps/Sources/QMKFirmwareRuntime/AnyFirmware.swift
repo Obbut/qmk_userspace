@@ -1,6 +1,6 @@
 import QMKKeymapKit
 
-/// A domain-erased firmware definition used by host tooling and catalogs.
+/// A firmware definition resolved for generation and host tooling.
 public struct AnyFirmware: Sendable {
     /// The stable keymap identifier.
     public let id: String
@@ -23,19 +23,19 @@ public struct AnyFirmware: Sendable {
     /// The selected firmware features.
     public let features: FirmwareFeatures
 
-    /// The semantic catalog fingerprint.
-    public let semanticCatalogFingerprint: UInt32
+    /// The fingerprint of automatically collected semantic metadata.
+    public let semanticFingerprint: UInt32
 
-    /// The style catalog fingerprint.
-    public let styleCatalogFingerprint: UInt32
+    /// The fingerprint of automatically collected style appearances.
+    public let styleFingerprint: UInt32
 
     /// The stable 32-bit layout identifier carried by protocol v4.
     public let layoutID: UInt32
 
-    /// The domain-owned semantic presentation catalog.
+    /// Referenced semantics paired with generated wire identifiers.
     public let semantics: [AnySemantic]
 
-    /// The domain-owned visual-style presentation catalog.
+    /// Referenced appearances paired with generated wire identifiers.
     public let styles: [AnyStyle]
 
     /// Erases a statically typed firmware composition.
@@ -48,18 +48,25 @@ public struct AnyFirmware: Sendable {
             keymap: firmware.keymap
         )
         let selectedFeatures = firmware.features
+        let keys =
+            keymap.layers.flatMap(\.keys)
+            + keymap.encoders.flatMap { encoder in
+                encoder.mappings.flatMap { [$0.counterclockwise, $0.clockwise] }
+            }
+        let metadata = GeneratedKeyMetadata(keys: keys)
         id = keymap.id
         outputName = firmware.outputName
         layout = keymap.layout
-        layers = keymap.layers.map(AnyFirmwareLayer.init)
-        encoders = keymap.encoders.map(AnyFirmwareEncoder.init)
-        buildSettings = firmware.configuration.qmkBuildSettings
+        layers = keymap.layers.map { AnyFirmwareLayer($0, metadata: metadata) }
+        encoders = keymap.encoders.map { AnyFirmwareEncoder($0, metadata: metadata) }
+        buildSettings =
+            firmware.configuration.qmkBuildSettings
             + selectedFeatures.descriptors.flatMap(\.buildSettings)
         features = selectedFeatures
-        semanticCatalogFingerprint = CatalogFingerprint.semantics(Firmware.Domain.semantics)
-        styleCatalogFingerprint = CatalogFingerprint.styles(Firmware.Domain.styles)
-        layoutID = CatalogFingerprint.identifier(keymap.layout.id)
-        semantics = Firmware.Domain.semantics.entries.map(AnySemantic.init)
-        styles = Firmware.Domain.styles.entries.map(AnyStyle.init)
+        semanticFingerprint = metadata.semanticFingerprint
+        styleFingerprint = metadata.styleFingerprint
+        layoutID = KeymapMetadataFingerprint.identifier(keymap.layout.id)
+        semantics = metadata.semantics
+        styles = metadata.styles
     }
 }

@@ -3,10 +3,10 @@ public struct KeymapRenderLegend: Equatable, Sendable {
     /// Compact fallback text.
     public let label: String
 
-    /// Optional renderer-neutral catalog symbol name.
+    /// Optional renderer-neutral semantic symbol name.
     public let symbolName: String?
 
-    /// Resolved domain style.
+    /// Resolved key style.
     public let style: KeymapRenderStyle
 
     /// Whether QMK should resolve this entry through lower active layers.

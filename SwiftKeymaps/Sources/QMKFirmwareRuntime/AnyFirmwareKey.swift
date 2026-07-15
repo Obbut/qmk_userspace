@@ -1,6 +1,6 @@
 import QMKKeymapKit
 
-/// A domain-erased key used by generated artifacts and host previews.
+/// A resolved key used by generated artifacts and host previews.
 public struct AnyFirmwareKey: Equatable, Sendable {
     /// The QMK C expression.
     public let cExpression: String
@@ -11,20 +11,22 @@ public struct AnyFirmwareKey: Equatable, Sendable {
     /// The optional explicit legend.
     public let legend: String?
 
-    /// The catalog-scoped semantic identifier.
+    /// The generated semantic wire identifier.
     public let semanticID: UInt16?
 
-    /// The catalog-scoped visual-style identifier.
-    public let styleID: UInt16?
+    /// The generated style wire identifier.
+    public let styleID: UInt16
 
-    /// Erases a domain-typed key.
+    /// Resolves one source key against automatically collected metadata.
     ///
-    /// - Parameter key: The key to erase.
-    public init<Domain: KeymapDomain>(_ key: Key<Domain>) {
+    /// - Parameters:
+    ///   - key: The source key to resolve.
+    ///   - metadata: The metadata collected from the complete firmware.
+    init(_ key: Key, metadata: GeneratedKeyMetadata) {
         cExpression = key.keycode.cExpression
         hidValue = key.keycode.hidValue
         legend = key.legend
-        semanticID = key.semanticID?.rawValue
-        styleID = key.styleID?.rawValue
+        semanticID = metadata.semanticID(for: key)
+        styleID = metadata.styleID(for: key)
     }
 }

@@ -18,11 +18,11 @@ public struct FirmwareKeymap: Equatable, Sendable {
     /// The firmware-provided FNV-1a fingerprint.
     public let fingerprint: UInt32
 
-    /// The firmware's semantic-catalog fingerprint.
-    public let semanticCatalogFingerprint: UInt32
+    /// The firmware's generated semantic-metadata fingerprint.
+    public let semanticFingerprint: UInt32
 
-    /// The firmware's style-catalog fingerprint.
-    public let styleCatalogFingerprint: UInt32
+    /// The firmware's generated style-metadata fingerprint.
+    public let styleFingerprint: UInt32
 
     /// The layer-major matrix and encoder entries.
     public let entries: [FirmwareKeymapEntry]
@@ -36,8 +36,8 @@ public struct FirmwareKeymap: Equatable, Sendable {
     ///   - matrixColumnCount: The number of columns in each matrix row.
     ///   - encoderCount: The number of physical encoders.
     ///   - fingerprint: The firmware-provided FNV-1a fingerprint.
-    ///   - semanticCatalogFingerprint: The firmware semantic-catalog fingerprint.
-    ///   - styleCatalogFingerprint: The firmware style-catalog fingerprint.
+    ///   - semanticFingerprint: The firmware semantic-metadata fingerprint.
+    ///   - styleFingerprint: The firmware style-metadata fingerprint.
     ///   - entries: The layer-major matrix and encoder entries.
     public init(
         layoutID: LayoutID,
@@ -46,8 +46,8 @@ public struct FirmwareKeymap: Equatable, Sendable {
         matrixColumnCount: Int,
         encoderCount: Int,
         fingerprint: UInt32,
-        semanticCatalogFingerprint: UInt32,
-        styleCatalogFingerprint: UInt32,
+        semanticFingerprint: UInt32,
+        styleFingerprint: UInt32,
         entries: [FirmwareKeymapEntry]
     ) {
         self.layoutID = layoutID
@@ -56,8 +56,8 @@ public struct FirmwareKeymap: Equatable, Sendable {
         self.matrixColumnCount = matrixColumnCount
         self.encoderCount = encoderCount
         self.fingerprint = fingerprint
-        self.semanticCatalogFingerprint = semanticCatalogFingerprint
-        self.styleCatalogFingerprint = styleCatalogFingerprint
+        self.semanticFingerprint = semanticFingerprint
+        self.styleFingerprint = styleFingerprint
         self.entries = entries
     }
 

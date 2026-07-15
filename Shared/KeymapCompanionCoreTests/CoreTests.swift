@@ -23,35 +23,33 @@ func allCatalogKeyboardsProduceRendererDocuments() {
         #expect(definition.positionedKeys.count == firmware.layout.keys.count)
         #expect(definition.supportedLayers.count == firmware.layers.count)
         #expect(definition.encoders.count == firmware.layout.encoders.count)
-        #expect(definition.semanticCatalogMatches)
-        #expect(definition.styleCatalogMatches)
+        #expect(definition.semanticsMatch)
+        #expect(definition.stylesMatch)
     }
 }
 
-/// Verifies the shared Obbut domain owns stable semantic and style wire values.
+/// Verifies source metadata receives compact wire identifiers automatically.
 @Test
-func obbutCatalogRawValuesRemainStable() {
-    #expect(ObbutSemantic.screenshot.rawValue == 1)
-    #expect(ObbutSemantic.pointerDragLock.rawValue == 17)
-    #expect(ObbutSemantic.bluetoothHost1.rawValue == 30)
-    #expect(ObbutSemantic.batteryLevel.rawValue == 34)
-    #expect(ObbutStyle.standard.rawValue == 0)
-    #expect(ObbutStyle.wireless.rawValue == 10)
+func generatedMetadataUsesCompactWireIdentifiers() {
+    for firmware in ObbutKeyboardCatalog.all {
+        #expect(firmware.semantics.map(\.id) == Array(1...UInt16(firmware.semantics.count)))
+        #expect(firmware.styles.map(\.id) == Array(0..<UInt16(firmware.styles.count)))
+    }
 }
 
-/// Verifies a catalog mismatch preserves the keymap and exposes diagnostics.
+/// Verifies a metadata mismatch preserves the keymap and exposes diagnostics.
 @Test
-func catalogMismatchDoesNotDiscardKeymap() throws {
+func metadataMismatchDoesNotDiscardKeymap() throws {
     let keymap = TestKeymaps.makeKyria(
-        semanticCatalogFingerprint: 0xDEAD_BEEF,
-        styleCatalogFingerprint: 0xFEED_FACE,
+        semanticFingerprint: 0xDEAD_BEEF,
+        styleFingerprint: 0xFEED_FACE,
         semanticID: SemanticID(rawValue: 999),
         styleID: StyleID(rawValue: 999)
     )
     let definition = try #require(KeymapDefinition(firmwareKeymap: keymap))
 
-    #expect(!definition.semanticCatalogMatches)
-    #expect(!definition.styleCatalogMatches)
+    #expect(!definition.semanticsMatch)
+    #expect(!definition.stylesMatch)
     let legend = try #require(definition.positionedKeys.first?.key.legends.first)
     #expect(legend.label == "Semantic #999")
     #expect(!legend.style.isKnown)
@@ -115,8 +113,8 @@ func transferSessionPublishesZeroEncoderKeymap() {
                 matrixRowCount: 1,
                 matrixColumnCount: 1,
                 fingerprint: fingerprint,
-                semanticCatalogFingerprint: 11,
-                styleCatalogFingerprint: 22,
+                semanticFingerprint: 11,
+                styleFingerprint: 22,
                 entryCount: 1,
                 encoderCount: 0
             )

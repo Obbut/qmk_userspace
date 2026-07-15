@@ -1,12 +1,9 @@
 import KeymapCompanionCore
 import SwiftUI
 
-/// Catalog-resolved key presentation.
-typealias KeyStyle = KeymapCompanionCore.KeyStyle
-
 /// SwiftUI presentation for shared firmware key styles.
-extension KeymapCompanionCore.KeyStyle {
-    /// The color used for this category in the app.
+extension KeymapCompanionCore.ResolvedKeyStyle {
+    /// The color used for this style in the app.
     var color: Color {
         Color(
             red: Double(red) / 255,

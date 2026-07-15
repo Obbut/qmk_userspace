@@ -16,8 +16,8 @@ func everyFirmwareProducesACompleteRenderDefinition() {
         #expect(definition.positionedKeys.count == expectedKeyCount)
         #expect(Set(definition.positionedKeys.map(\.id)).count == expectedKeyCount)
         #expect(!definition.supportedLayers.isEmpty)
-        #expect(definition.semanticCatalogMatches)
-        #expect(definition.styleCatalogMatches)
+        #expect(definition.semanticsMatch)
+        #expect(definition.stylesMatch)
     }
 }
 
@@ -36,7 +36,7 @@ func transparentMappingsResolveThroughActiveLayers() throws {
     )
 }
 
-/// Verifies the Kyria pointer layer resolves domain-owned semantic presentation.
+/// Verifies the Kyria pointer layer resolves shared semantic presentation.
 @Test
 func pointerSemanticsProduceReadableLegends() throws {
     let definition = KeymapDefinition.makePreview(for: .kyria)

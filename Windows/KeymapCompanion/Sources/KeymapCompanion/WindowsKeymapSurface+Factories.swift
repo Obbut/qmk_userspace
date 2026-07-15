@@ -179,9 +179,9 @@ extension WindowsKeymapSurface {
 
     /// Returns the Windows brush for a firmware key style.
     ///
-    /// - Parameter style: The firmware-owned key presentation category.
-    /// - Returns: The category's Windows background brush.
-    static func background(for style: KeyStyle) -> SolidColorBrush {
+    /// - Parameter style: The key appearance supplied by firmware.
+    /// - Returns: The style's Windows background brush.
+    static func background(for style: ResolvedKeyStyle) -> SolidColorBrush {
         WindowsTheme.makeBrush(
             red: UInt8((UInt16(style.red) + 43) / 2),
             green: UInt8((UInt16(style.green) + 46) / 2),

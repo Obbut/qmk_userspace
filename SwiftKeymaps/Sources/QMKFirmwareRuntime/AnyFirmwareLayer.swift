@@ -1,6 +1,6 @@
 import QMKKeymapKit
 
-/// A domain-erased layer used by generated artifacts and host previews.
+/// A resolved layer used by generated artifacts and host previews.
 public struct AnyFirmwareLayer: Sendable {
     /// The stable layer identifier.
     public let id: LayerID
@@ -14,13 +14,15 @@ public struct AnyFirmwareLayer: Sendable {
     /// The keys in QMK layout-macro order.
     public let keys: [AnyFirmwareKey]
 
-    /// Erases a domain-typed layer.
+    /// Resolves one layer against automatically collected metadata.
     ///
-    /// - Parameter layer: The layer to erase.
-    public init<Domain: KeymapDomain>(_ layer: Layer<Domain>) {
+    /// - Parameters:
+    ///   - layer: The source layer to resolve.
+    ///   - metadata: The metadata collected from the complete firmware.
+    init(_ layer: Layer, metadata: GeneratedKeyMetadata) {
         id = layer.id
         name = layer.name
         showsHUD = layer.showsHUD
-        keys = layer.keys.map(AnyFirmwareKey.init)
+        keys = layer.keys.map { AnyFirmwareKey($0, metadata: metadata) }
     }
 }

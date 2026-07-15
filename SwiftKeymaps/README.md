@@ -6,63 +6,66 @@ the source tree for direct `swiftc` Embedded Swift builds inside QMK.
 
 ## The API
 
-Semantics and presentation belong to a domain module, never the reusable QMK
-framework or an individual board:
+Shared modules can add semantic values and named styles without registering a
+domain or maintaining parallel catalogs:
 
 ```swift
 import QMKKeymapKit
 
-public enum ObbutSemantic: UInt16, KeySemanticID {
-    case screenshot = 1
-    case pointerDragLock = 17
-    case bluetoothHost1 = 30
+public extension KeySemantic {
+    static let screenshot = KeySemantic(
+        id: "com.obbut.screenshot",
+        legend: "Screenshot",
+        symbol: .camera
+    )
+
+    static let bluetoothHost1 = KeySemantic(
+        id: "com.obbut.bluetooth.host-1",
+        legend: "Bluetooth 1",
+        symbol: .bluetooth
+    )
 }
 
-public enum ObbutStyle: UInt16, KeyStyleID {
-    case standard
-    case navigation
-    case wireless
-}
-
-public enum ObbutKeymapDomain: KeymapDomain {
-    public typealias Semantics = SemanticCatalogValue<ObbutSemantic>
-    public typealias Styles = StyleCatalogValue<ObbutStyle>
-
-    @SemanticCatalogBuilder
-    public static var semantics: Semantics {
-        Semantic(.screenshot, legend: "Screenshot", symbol: .camera)
-        Semantic(.pointerDragLock, legend: "Drag Lock", symbol: .lockedPointer)
-        Semantic(.bluetoothHost1, legend: "Bluetooth 1", symbol: .bluetooth)
-    }
-
-    @StyleCatalogBuilder
-    public static var styles: Styles {
-        Style(.standard, color: .rgb(90, 90, 96))
-        Style(.navigation, color: .rgb(255, 0, 255))
-        Style(.wireless, color: .rgb(0, 220, 220))
-    }
+public extension KeyStyle where Self == SolidKeyStyle {
+    static var navigation: SolidKeyStyle { .magenta }
+    static var wireless: SolidKeyStyle { .rgb(0, 220, 220) }
 }
 ```
 
-Shared domain actions stay typed, readable, and reusable:
+Custom styles follow the same pattern as SwiftUI styles:
+
+```swift
+public struct WarningKeyStyle: KeyStyle {
+    public func makeAppearance(
+        configuration: KeyStyleConfiguration
+    ) -> KeyAppearance {
+        KeyAppearance(color: .rgb(255, 96, 0))
+    }
+}
+
+public extension KeyStyle where Self == WarningKeyStyle {
+    static var warning: WarningKeyStyle { WarningKeyStyle() }
+}
+```
+
+Shared actions stay readable and reusable:
 
 ```swift
 private let keychronBluetoothHost1 = QMKToken("BT_HST1")
 
 public enum ObbutKey {
-    public static var screenshot: Key<ObbutKeymapDomain> {
+    public static var screenshot: Key {
         .four
             .withModifiers(.leftCommand, .leftControl, .leftShift)
             .semantic(.screenshot)
     }
 
-    public static var bluetoothHost1: Key<ObbutKeymapDomain> {
+    public static var bluetoothHost1: Key {
         Key.qmk(
             keychronBluetoothHost1,
             legend: "Bluetooth 1",
-            semantic: .bluetoothHost1,
-            style: .wireless
-        )
+            semantic: .bluetoothHost1
+        ).style(.wireless)
     }
 }
 ```
@@ -75,12 +78,11 @@ import QMKFirmwareRuntime
 import QMKKeymapKit
 
 public enum KyriaFirmware: QMKFirmware {
-    public typealias Domain = ObbutKeymapDomain
     public static let id = "com.obbut.kyria-rev4"
     public static let layout: LayoutDescriptor = .splitKBKyriaRev4
     public static let outputName = "kyria_rev4_obbut"
 
-    public static var keymap: Keymap<Domain> {
+    public static var keymap: Keymap {
         SharedHalcyonLayers(layout: .kyria)
         KyriaPointerLayer()
         ObbutEncoder.halcyon(includesPointerLayer: true)
@@ -112,10 +114,10 @@ import SwiftUI
 #endif
 ```
 
-Result builders compose heterogeneous layers, rows, encoders, configuration,
-and features. Variadic generics keep feature and row composition statically
-typed. The domain generic on `Key`, `Keymap`, and catalogs makes mixing
-unrelated semantic vocabularies a compile-time error.
+Result builders compose layers, rows, encoders, configuration, and features.
+The keymap compiler collects referenced semantics and resolved appearances,
+assigns compact wire identifiers, and emits the metadata needed by firmware,
+previews, and companion applications.
 
 ## Custom firmware behavior in Swift
 
@@ -202,4 +204,4 @@ module owns its preview in the firmware source itself; select the matching
 scheme (`KyriaFirmware`, `EloraFirmware`, `Q15Firmware`, or `PlanckFirmware`)
 to use its Canvas. The package is the preview workspace and has no dependency
 on either companion app. The previews and companion apps independently consume
-`QMKKeymapRenderer` and the same catalog-resolved document model.
+`QMKKeymapRenderer` and the same metadata-resolved document model.

@@ -2,9 +2,7 @@ import QMKKeymapKit
 
 /// The Kyria-only automatic pointer layer.
 public struct KyriaPointerLayer: KeymapComponent, Sendable {
-    public typealias Domain = ObbutKeymapDomain
-
-    public let keymapElements: [KeymapElement<Domain>]
+    public let keymapElements: [KeymapElement]
 
     public init() {
         keymapElements = [
@@ -20,7 +18,7 @@ public struct KyriaPointerLayer: KeymapComponent, Sendable {
         ]
     }
 
-    fileprivate static var pointerRowOne: [Key<Domain>] {
+    fileprivate static var pointerRowOne: [Key] {
         transparent(count: 6)
             + [
                 .transparent,
@@ -32,7 +30,7 @@ public struct KyriaPointerLayer: KeymapComponent, Sendable {
             ]
     }
 
-    fileprivate static var pointerRowTwo: [Key<Domain>] {
+    fileprivate static var pointerRowTwo: [Key] {
         transparent(count: 6)
             + [
                 ObbutKey.browserBack,
@@ -44,7 +42,7 @@ public struct KyriaPointerLayer: KeymapComponent, Sendable {
             ]
     }
 
-    fileprivate static var pointerBottomWithModules: [Key<Domain>] {
+    fileprivate static var pointerBottomWithModules: [Key] {
         transparent(count: 10)
             + [
                 .transparent,
@@ -56,7 +54,7 @@ public struct KyriaPointerLayer: KeymapComponent, Sendable {
             ]
     }
 
-    fileprivate static func transparent(count: Int) -> [Key<Domain>] {
+    fileprivate static func transparent(count: Int) -> [Key] {
         Array(repeating: .transparent, count: count)
     }
 }

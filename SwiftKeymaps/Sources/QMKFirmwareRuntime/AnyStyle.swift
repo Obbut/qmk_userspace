@@ -1,18 +1,20 @@
 import QMKKeymapKit
 
-/// A domain-erased visual-style presentation used by firmware and host tooling.
+/// Portable appearance paired with its generated firmware wire identifier.
 public struct AnyStyle: Equatable, Sendable {
-    /// The stable catalog-scoped identifier.
+    /// The compact identifier emitted to firmware and companion traffic.
     public let id: UInt16
 
-    /// The style color.
+    /// The color resolved from the source-level key style.
     public let color: RGBColor
 
-    /// Erases a domain-typed style presentation.
+    /// Pairs a resolved appearance with its generated wire identifier.
     ///
-    /// - Parameter style: The presentation to erase.
-    public init<ID: KeyStyleID>(_ style: Style<ID>) {
-        id = style.id.rawValue
-        color = style.color
+    /// - Parameters:
+    ///   - id: The generated wire identifier, where zero means the standard appearance.
+    ///   - appearance: Portable appearance produced by a key style.
+    public init(id: UInt16, appearance: KeyAppearance) {
+        self.id = id
+        color = appearance.color
     }
 }

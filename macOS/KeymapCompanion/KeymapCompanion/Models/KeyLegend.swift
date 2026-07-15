@@ -1,6 +1,6 @@
 import KeymapCompanionCore
 
-/// A key label and its layer-specific presentation category.
+/// A key label and its layer-specific appearance.
 typealias KeyLegend = KeymapCompanionCore.KeyLegend
 
 /// SF Symbol presentation for shared key legends.

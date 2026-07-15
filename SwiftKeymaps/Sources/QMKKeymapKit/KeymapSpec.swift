@@ -1,5 +1,5 @@
 /// A keymap validated against its identity and physical layout.
-public struct KeymapSpec<Domain: KeymapDomain>: KeymapSpecification, Sendable {
+public struct KeymapSpec: KeymapSpecification, Sendable {
     /// The stable keymap identifier.
     public let id: String
 
@@ -7,10 +7,10 @@ public struct KeymapSpec<Domain: KeymapDomain>: KeymapSpecification, Sendable {
     public let layout: LayoutDescriptor
 
     /// The layers in firmware index order.
-    public let layers: [Layer<Domain>]
+    public let layers: [Layer]
 
     /// The physical encoders in QMK index order.
-    public let encoders: [Encoder<Domain>]
+    public let encoders: [Encoder]
 
     /// Validates declarations produced by ``KeymapBuilder``.
     ///
@@ -21,7 +21,7 @@ public struct KeymapSpec<Domain: KeymapDomain>: KeymapSpecification, Sendable {
     public init(
         id: String,
         layout: LayoutDescriptor,
-        @KeymapBuilder<Domain> content: () -> Keymap<Domain>
+        @KeymapBuilder content: () -> Keymap
     ) {
         self.init(id: id, layout: layout, keymap: content())
     }
@@ -32,13 +32,13 @@ public struct KeymapSpec<Domain: KeymapDomain>: KeymapSpecification, Sendable {
     ///   - id: The stable keymap identifier.
     ///   - layout: The keyboard layout and physical geometry.
     ///   - keymap: Layer and encoder declarations in source order.
-    public init(id: String, layout: LayoutDescriptor, keymap: Keymap<Domain>) {
+    public init(id: String, layout: LayoutDescriptor, keymap: Keymap) {
         let elements = keymap.elements
-        let layers = elements.compactMap { element -> Layer<Domain>? in
+        let layers = elements.compactMap { element -> Layer? in
             guard case let .layer(layer) = element else { return nil }
             return layer
         }
-        let encoders = elements.compactMap { element -> Encoder<Domain>? in
+        let encoders = elements.compactMap { element -> Encoder? in
             guard case let .encoder(encoder) = element else { return nil }
             return encoder
         }

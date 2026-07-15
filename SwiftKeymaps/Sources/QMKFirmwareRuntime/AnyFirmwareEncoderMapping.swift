@@ -1,6 +1,6 @@
 import QMKKeymapKit
 
-/// A domain-erased encoder mapping for one layer.
+/// A resolved encoder mapping for one layer.
 public struct AnyFirmwareEncoderMapping: Sendable {
     /// The layer selecting this mapping.
     public let layer: LayerID
@@ -11,12 +11,14 @@ public struct AnyFirmwareEncoderMapping: Sendable {
     /// The clockwise action.
     public let clockwise: AnyFirmwareKey
 
-    /// Erases a domain-typed encoder mapping.
+    /// Resolves one mapping against automatically collected metadata.
     ///
-    /// - Parameter mapping: The mapping to erase.
-    public init<Domain: KeymapDomain>(_ mapping: On<Domain>) {
+    /// - Parameters:
+    ///   - mapping: The source mapping to resolve.
+    ///   - metadata: The metadata collected from the complete firmware.
+    init(_ mapping: On, metadata: GeneratedKeyMetadata) {
         layer = mapping.layer
-        counterclockwise = AnyFirmwareKey(mapping.counterclockwise)
-        clockwise = AnyFirmwareKey(mapping.clockwise)
+        counterclockwise = AnyFirmwareKey(mapping.counterclockwise, metadata: metadata)
+        clockwise = AnyFirmwareKey(mapping.clockwise, metadata: metadata)
     }
 }

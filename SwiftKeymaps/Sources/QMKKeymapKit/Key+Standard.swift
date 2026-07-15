@@ -1,4 +1,4 @@
-/// Standard QMK key actions available to every keymap domain.
+/// Standard QMK key actions available to every keymap.
 public extension Key {
     static var no: Key { standard("KC_NO", hidValue: 0x0000) }
     static var transparent: Key { standard("KC_TRNS", hidValue: 0x0001) }
@@ -122,7 +122,7 @@ public extension Key {
     /// - Parameters:
     ///   - expression: The QMK C keycode constant.
     ///   - hidValue: The optional basic HID value.
-    /// - Returns: A domain-typed key.
+    /// - Returns: A standard key action.
     fileprivate static func standard(_ expression: String, hidValue: UInt16? = nil) -> Key {
         Key(keycode: QMKKeycode(cExpression: expression, hidValue: hidValue))
     }

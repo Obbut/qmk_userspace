@@ -4,13 +4,11 @@ import QMKKeymapKit
 
 /// Shared definition for the Elora Rev2 left and right-encoder builds.
 public enum EloraFirmware: QMKFirmware {
-    public typealias Domain = ObbutKeymapDomain
-
     public static let id = "com.obbut.elora-rev2"
     public static let layout: LayoutDescriptor = .splitKBEloraRev2
     public static let outputName = "elora_rev2_obbut"
 
-    public static var keymap: Keymap<Domain> {
+    public static var keymap: Keymap {
         SharedHalcyonLayers(layout: .elora)
         ObbutEncoder.halcyon(includesPointerLayer: false)
     }

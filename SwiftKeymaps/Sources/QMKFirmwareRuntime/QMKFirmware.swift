@@ -1,10 +1,7 @@
 import QMKKeymapKit
 
-/// A board-specific firmware composition rooted in one keymap domain.
-public protocol QMKFirmware<Domain>: Sendable {
-    /// The semantic and style domain selected by the firmware.
-    associatedtype Domain: KeymapDomain
-
+/// A board-specific firmware composition.
+public protocol QMKFirmware: Sendable {
     /// The stable identifier carried by generated metadata and companion traffic.
     static var id: String { get }
 
@@ -15,7 +12,7 @@ public protocol QMKFirmware<Domain>: Sendable {
     static var outputName: String { get }
 
     /// Layer and encoder declarations for this firmware.
-    @KeymapBuilder<Domain> static var keymap: Keymap<Domain> { get }
+    @KeymapBuilder static var keymap: Keymap { get }
 
     /// The generated QMK build configuration.
     static var configuration: QMKConfiguration { get }

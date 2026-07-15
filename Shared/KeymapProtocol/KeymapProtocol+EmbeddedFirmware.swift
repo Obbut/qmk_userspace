@@ -131,8 +131,8 @@
                     matrixRowCount: snapshot.matrix_row_count,
                     matrixColumnCount: snapshot.matrix_column_count,
                     fingerprint: fingerprint,
-                    semanticCatalogFingerprint: snapshot.semantic_catalog_fingerprint,
-                    styleCatalogFingerprint: snapshot.style_catalog_fingerprint,
+                    semanticFingerprint: snapshot.semantic_fingerprint,
+                    styleFingerprint: snapshot.style_fingerprint,
                     entryCount: entryCount,
                     encoderCount: snapshot.encoder_count
                 )

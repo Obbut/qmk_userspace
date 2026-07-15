@@ -1,11 +1,11 @@
 /// Flattens readable rows into the argument order required by a QMK layout macro.
 @resultBuilder
-public enum KeyRowsBuilder<Domain: KeymapDomain> {
+public enum KeyRowsBuilder {
     /// Converts one row into its key sequence.
     ///
     /// - Parameter row: The row to flatten.
     /// - Returns: The row's key sequence.
-    public static func buildExpression(_ row: Row<Domain>) -> [Key<Domain>] {
+    public static func buildExpression(_ row: Row) -> [Key] {
         row.keys
     }
 
@@ -13,7 +13,7 @@ public enum KeyRowsBuilder<Domain: KeymapDomain> {
     ///
     /// - Parameter keys: The keys to include.
     /// - Returns: The unchanged key sequence.
-    public static func buildExpression(_ keys: [Key<Domain>]) -> [Key<Domain>] {
+    public static func buildExpression(_ keys: [Key]) -> [Key] {
         keys
     }
 
@@ -21,7 +21,7 @@ public enum KeyRowsBuilder<Domain: KeymapDomain> {
     ///
     /// - Parameter rows: The row components in declaration order.
     /// - Returns: Keys in QMK layout-macro argument order.
-    public static func buildBlock(_ rows: [Key<Domain>]...) -> [Key<Domain>] {
+    public static func buildBlock(_ rows: [Key]...) -> [Key] {
         rows.flatMap { $0 }
     }
 
@@ -29,7 +29,7 @@ public enum KeyRowsBuilder<Domain: KeymapDomain> {
     ///
     /// - Parameter component: The optional component.
     /// - Returns: The component or an empty sequence.
-    public static func buildOptional(_ component: [Key<Domain>]?) -> [Key<Domain>] {
+    public static func buildOptional(_ component: [Key]?) -> [Key] {
         component ?? []
     }
 
@@ -37,7 +37,7 @@ public enum KeyRowsBuilder<Domain: KeymapDomain> {
     ///
     /// - Parameter component: The selected component.
     /// - Returns: The selected keys.
-    public static func buildEither(first component: [Key<Domain>]) -> [Key<Domain>] {
+    public static func buildEither(first component: [Key]) -> [Key] {
         component
     }
 
@@ -45,7 +45,7 @@ public enum KeyRowsBuilder<Domain: KeymapDomain> {
     ///
     /// - Parameter component: The selected component.
     /// - Returns: The selected keys.
-    public static func buildEither(second component: [Key<Domain>]) -> [Key<Domain>] {
+    public static func buildEither(second component: [Key]) -> [Key] {
         component
     }
 }

@@ -1,4 +1,4 @@
-/// A renderer-neutral symbol name supplied by a keymap domain.
+/// A renderer-neutral symbol name attached to semantic metadata.
 public struct KeySymbol: Equatable, Hashable, Sendable {
     /// The stable symbol name.
     public let name: String

@@ -1,4 +1,4 @@
-# Shared protocol-v4 build rules for every Swift-authored Obbut keymap.
+# Shared protocol-v4 build rules for every Obbut keymap.
 
 VPATH += $(QMK_USERSPACE)/users/obbut_keymap
 SRC += keymap_protocol_platform.c

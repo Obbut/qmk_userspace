@@ -96,17 +96,17 @@ func allKeymapsMatchGoldenFingerprints() {
 
     #expect(
         fingerprints == [
-            "kyria_rev4_obbut": 1_046_621_259,
-            "elora_rev2_obbut": 2_817_305_777,
-            "keychron_q15_max_ansi_encoder_obbut": 326_851_640,
-            "zsa_planck_ez_glow_obbut": 4_127_950_778,
+            "kyria_rev4_obbut": 2_339_521_355,
+            "elora_rev2_obbut": 3_157_976_327,
+            "keychron_q15_max_ansi_encoder_obbut": 915_067_431,
+            "zsa_planck_ez_glow_obbut": 1_300_927_986,
         ]
     )
 }
 
 /// Computes a deterministic FNV-1a fixture for a firmware definition.
 ///
-/// - Parameter firmware: The domain-erased firmware definition.
+/// - Parameter firmware: The resolved firmware definition.
 /// - Returns: A fixture covering every layer key and encoder direction.
 private func keymapFingerprint(_ firmware: AnyFirmware) -> UInt32 {
     var hash: UInt32 = 2_166_136_261
@@ -124,7 +124,7 @@ private func keymapFingerprint(_ firmware: AnyFirmware) -> UInt32 {
     for layer in firmware.layers {
         append("layer:\(layer.id.rawValue):\(layer.name)")
         for key in layer.keys {
-            append("\(key.cExpression):\(key.semanticID ?? 0):\(key.styleID ?? 0)")
+            append("\(key.cExpression):\(key.semanticID ?? 0):\(key.styleID)")
         }
     }
     for encoder in firmware.encoders {
@@ -133,11 +133,11 @@ private func keymapFingerprint(_ firmware: AnyFirmware) -> UInt32 {
             append(
                 "\(mapping.layer.rawValue):\(mapping.counterclockwise.cExpression):"
                     + "\(mapping.counterclockwise.semanticID ?? 0):"
-                    + "\(mapping.counterclockwise.styleID ?? 0)"
+                    + "\(mapping.counterclockwise.styleID)"
             )
             append(
                 "\(mapping.clockwise.cExpression):\(mapping.clockwise.semanticID ?? 0):"
-                    + "\(mapping.clockwise.styleID ?? 0)"
+                    + "\(mapping.clockwise.styleID)"
             )
         }
     }

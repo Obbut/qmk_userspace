@@ -4,13 +4,11 @@ import QMKKeymapKit
 
 /// ZSA Planck EZ Glow definition using the two-unit center-space layout.
 public enum PlanckFirmware: QMKFirmware {
-    public typealias Domain = ObbutKeymapDomain
-
     public static let id = "com.obbut.planck-ez-glow"
     public static let layout: LayoutDescriptor = .zsaPlanckEZGlow
     public static let outputName = "zsa_planck_ez_glow_obbut"
 
-    public static var keymap: Keymap<Domain> {
+    public static var keymap: Keymap {
         Layer(ObbutLayer.base, name: "Default") {
             Row(.tab, .q, .w, .f, .p, .b, .j, .l, .u, .y, .semicolon, .backspace)
             Row(.escape, .a, .r, .s, .t, .g, .m, .n, .e, .i, .o, .quote)
@@ -94,11 +92,11 @@ public enum PlanckFirmware: QMKFirmware {
         }
     }
 
-    fileprivate static func transparent(count: Int) -> [Key<Domain>] {
+    fileprivate static func transparent(count: Int) -> [Key] {
         Array(repeating: .transparent, count: count)
     }
 
-    fileprivate static func functionKey(_ number: Int) -> Key<Domain> {
+    fileprivate static func functionKey(_ number: Int) -> Key {
         .function(number).style(.function)
     }
 

@@ -69,7 +69,7 @@ func stateReportRoundTripsProtocolFour() throws {
     #expect(report.rgbSettings?.speed == 137)
 }
 
-/// Verifies metadata carries arbitrary layout, layer, encoder, and catalog data.
+/// Verifies metadata carries arbitrary layout, layer, encoder, and fingerprint data.
 @Test
 func metadataReportRoundTripsProtocolFour() throws {
     var packet = [UInt8](repeating: 0, count: KeymapProtocol.reportSize)
@@ -81,8 +81,8 @@ func metadataReportRoundTripsProtocolFour() throws {
             matrixRowCount: 2,
             matrixColumnCount: 3,
             fingerprint: 0xCAFE_BABE,
-            semanticCatalogFingerprint: 0x1234_5678,
-            styleCatalogFingerprint: 0x8765_4321,
+            semanticFingerprint: 0x1234_5678,
+            styleFingerprint: 0x8765_4321,
             entryCount: 16,
             encoderCount: 1
         )
@@ -97,8 +97,8 @@ func metadataReportRoundTripsProtocolFour() throws {
     #expect(metadata.entryCount == 16)
     #expect(metadata.encoderCount == 1)
     #expect(metadata.fingerprint == 0xCAFE_BABE)
-    #expect(metadata.semanticCatalogFingerprint == 0x1234_5678)
-    #expect(metadata.styleCatalogFingerprint == 0x8765_4321)
+    #expect(metadata.semanticFingerprint == 0x1234_5678)
+    #expect(metadata.styleFingerprint == 0x8765_4321)
 }
 
 /// Verifies protocol v4 does not impose a fixed keyboard encoder shape.
@@ -115,8 +115,8 @@ func metadataAcceptsArbitraryEncoderCount() throws {
             matrixRowCount: 1,
             matrixColumnCount: 1,
             fingerprint: 1,
-            semanticCatalogFingerprint: 2,
-            styleCatalogFingerprint: 3,
+            semanticFingerprint: 2,
+            styleFingerprint: 3,
             entryCount: entryCount,
             encoderCount: encoderCount
         )
@@ -130,7 +130,7 @@ func metadataAcceptsArbitraryEncoderCount() throws {
 
 /// Verifies chunks carry 16-bit opaque semantic and style identifiers.
 @Test
-func keymapChunkRoundTripsOpaqueCatalogIdentifiers() throws {
+func keymapChunkRoundTripsGeneratedMetadataIdentifiers() throws {
     var packet = [UInt8](repeating: 0, count: KeymapProtocol.reportSize)
     packet.withUnsafeMutableBufferPointer { bytes in
         #expect(

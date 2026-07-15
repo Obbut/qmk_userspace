@@ -17,8 +17,8 @@ typedef struct {
     uint32_t layer_state_mask;
     uint32_t default_layer_state_mask;
     uint32_t layout_id;
-    uint32_t semantic_catalog_fingerprint;
-    uint32_t style_catalog_fingerprint;
+    uint32_t semantic_fingerprint;
+    uint32_t style_fingerprint;
     uint8_t  layer_count;
     uint8_t  matrix_row_count;
     uint8_t  matrix_column_count;

@@ -46,7 +46,7 @@ fileprivate extension PhysicalKeyPlacement {
     }
 }
 
-/// Converts live catalog-resolved legends to renderer legends.
+/// Converts live metadata-resolved legends to renderer legends.
 fileprivate extension KeyLegend {
     var renderLegend: KeymapRenderLegend {
         KeymapRenderLegend(
@@ -62,7 +62,7 @@ fileprivate extension KeyLegend {
     }
 }
 
-/// Stable renderer symbol names for standard and domain actions.
+/// Stable renderer symbol names for standard and semantic actions.
 fileprivate extension KeySymbol {
     var rendererName: String {
         switch self {

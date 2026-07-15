@@ -1,9 +1,12 @@
 import QMKKeymapKit
 
-/// A domain-erased semantic presentation used by host tooling.
+/// Semantic metadata paired with its generated firmware wire identifier.
 public struct AnySemantic: Equatable, Sendable {
-    /// The stable catalog-scoped identifier.
+    /// The compact identifier emitted to firmware and companion traffic.
     public let id: UInt16
+
+    /// The source-level stable identifier.
+    public let stableID: String
 
     /// The fallback renderer legend.
     public let legend: String
@@ -11,11 +14,15 @@ public struct AnySemantic: Equatable, Sendable {
     /// The optional renderer-neutral symbol name.
     public let symbolName: String?
 
-    /// Erases a domain-typed semantic presentation.
+    /// Pairs collected semantic metadata with its generated wire identifier.
     ///
-    /// - Parameter semantic: The presentation to erase.
-    public init<ID: KeySemanticID>(_ semantic: Semantic<ID>) {
-        id = semantic.id.rawValue
+    /// - Parameters:
+    ///   - id: The nonzero generated wire identifier.
+    ///   - semantic: Semantic metadata referenced by the keymap.
+    public init(id: UInt16, semantic: KeySemantic) {
+        precondition(id != 0, "Semantic wire identifier zero is reserved for no semantic.")
+        self.id = id
+        stableID = semantic.id
         legend = semantic.legend
         symbolName = semantic.symbol?.name
     }

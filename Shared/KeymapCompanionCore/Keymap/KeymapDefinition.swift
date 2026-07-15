@@ -22,11 +22,11 @@ public struct KeymapDefinition: Equatable, Sendable {
     /// Every physical encoder supplied by the layout descriptor.
     public let encoders: [KeymapEncoder]
 
-    /// Whether semantic IDs were resolved using an identical catalog.
-    public let semanticCatalogMatches: Bool
+    /// Whether semantic IDs were resolved using identical generated metadata.
+    public let semanticsMatch: Bool
 
-    /// Whether style IDs were resolved using an identical catalog.
-    public let styleCatalogMatches: Bool
+    /// Whether style IDs were resolved using identical generated metadata.
+    public let stylesMatch: Bool
 
     /// Creates renderer input from a validated firmware keymap.
     ///
@@ -86,8 +86,8 @@ public struct KeymapDefinition: Equatable, Sendable {
             matrixColumnCount: descriptor.matrixColumnCount,
             encoderCount: descriptor.encoders.count,
             fingerprint: 0,
-            semanticCatalogFingerprint: firmware.semanticCatalogFingerprint,
-            styleCatalogFingerprint: firmware.styleCatalogFingerprint,
+            semanticFingerprint: firmware.semanticFingerprint,
+            styleFingerprint: firmware.styleFingerprint,
             entries: entries
         )
         guard let definition = KeymapDefinition(firmwareKeymap: previewKeymap, firmware: firmware) else {
@@ -96,7 +96,7 @@ public struct KeymapDefinition: Equatable, Sendable {
         return definition
     }
 
-    /// Resolves live keymap data against its exact firmware catalog.
+    /// Resolves live keymap data against the matching compiled firmware definition.
     ///
     /// - Parameters:
     ///   - firmwareKeymap: The live compiled keymap.
@@ -129,14 +129,14 @@ public struct KeymapDefinition: Equatable, Sendable {
             return nil
         }
 
-        let semanticCatalogMatches =
-            firmwareKeymap.semanticCatalogFingerprint == firmware.semanticCatalogFingerprint
-        let styleCatalogMatches =
-            firmwareKeymap.styleCatalogFingerprint == firmware.styleCatalogFingerprint
-        let resolver = CatalogResolver(
+        let semanticsMatch =
+            firmwareKeymap.semanticFingerprint == firmware.semanticFingerprint
+        let stylesMatch =
+            firmwareKeymap.styleFingerprint == firmware.styleFingerprint
+        let resolver = KeyMetadataResolver(
             firmware: firmware,
-            semanticCatalogMatches: semanticCatalogMatches,
-            styleCatalogMatches: styleCatalogMatches
+            semanticsMatch: semanticsMatch,
+            stylesMatch: stylesMatch
         )
 
         var positionedKeys: [PositionedKey] = []
@@ -240,16 +240,16 @@ public struct KeymapDefinition: Equatable, Sendable {
         supportedLayers = layers
         self.positionedKeys = positionedKeys
         self.encoders = encoders
-        self.semanticCatalogMatches = semanticCatalogMatches
-        self.styleCatalogMatches = styleCatalogMatches
+        self.semanticsMatch = semanticsMatch
+        self.stylesMatch = stylesMatch
     }
 
-    /// Produces one catalog-resolved key from layer-major firmware entries.
+    /// Produces one metadata-resolved key from layer-major firmware entries.
     private static func makeKey(
         id: String,
         entries: [FirmwareKeymapEntry],
         layers: [KeymapLayer],
-        resolver: CatalogResolver
+        resolver: KeyMetadataResolver
     ) -> KeymapKey {
         KeymapKey(
             id: id,
@@ -280,43 +280,43 @@ public struct KeymapDefinition: Equatable, Sendable {
     }
 }
 
-/// Resolves catalog-scoped IDs while preserving useful mismatch diagnostics.
-fileprivate struct CatalogResolver {
+/// Resolves generated IDs while preserving useful mismatch diagnostics.
+fileprivate struct KeyMetadataResolver {
     /// The matching host-side firmware definition.
     let firmware: AnyFirmware
 
     /// Whether semantic values may be interpreted safely.
-    let semanticCatalogMatches: Bool
+    let semanticsMatch: Bool
 
     /// Whether style values may be interpreted safely.
-    let styleCatalogMatches: Bool
+    let stylesMatch: Bool
 
-    /// Returns the matching domain legend.
+    /// Returns the matching semantic legend.
     func semanticLegend(for id: SemanticID) -> String? {
-        guard id != .none, semanticCatalogMatches else { return nil }
+        guard id != .none, semanticsMatch else { return nil }
         return firmware.semantics.first { $0.id == id.rawValue }?.legend
     }
 
-    /// Returns the matching renderer-neutral domain symbol.
+    /// Returns the matching renderer-neutral semantic symbol.
     func semanticSymbolName(for id: SemanticID) -> String? {
-        guard id != .none, semanticCatalogMatches else { return nil }
+        guard id != .none, semanticsMatch else { return nil }
         return firmware.semantics.first { $0.id == id.rawValue }?.symbolName
     }
 
     /// Returns resolved style presentation or a visible unknown-style fallback.
-    func style(for id: StyleID) -> KeyStyle {
-        guard styleCatalogMatches,
+    func style(for id: StyleID) -> ResolvedKeyStyle {
+        guard stylesMatch,
             let style = firmware.styles.first(where: { $0.id == id.rawValue })
         else {
-            return KeyStyle(
+            return ResolvedKeyStyle(
                 id: id,
-                red: KeyStyle.standard.red,
-                green: KeyStyle.standard.green,
-                blue: KeyStyle.standard.blue,
+                red: ResolvedKeyStyle.standard.red,
+                green: ResolvedKeyStyle.standard.green,
+                blue: ResolvedKeyStyle.standard.blue,
                 isKnown: false
             )
         }
-        return KeyStyle(
+        return ResolvedKeyStyle(
             id: id,
             red: style.color.red,
             green: style.color.green,
@@ -341,7 +341,7 @@ fileprivate extension AnyFirmwareKey {
         FirmwareKeymapEntry(
             keycode: hidValue ?? 0,
             semanticID: SemanticID(rawValue: semanticID ?? 0),
-            styleID: StyleID(rawValue: styleID ?? 0)
+            styleID: StyleID(rawValue: styleID)
         )
     }
 }

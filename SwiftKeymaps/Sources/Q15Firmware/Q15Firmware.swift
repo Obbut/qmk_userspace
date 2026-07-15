@@ -4,13 +4,11 @@ import QMKKeymapKit
 
 /// Keychron Q15 Max definition with macOS and Windows base layers.
 public enum Q15Firmware: QMKFirmware {
-    public typealias Domain = ObbutKeymapDomain
-
     public static let id = "com.obbut.keychron-q15-max"
     public static let layout: LayoutDescriptor = .keychronQ15Max
     public static let outputName = "keychron_q15_max_ansi_encoder_obbut"
 
-    public static var keymap: Keymap<Domain> {
+    public static var keymap: Keymap {
         Layer(Q15Layer.macBase, name: "macOS") {
             Row(keys: [
                 ObbutKey.screenshot, .one, .two, .three, .four, .five, .six,
@@ -47,8 +45,8 @@ public enum Q15Firmware: QMKFirmware {
             Row(
                 keys: [
                     .rgbToggle.style(.increase),
-                    .qmk("KC_BRID", legend: "Brightness −", style: .decrease),
-                    .qmk("KC_BRIU", legend: "Brightness +", style: .increase),
+                    .qmk("KC_BRID", legend: "Brightness −").style(.decrease),
+                    .qmk("KC_BRIU", legend: "Brightness +").style(.increase),
                     .qmk("KC_MCTRL", legend: "Mission Control"),
                     .qmk("KC_LPAD", legend: "Launchpad"),
                     .rgbValueDown.style(.decrease), .rgbValueUp.style(.increase),
@@ -62,8 +60,8 @@ public enum Q15Firmware: QMKFirmware {
             Row(
                 keys: [
                     .rgbToggle.style(.increase),
-                    .qmk("KC_BRID", legend: "Brightness −", style: .decrease),
-                    .qmk("KC_BRIU", legend: "Brightness +", style: .increase),
+                    .qmk("KC_BRID", legend: "Brightness −").style(.decrease),
+                    .qmk("KC_BRIU", legend: "Brightness +").style(.increase),
                     .qmk("KC_TASK", legend: "Task View"),
                     .qmk("KC_FILE", legend: "File Explorer"),
                     .rgbValueDown.style(.decrease), .rgbValueUp.style(.increase),
@@ -76,7 +74,7 @@ public enum Q15Firmware: QMKFirmware {
         Layer(Q15Layer.commonFunction, name: "Function", showsHUD: true) {
             Row(
                 keys: [.transparent]
-                    + (1...12).map { Key<Domain>.function($0).style(.function) }
+                    + (1...12).map { Key.function($0).style(.function) }
                     + [.transparent]
                     + transparent(count: 14)
                     + transparent(count: 13)
@@ -136,7 +134,7 @@ public enum Q15Firmware: QMKFirmware {
         KeychronCommonFeature()
     }
 
-    fileprivate static func q15Encoder(index: Int, id: String) -> Encoder<Domain> {
+    fileprivate static func q15Encoder(index: Int, id: String) -> Encoder {
         Encoder(index, id: id) {
             On(Q15Layer.macBase, counterclockwise: .volumeDown, clockwise: .volumeUp)
             On(Q15Layer.windowsBase, counterclockwise: .volumeDown, clockwise: .volumeUp)
@@ -147,7 +145,7 @@ public enum Q15Firmware: QMKFirmware {
         }
     }
 
-    fileprivate static func transparent(count: Int) -> [Key<Domain>] {
+    fileprivate static func transparent(count: Int) -> [Key] {
         Array(repeating: .transparent, count: count)
     }
 }

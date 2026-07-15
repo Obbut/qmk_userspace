@@ -1,15 +1,15 @@
 # Keymap Companion for macOS
 
-Keymap Companion is a native SwiftUI utility for all four Swift-authored
-firmwares in this repository. It discovers QMK Raw HID devices, downloads the
-compiled keymap, resolves domain-owned semantics and styles, follows layer
+Keymap Companion is a native SwiftUI utility for all four Obbut keyboards in
+this repository. It discovers QMK Raw HID devices, downloads the
+compiled keymap, resolves shared semantics and styles, follows layer
 changes in realtime, and renders the result with the same
 `QMKKeymapRenderer` used by the Xcode keymap previews.
 
 The app uses protocol v4 only. There is intentionally no legacy decoder or
-compatibility mode. The protocol carries a stable layout ID, keymap and catalog
+compatibility mode. The protocol carries a stable layout ID, keymap and metadata
 fingerprints, arbitrary layers, arbitrary matrix placements, and zero or more
-encoders. Unknown catalog IDs remain visible as diagnostics while ordinary QMK
+encoders. Unknown generated IDs remain visible as diagnostics while ordinary QMK
 keycodes continue to render.
 
 ## Open in Xcode
@@ -51,7 +51,7 @@ IOHID interface directly. Hardened Runtime remains enabled.
 `Shared/KeymapCompanionCore` owns the `@MainActor @Observable` application
 model and protocol transfer state. macOS injects IOHID transport and Windows
 injects its native SetupAPI transport. Both consume `ObbutKeyboardCatalog` and
-the same domain-resolved document model.
+the same metadata-resolved document model.
 
 `Shared/KeymapProtocol` is compiled twice from the same Swift source: once for
 the host apps and once with Embedded Swift for firmware. Swift owns packet
@@ -60,7 +60,7 @@ QMK platform shim expose ABI facts such as matrix entries, timers, Raw HID, and
 RGB persistence; they contain no authored keymap or protocol semantics.
 
 All Raw HID reports are 32 bytes and begin with `KMAP` plus version `4`.
-Metadata reports identify the layout and catalog fingerprints; chunk reports
+Metadata reports identify the layout and generated metadata fingerprints; chunk reports
 stream variable-sized layer, matrix, and encoder entries. Corrupt or reordered
 transfers are rejected by the fingerprint check.
 

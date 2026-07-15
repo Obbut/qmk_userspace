@@ -1,6 +1,6 @@
 import QMKFirmwareRuntime
 
-/// Style-catalog-driven RGB layer lighting shared by Obbut keyboards.
+/// Style-driven RGB layer lighting shared by Obbut keyboards.
 public struct ObbutLayerLighting: FirmwareFeature, Sendable {
     public let firmwareFeatureDescriptor = FirmwareFeatureDescriptor(
         id: "obbut.layer-lighting"

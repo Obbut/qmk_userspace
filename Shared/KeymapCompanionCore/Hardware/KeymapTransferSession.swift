@@ -101,8 +101,8 @@ public struct KeymapTransferSession: Sendable {
             matrixColumnCount: metadata.matrixColumnCount,
             encoderCount: metadata.encoderCount,
             fingerprint: metadata.fingerprint,
-            semanticCatalogFingerprint: metadata.semanticCatalogFingerprint,
-            styleCatalogFingerprint: metadata.styleCatalogFingerprint,
+            semanticFingerprint: metadata.semanticFingerprint,
+            styleFingerprint: metadata.styleFingerprint,
             entries: keymapEntries
         )
         guard keymap.hasValidFingerprint else {

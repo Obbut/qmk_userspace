@@ -6,7 +6,7 @@ public struct KeymapKey: Equatable, Identifiable, Sendable {
     /// The firmware entries ordered by layer index.
     public let entries: [FirmwareKeymapEntry]
 
-    /// The catalog-resolved legends ordered by layer index.
+    /// The metadata-resolved legends ordered by layer index.
     public let legends: [KeyLegend]
 
     /// Creates a physical key with its layer entries.
@@ -14,7 +14,7 @@ public struct KeymapKey: Equatable, Identifiable, Sendable {
     /// - Parameters:
     ///   - id: The stable identifier derived from the key's matrix position.
     ///   - entries: The firmware entries ordered by layer index.
-    ///   - legends: The catalog-resolved legends ordered by layer index.
+    ///   - legends: The metadata-resolved legends ordered by layer index.
     public init(id: String, entries: [FirmwareKeymapEntry], legends: [KeyLegend]) {
         precondition(entries.count == legends.count, "Every keymap entry needs a resolved legend.")
         self.id = id

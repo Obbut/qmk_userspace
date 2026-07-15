@@ -11,7 +11,7 @@
             makeRequest(type: .getState)
         }
 
-        /// Creates a request for keymap dimensions and catalog fingerprints.
+        /// Creates a request for keymap dimensions and metadata fingerprints.
         ///
         /// - Returns: One complete Raw HID output report.
         public static func makeKeymapMetadataRequest() -> [UInt8] {
@@ -120,8 +120,8 @@
                     entryByteCount: entrySize,
                     entriesPerChunk: chunkEntryCount,
                     fingerprint: uint32(from: report, at: 18),
-                    semanticCatalogFingerprint: uint32(from: report, at: 22),
-                    styleCatalogFingerprint: uint32(from: report, at: 26),
+                    semanticFingerprint: uint32(from: report, at: 22),
+                    styleFingerprint: uint32(from: report, at: 26),
                     entryCount: entryCount,
                     encoderCount: encoderCount
                 )

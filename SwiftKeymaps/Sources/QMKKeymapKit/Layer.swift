@@ -1,5 +1,5 @@
 /// A keymap layer in layout-macro argument order.
-public struct Layer<Domain: KeymapDomain>: Sendable {
+public struct Layer: Sendable {
     /// The stable layer identifier.
     public let id: LayerID
 
@@ -10,7 +10,7 @@ public struct Layer<Domain: KeymapDomain>: Sendable {
     public let showsHUD: Bool
 
     /// The QMK layout-macro arguments.
-    public let keys: [Key<Domain>]
+    public let keys: [Key]
 
     /// Creates a layer from readable rows.
     ///
@@ -23,7 +23,7 @@ public struct Layer<Domain: KeymapDomain>: Sendable {
         _ id: LayerID,
         name: String,
         showsHUD: Bool = false,
-        @KeyRowsBuilder<Domain> content: () -> [Key<Domain>]
+        @KeyRowsBuilder content: () -> [Key]
     ) {
         self.id = id
         self.name = name

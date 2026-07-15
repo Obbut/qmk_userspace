@@ -1,31 +1,39 @@
 import QMKKeymapKit
 
-/// The sole visual vocabulary used by every Obbut keyboard.
-public enum ObbutStyle: UInt16, CaseIterable, KeyStyleID {
-    /// An unaccented key.
-    case standard = 0
+public extension KeyStyle where Self == SolidKeyStyle {
     /// A QWERTY gaming key.
-    case gaming = 1
+    static var gaming: SolidKeyStyle { .rgb(148, 0, 211) }
+
     /// A navigation key.
-    case navigation = 2
+    static var navigation: SolidKeyStyle { .magenta }
+
     /// A numeric key.
-    case number = 3
+    static var number: SolidKeyStyle { .blue }
+
     /// A symbol key.
-    case symbol = 4
+    static var symbol: SolidKeyStyle { .yellow }
+
     /// A function key.
-    case function = 5
+    static var function: SolidKeyStyle { .rgb(0, 220, 220) }
+
     /// An increasing or enabling action.
-    case increase = 6
+    static var increase: SolidKeyStyle { .green }
+
     /// A decreasing action.
-    case decrease = 7
+    static var decrease: SolidKeyStyle { .rgb(0, 50, 0) }
+
     /// A destructive editing action.
-    case destructive = 8
+    static var destructive: SolidKeyStyle { .orange }
+
     /// A bootloader action.
-    case bootloader = 9
+    static var bootloader: SolidKeyStyle { .rgb(255, 68, 68) }
+
     /// A wireless-radio action.
-    case wireless = 10
+    static var wireless: SolidKeyStyle { .rgb(0, 220, 220) }
+
     /// A pointer button or movement action.
-    case pointer = 11
+    static var pointer: SolidKeyStyle { .rgb(0, 180, 220) }
+
     /// A neutral operating-system indicator.
-    case operatingSystem = 12
+    static var operatingSystem: SolidKeyStyle { .white }
 }

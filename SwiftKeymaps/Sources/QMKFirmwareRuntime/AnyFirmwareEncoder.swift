@@ -1,6 +1,6 @@
 import QMKKeymapKit
 
-/// A domain-erased encoder used by generated artifacts and host previews.
+/// A resolved encoder used by generated artifacts and host previews.
 public struct AnyFirmwareEncoder: Sendable {
     /// The zero-based QMK encoder index.
     public let index: Int
@@ -11,12 +11,14 @@ public struct AnyFirmwareEncoder: Sendable {
     /// The layer-specific action pairs.
     public let mappings: [AnyFirmwareEncoderMapping]
 
-    /// Erases a domain-typed encoder.
+    /// Resolves one encoder against automatically collected metadata.
     ///
-    /// - Parameter encoder: The encoder to erase.
-    public init<Domain: KeymapDomain>(_ encoder: Encoder<Domain>) {
+    /// - Parameters:
+    ///   - encoder: The source encoder to resolve.
+    ///   - metadata: The metadata collected from the complete firmware.
+    init(_ encoder: Encoder, metadata: GeneratedKeyMetadata) {
         index = encoder.index
         id = encoder.id
-        mappings = encoder.mappings.map(AnyFirmwareEncoderMapping.init)
+        mappings = encoder.mappings.map { AnyFirmwareEncoderMapping($0, metadata: metadata) }
     }
 }

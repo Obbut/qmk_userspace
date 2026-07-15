@@ -1,5 +1,5 @@
 /// Layer-specific actions for one physical encoder.
-public struct Encoder<Domain: KeymapDomain>: Sendable {
+public struct Encoder: Sendable {
     /// The zero-based QMK encoder index.
     public let index: Int
 
@@ -7,7 +7,7 @@ public struct Encoder<Domain: KeymapDomain>: Sendable {
     public let id: String
 
     /// The per-layer mappings.
-    public let mappings: [On<Domain>]
+    public let mappings: [On]
 
     /// Creates an encoder map.
     ///
@@ -18,7 +18,7 @@ public struct Encoder<Domain: KeymapDomain>: Sendable {
     public init(
         _ index: Int,
         id: String,
-        @EncoderBuilder<Domain> content: () -> [On<Domain>]
+        @EncoderBuilder content: () -> [On]
     ) {
         precondition(index >= 0 && !id.isEmpty, "Encoder identifiers and indices must be valid.")
         self.index = index

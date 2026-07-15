@@ -38,7 +38,7 @@ extension KeymapProtocol {
         return true
     }
 
-    /// Encodes keymap dimensions and all catalog fingerprints.
+    /// Encodes keymap dimensions and generated metadata fingerprints.
     @discardableResult
     public static func encodeKeymapMetadataReport(
         to bytes: UnsafeMutableBufferPointer<UInt8>,
@@ -47,8 +47,8 @@ extension KeymapProtocol {
         matrixRowCount: UInt8,
         matrixColumnCount: UInt8,
         fingerprint: UInt32,
-        semanticCatalogFingerprint: UInt32,
-        styleCatalogFingerprint: UInt32,
+        semanticFingerprint: UInt32,
+        styleFingerprint: UInt32,
         entryCount: UInt16,
         encoderCount: UInt8
     ) -> Bool {
@@ -62,8 +62,8 @@ extension KeymapProtocol {
         bytes[15] = encoderCount
         writeUInt16(entryCount, to: bytes, at: 16)
         writeUInt32(fingerprint, to: bytes, at: 18)
-        writeUInt32(semanticCatalogFingerprint, to: bytes, at: 22)
-        writeUInt32(styleCatalogFingerprint, to: bytes, at: 26)
+        writeUInt32(semanticFingerprint, to: bytes, at: 22)
+        writeUInt32(styleFingerprint, to: bytes, at: 26)
         bytes[30] = encoderDirectionCount
         return true
     }
@@ -89,7 +89,7 @@ extension KeymapProtocol {
         return true
     }
 
-    /// Encodes one keycode and opaque domain-ID tuple.
+    /// Encodes one keycode and its generated metadata identifiers.
     @discardableResult
     public static func encodeKeymapEntry(
         keycode: UInt16,

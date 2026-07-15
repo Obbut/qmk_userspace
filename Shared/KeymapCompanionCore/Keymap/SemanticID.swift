@@ -1,15 +1,15 @@
-/// An opaque semantic identifier scoped by a domain catalog fingerprint.
+/// A generated semantic identifier scoped by its metadata fingerprint.
 public struct SemanticID: Equatable, Hashable, RawRepresentable, Sendable {
-    /// The catalog-scoped wire value, where zero means no semantic override.
+    /// The generated wire value, where zero means no semantic metadata.
     public let rawValue: UInt16
 
     /// Creates a semantic identifier from its protocol representation.
     ///
-    /// - Parameter rawValue: The catalog-scoped wire value.
+    /// - Parameter rawValue: The generated wire value.
     public init(rawValue: UInt16) {
         self.rawValue = rawValue
     }
 
-    /// The absence of a domain semantic override.
+    /// The absence of semantic metadata.
     public static let none = SemanticID(rawValue: 0)
 }

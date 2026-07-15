@@ -4,13 +4,11 @@ import QMKKeymapKit
 
 /// Shared definition for the Kyria Rev4 Cirque-left and encoder-right builds.
 public enum KyriaFirmware: QMKFirmware {
-    public typealias Domain = ObbutKeymapDomain
-
     public static let id = "com.obbut.kyria-rev4"
     public static let layout: LayoutDescriptor = .splitKBKyriaRev4
     public static let outputName = "kyria_rev4_obbut"
 
-    public static var keymap: Keymap<Domain> {
+    public static var keymap: Keymap {
         SharedHalcyonLayers(layout: .kyria)
         KyriaPointerLayer()
         ObbutEncoder.halcyon(includesPointerLayer: true)

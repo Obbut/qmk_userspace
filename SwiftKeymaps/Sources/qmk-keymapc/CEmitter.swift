@@ -1,6 +1,6 @@
 import QMKFirmwareRuntime
 
-/// Emits QMK ABI artifacts from one domain-erased Swift firmware definition.
+/// Emits QMK ABI artifacts from one resolved Swift firmware definition.
 struct CEmitter {
     let firmware: AnyFirmware
 
@@ -125,7 +125,7 @@ struct CEmitter {
             return "    [\(layer.id.cIdentifier)] = \(layoutCall(values: values))"
         }
         let styleLayers = firmware.layers.map { layer in
-            let values = layer.keys.map { String($0.styleID ?? 0) }
+            let values = layer.keys.map { String($0.styleID) }
             return "    [\(layer.id.cIdentifier)] = \(layoutCall(values: values))"
         }
         return """
@@ -156,7 +156,7 @@ struct CEmitter {
                 guard let mapping = encoder.mappings.first(where: { $0.layer == layer.id }) else {
                     return "{ 0, 0 }"
                 }
-                return "{ \(mapping.counterclockwise.styleID ?? 0), \(mapping.clockwise.styleID ?? 0) }"
+                return "{ \(mapping.counterclockwise.styleID), \(mapping.clockwise.styleID) }"
             }
             return "    [\(layer.id.cIdentifier)] = { \(pairs.joined(separator: ", ")) }"
         }
@@ -356,7 +356,9 @@ struct CEmitter {
     }
 
     private func planckCallbacks() -> String {
-        let screenshotSemanticID = firmware.semantics.first { $0.legend == "Screenshot" }?.id
+        let screenshotSemanticID = firmware.semantics.first {
+            $0.stableID == "com.obbut.screenshot"
+        }?.id
         let screenshot = firmware.layers
             .flatMap(\.keys)
             .first { $0.semanticID == screenshotSemanticID }?
@@ -481,7 +483,7 @@ struct CEmitter {
             }
         """
         let pointerDragLockSemanticID = firmware.semantics.first {
-            $0.legend == "Drag Lock"
+            $0.stableID == "com.obbut.pointer.drag-lock"
         }?.id ?? 0
         let pointerDragLock = includesPointerState ? """
                     uint16_t semantic = obbut_generated_semantic_at(layer, row, column);
@@ -620,8 +622,8 @@ struct CEmitter {
         #define OBBUT_GENERATED_LAYOUT_ID \(firmware.layoutID)
         #define OBBUT_GENERATED_LAYER_COUNT \(firmware.layers.count)
         #define OBBUT_GENERATED_ENCODER_COUNT \(firmware.encoders.count)
-        #define OBBUT_GENERATED_SEMANTIC_CATALOG_FINGERPRINT \(firmware.semanticCatalogFingerprint)u
-        #define OBBUT_GENERATED_STYLE_CATALOG_FINGERPRINT \(firmware.styleCatalogFingerprint)u
+        #define OBBUT_GENERATED_SEMANTIC_FINGERPRINT \(firmware.semanticFingerprint)u
+        #define OBBUT_GENERATED_STYLE_FINGERPRINT \(firmware.styleFingerprint)u
 
         uint16_t obbut_generated_semantic_at(uint8_t layer, uint8_t row, uint8_t column);
         uint16_t obbut_generated_style_at(uint8_t layer, uint8_t row, uint8_t column);

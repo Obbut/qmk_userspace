@@ -8,12 +8,12 @@ This repo contains QMK keymaps for four keyboards:
 
 ## Swift source of truth
 
-Never author a keymap, domain semantic, style, or firmware state machine in C.
+Never author a keymap, semantic, style, or firmware state machine in C.
 The module hierarchy is:
 
-1. `SwiftKeymaps/Sources/QMKKeymapKit` and `QMKFirmwareRuntime`: reusable,
-   domain-agnostic framework.
-2. `SwiftKeymaps/Sources/ObbutKeymaps`: the only Obbut semantic/style catalog,
+1. `SwiftKeymaps/Sources/QMKKeymapKit` and `QMKFirmwareRuntime`: reusable
+   framework with no Obbut-specific vocabulary.
+2. `SwiftKeymaps/Sources/ObbutKeymaps`: shared Obbut semantics, styles,
    shared layers, actions, configuration, lighting, OS behavior, split state,
    companion support, and pointer engine.
 3. The four individual `*Firmware` modules: board composition and
@@ -151,10 +151,9 @@ The keyboard has per-layer RGB backlighting (all other keys turn off for visibil
 
 ### Keeping RGB in Sync
 
-RGB presentation is defined once by `ObbutStyle` and `ObbutKeymapDomain.styles`.
-Keys select those typed styles in the shared Swift layers. Firmware lighting,
-companion rendering, Xcode previews, and generated SVG YAML all consume the
-same catalog.
+RGB presentation is defined by `KeyStyle` values in `ObbutKeymaps`. Keys select
+those styles in the shared Swift layers. Firmware lighting, companion rendering,
+Xcode previews, and generated SVG YAML all consume the resolved appearance data.
 
 The border styles are defined in `keymap-drawer.yaml` under `svg_style`:
 - `rgb-magenta` - Magenta for movement keys
@@ -166,7 +165,7 @@ The border styles are defined in `keymap-drawer.yaml` under `svg_style`:
 - `rgb-red` - Red for Boot keys
 - `rgb-orange` - Orange for Delete/Backspace keys
 
-**When changing RGB indicators:** update the style catalog or typed key style,
+**When changing RGB indicators:** update the relevant key style,
 then run the relevant Docker build and `./draw-keymap.sh`.
 
 ---
@@ -369,5 +368,5 @@ Same layout concept as Kyria (reimplemented independently):
 
 ## RGB Layer Indicators
 
-The Planck consumes the same Swift style catalog and generated lighting path as
+The Planck consumes the same Swift styles and generated lighting path as
 the other boards. See Kyria above for the color mapping.

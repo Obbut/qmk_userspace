@@ -1,5 +1,5 @@
-/// Resolved renderer presentation for an opaque catalog style identifier.
-public struct KeyStyle: Equatable, Sendable {
+/// Renderer presentation resolved from generated style metadata.
+public struct ResolvedKeyStyle: Equatable, Sendable {
     /// The style identifier supplied by firmware.
     public let id: StyleID
 
@@ -12,7 +12,7 @@ public struct KeyStyle: Equatable, Sendable {
     /// The blue color component.
     public let blue: UInt8
 
-    /// Whether the host recognized the firmware's catalog and style identifier.
+    /// Whether the metadata fingerprint allowed the identifier to be resolved.
     public let isKnown: Bool
 
     /// Creates resolved style presentation.
@@ -37,8 +37,8 @@ public struct KeyStyle: Equatable, Sendable {
         self.isKnown = isKnown
     }
 
-    /// Neutral presentation used when no style or catalog match is available.
-    public static let standard = KeyStyle(
+    /// Neutral presentation used when no style metadata is available.
+    public static let standard = ResolvedKeyStyle(
         id: .standard,
         red: 90,
         green: 90,

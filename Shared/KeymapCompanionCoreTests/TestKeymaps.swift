@@ -3,10 +3,10 @@ import ObbutKeyboardCatalog
 
 /// Deterministic firmware keymaps used by shared-model tests.
 enum TestKeymaps {
-    /// Creates a dimensionally valid Kyria keymap with configurable catalog IDs.
+    /// Creates a valid Kyria keymap with configurable generated metadata.
     static func makeKyria(
-        semanticCatalogFingerprint: UInt32? = nil,
-        styleCatalogFingerprint: UInt32? = nil,
+        semanticFingerprint: UInt32? = nil,
+        styleFingerprint: UInt32? = nil,
         semanticID: SemanticID = .none,
         styleID: StyleID = .standard
     ) -> FirmwareKeymap {
@@ -24,10 +24,10 @@ enum TestKeymaps {
             matrixColumnCount: firmware.layout.matrixColumnCount,
             encoderCount: firmware.layout.encoders.count,
             fingerprint: 0,
-            semanticCatalogFingerprint: semanticCatalogFingerprint
-                ?? firmware.semanticCatalogFingerprint,
-            styleCatalogFingerprint: styleCatalogFingerprint
-                ?? firmware.styleCatalogFingerprint,
+            semanticFingerprint: semanticFingerprint
+                ?? firmware.semanticFingerprint,
+            styleFingerprint: styleFingerprint
+                ?? firmware.styleFingerprint,
             entries: Array(
                 repeating: FirmwareKeymapEntry(
                     keycode: 0,

@@ -1,8 +1,5 @@
-/// A domain-typed keyboard definition.
-public protocol KeymapSpecification<Domain>: Sendable {
-    /// The semantic and style domain selected by the keymap.
-    associatedtype Domain: KeymapDomain
-
+/// A validated keyboard definition.
+public protocol KeymapSpecification: Sendable {
     /// The stable keymap identifier.
     var id: String { get }
 
@@ -10,8 +7,8 @@ public protocol KeymapSpecification<Domain>: Sendable {
     var layout: LayoutDescriptor { get }
 
     /// The layers in firmware index order.
-    var layers: [Layer<Domain>] { get }
+    var layers: [Layer] { get }
 
     /// The physical encoders in QMK index order.
-    var encoders: [Encoder<Domain>] { get }
+    var encoders: [Encoder] { get }
 }

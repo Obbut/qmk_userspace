@@ -1,13 +1,13 @@
 /// One encoder's counterclockwise and clockwise actions on a layer.
-public struct On<Domain: KeymapDomain>: Sendable {
+public struct On: Sendable {
     /// The layer selecting this mapping.
     public let layer: LayerID
 
     /// The counterclockwise action.
-    public let counterclockwise: Key<Domain>
+    public let counterclockwise: Key
 
     /// The clockwise action.
-    public let clockwise: Key<Domain>
+    public let clockwise: Key
 
     /// Creates one layer-specific encoder mapping.
     ///
@@ -17,8 +17,8 @@ public struct On<Domain: KeymapDomain>: Sendable {
     ///   - clockwise: The clockwise action.
     public init(
         _ layer: LayerID,
-        counterclockwise: Key<Domain>,
-        clockwise: Key<Domain>
+        counterclockwise: Key,
+        clockwise: Key
     ) {
         self.layer = layer
         self.counterclockwise = counterclockwise

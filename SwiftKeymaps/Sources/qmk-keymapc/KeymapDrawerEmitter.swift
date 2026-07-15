@@ -32,24 +32,28 @@ struct KeymapDrawerEmitter {
     }
 
     private func yamlEntry(for key: AnyFirmwareKey) -> String {
-        let legend = key.legend
+        let legend =
+            key.legend
             ?? key.semanticID.flatMap { id in firmware.semantics.first { $0.id == id }?.legend }
             ?? fallbackLegend(for: key)
         guard let styleName = styleName(for: key.styleID) else { return quoted(legend) }
         return "{t: \(quoted(legend)), type: \(quoted(styleName))}"
     }
 
-    private func styleName(for styleID: UInt16?) -> String? {
-        switch styleID {
-        case 1: "rgb-purple"
-        case 2: "rgb-magenta"
-        case 3: "rgb-blue"
-        case 4: "rgb-yellow"
-        case 5, 10, 11: "rgb-cyan"
-        case 6: "rgb-green"
-        case 7: "rgb-green-dark"
-        case 8: "rgb-orange"
-        case 9: "rgb-red"
+    private func styleName(for styleID: UInt16) -> String? {
+        guard let color = firmware.styles.first(where: { $0.id == styleID })?.color else {
+            return nil
+        }
+        return switch (color.red, color.green, color.blue) {
+        case (148, 0, 211): "rgb-purple"
+        case (255, 0, 255): "rgb-magenta"
+        case (0, 0, 255): "rgb-blue"
+        case (255, 255, 0): "rgb-yellow"
+        case (0, 255, 255), (0, 220, 220), (0, 180, 220): "rgb-cyan"
+        case (0, 255, 0): "rgb-green"
+        case (0, 50, 0): "rgb-green-dark"
+        case (255, 128, 0): "rgb-orange"
+        case (255, 0, 0), (255, 68, 68): "rgb-red"
         default: nil
         }
     }

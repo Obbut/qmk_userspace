@@ -1,8 +1,5 @@
-/// A reusable collection of layers and encoders for one keymap domain.
+/// A reusable collection of layers and encoders.
 public protocol KeymapComponent: Sendable {
-    /// The keymap domain accepted by the component.
-    associatedtype Domain: KeymapDomain
-
     /// The declarations contributed by this component.
-    var keymapElements: [KeymapElement<Domain>] { get }
+    var keymapElements: [KeymapElement] { get }
 }

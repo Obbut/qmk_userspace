@@ -6,9 +6,9 @@ enum QMKKeycodeLegend {
     ///
     /// - Parameters:
     ///   - entry: The firmware keymap entry to describe.
-    ///   - semanticLegend: The domain-catalog legend, when resolved.
-    ///   - semanticSymbolName: The domain-catalog symbol name, when resolved.
-    ///   - style: The resolved domain style.
+    ///   - semanticLegend: The semantic legend, when resolved.
+    ///   - semanticSymbolName: The semantic symbol name, when resolved.
+    ///   - style: The resolved key style.
     ///   - layers: The firmware-defined layers used for layer-action legends.
     ///
     /// - Returns: A compact renderer legend.
@@ -16,7 +16,7 @@ enum QMKKeycodeLegend {
         for entry: FirmwareKeymapEntry,
         semanticLegend: String?,
         semanticSymbolName: String?,
-        style: KeyStyle,
+        style: ResolvedKeyStyle,
         layers: [KeymapLayer]
     ) -> KeyLegend {
         KeyLegend(
@@ -32,7 +32,7 @@ enum QMKKeycodeLegend {
     ///
     /// - Parameters:
     ///   - entry: The firmware keymap entry to describe.
-    ///   - semanticLegend: The resolved domain legend.
+    ///   - semanticLegend: The resolved semantic legend.
     ///   - layers: The firmware-defined layers.
     ///
     /// - Returns: Compact fallback text.
@@ -190,9 +190,9 @@ enum QMKKeycodeLegend {
         return layers.first { $0.rawValue == rawValue }?.legendName
     }
 
-    /// Maps a renderer-neutral catalog symbol name to native presentation semantics.
+    /// Maps a renderer-neutral symbol name to native presentation semantics.
     ///
-    /// - Parameter name: The symbol name supplied by the domain catalog.
+    /// - Parameter name: The symbol name supplied by semantic metadata.
     /// - Returns: A platform-neutral symbol, or `nil` for an unknown name.
     private static func semanticSymbol(named name: String?) -> KeySymbol? {
         switch name {

@@ -1,114 +1,107 @@
 import QMKKeymapKit
 
-/// Common domain-typed actions shared by Obbut firmware modules.
+/// Common actions shared by Obbut firmware modules.
 public enum ObbutKey {
-    /// The macOS screenshot chord with a platform semantic override.
-    public static var screenshot: Key<ObbutKeymapDomain> {
+    /// The macOS screenshot chord.
+    public static var screenshot: Key {
         Key.four
             .withModifiers(.leftCommand, .leftControl, .leftShift)
             .semantic(.screenshot)
     }
 
     /// The Aerospace modifier chord.
-    public static var aerospace: Key<ObbutKeymapDomain> {
+    public static var aerospace: Key {
         Key.chord(.leftControl, .leftCommand, .rightOption)
             .semantic(.aerospace)
     }
 
     /// Escape on tap and the Aerospace modifier set on hold.
-    public static var escapeAerospace: Key<ObbutKeymapDomain> {
-        Key.escapeAerospace.semantic(.aerospace)
+    public static var escapeAerospace: Key {
+        Key.modifierTap(
+            [.leftControl, .leftCommand, .rightOption],
+            key: .escape
+        ).semantic(.aerospace)
     }
 
     /// Selects Bluetooth host one.
-    public static var bluetoothHost1: Key<ObbutKeymapDomain> {
+    public static var bluetoothHost1: Key {
         Key.qmk(
             keychronBluetoothHost1,
             legend: "Bluetooth 1",
-            semantic: .bluetoothHost1,
-            style: .wireless
-        )
+            semantic: .bluetoothHost1
+        ).style(.wireless)
     }
 
     /// Selects Bluetooth host two.
-    public static var bluetoothHost2: Key<ObbutKeymapDomain> {
+    public static var bluetoothHost2: Key {
         Key.qmk(
             keychronBluetoothHost2,
             legend: "Bluetooth 2",
-            semantic: .bluetoothHost2,
-            style: .wireless
-        )
+            semantic: .bluetoothHost2
+        ).style(.wireless)
     }
 
     /// Selects Bluetooth host three.
-    public static var bluetoothHost3: Key<ObbutKeymapDomain> {
+    public static var bluetoothHost3: Key {
         Key.qmk(
             keychronBluetoothHost3,
             legend: "Bluetooth 3",
-            semantic: .bluetoothHost3,
-            style: .wireless
-        )
+            semantic: .bluetoothHost3
+        ).style(.wireless)
     }
 
     /// Selects the 2.4 GHz radio.
-    public static var wireless24GHz: Key<ObbutKeymapDomain> {
+    public static var wireless24GHz: Key {
         Key.qmk(
             keychronWireless24GHz,
             legend: "2.4 GHz",
-            semantic: .wireless24GHz,
-            style: .wireless
-        )
+            semantic: .wireless24GHz
+        ).style(.wireless)
     }
 
     /// Displays the battery level.
-    public static var batteryLevel: Key<ObbutKeymapDomain> {
+    public static var batteryLevel: Key {
         Key.qmk(
             keychronBatteryLevel,
             legend: "Battery",
-            semantic: .batteryLevel,
-            style: .number
-        )
+            semantic: .batteryLevel
+        ).style(.number)
     }
 
     /// The primary pointer button.
-    public static let pointerLeftClick = Key<ObbutKeymapDomain>.qmk(
+    public static let pointerLeftClick = Key.qmk(
         "MS_BTN1",
         legend: "Left Click",
-        semantic: .pointerLeftClick,
-        style: .pointer
-    )
+        semantic: .pointerLeftClick
+    ).style(.pointer)
 
     /// The secondary pointer button.
-    public static let pointerRightClick = Key<ObbutKeymapDomain>.qmk(
+    public static let pointerRightClick = Key.qmk(
         "MS_BTN2",
         legend: "Right Click",
-        semantic: .pointerRightClick,
-        style: .pointer
-    )
+        semantic: .pointerRightClick
+    ).style(.pointer)
 
     /// The middle pointer button.
-    public static let pointerMiddleClick = Key<ObbutKeymapDomain>.qmk(
+    public static let pointerMiddleClick = Key.qmk(
         "MS_BTN3",
         legend: "Middle Click",
-        semantic: .pointerMiddleClick,
-        style: .pointer
-    )
+        semantic: .pointerMiddleClick
+    ).style(.pointer)
 
     /// Browser backward navigation.
-    public static let browserBack = Key<ObbutKeymapDomain>.qmk(
+    public static let browserBack = Key.qmk(
         "KC_WBAK",
         legend: "Browser Back",
-        semantic: .browserBack,
-        style: .gaming
-    )
+        semantic: .browserBack
+    ).style(.gaming)
 
     /// Browser forward navigation.
-    public static let browserForward = Key<ObbutKeymapDomain>.qmk(
+    public static let browserForward = Key.qmk(
         "KC_WFWD",
         legend: "Browser Forward",
-        semantic: .browserForward,
-        style: .gaming
-    )
+        semantic: .browserForward
+    ).style(.gaming)
 
     /// Momentary drag scrolling.
     public static let pointerScroll = pointerAction(
@@ -170,9 +163,10 @@ public enum ObbutKey {
     fileprivate static func pointerAction(
         _ expression: String,
         legend: String,
-        semantic: ObbutSemantic,
-        style: ObbutStyle
-    ) -> Key<ObbutKeymapDomain> {
-        .qmk(expression, legend: legend, semantic: semantic, style: style)
+        semantic: KeySemantic,
+        style: SolidKeyStyle
+    ) -> Key {
+        .qmk(expression, legend: legend, semantic: semantic)
+            .style(style)
     }
 }
