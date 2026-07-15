@@ -16,7 +16,7 @@ extension WindowsAppController {
         let name = WindowsTheme.makeText(text: definition.keyboardKind.displayName, size: 21)
         name.fontWeight = FontWeights.semiBold
         content.children.append(name)
-        content.children.append(makeLayerStrip())
+        content.children.append(makeLayerStrip(supportedLayers: definition.supportedLayers))
 
         let boardScroll = ScrollViewer()
         boardScroll.horizontalScrollBarVisibility = .auto
@@ -33,12 +33,13 @@ extension WindowsAppController {
 
     /// Creates the pills that summarize the active firmware layers.
     ///
+    /// - Parameter supportedLayers: The layers supplied by the connected firmware.
     /// - Returns: The configured layer strip.
-    private func makeLayerStrip() -> StackPanel {
+    private func makeLayerStrip(supportedLayers: [KeymapLayer]) -> StackPanel {
         let strip = StackPanel()
         strip.orientation = .horizontal
         strip.spacing = 8
-        for layer in KeymapLayer.allCases {
+        for layer in supportedLayers {
             let isActive = layer.isActive(inLayerMask: model.effectiveLayerMask)
             let pill = Border()
             pill.cornerRadius = WindowsTheme.makeCornerRadius(all: 10)

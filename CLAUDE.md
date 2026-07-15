@@ -13,7 +13,7 @@ The Kyria and Elora share code via `users/obbut_halcyon/`:
 - **`obbut_halcyon.c`** - Shared logic (RGB indicators, OS detection, split sync)
 - **`config.h`** - Shared config (RGB timeout, split transaction ID)
 
-The Elora is essentially the Kyria with an additional number row. All layers, RGB indicators, and settings are kept in sync through the shared code.
+The Elora is essentially the Kyria with an additional number row. Their typing layers, RGB indicators, and settings are kept in sync through the shared code. The Kyria additionally owns an automatic Pointer layer because it has the Cirque trackpad.
 
 **When changing Kyria or Elora keymaps:**
 1. Update the shared code in `users/obbut_halcyon/` for common changes
@@ -154,9 +154,11 @@ When discussing keys, you can refer to them by their keycap label:
 ## Layers
 
 1. **Default** - Colemak-DH base layer
-2. **Lower** - Navigation (arrow keys)
-3. **Raise** - Symbols and numpad
-4. **Function** - F-keys (F1-F15), RGB controls, Boot keys
+2. **QWERTY** - Gaming base layer
+3. **Lower** - Navigation (arrow keys)
+4. **Raise** - Symbols and numpad
+5. **Function** - F-keys (F1-F15), RGB controls, Boot keys
+6. **Pointer** - Automatically activated Cirque controls, scrolling, sensitivity, and drag lock
 
 ## RGB Layer Indicators
 
@@ -165,6 +167,7 @@ The keyboard has per-layer RGB backlighting (all other keys turn off for visibil
 - **Lower layer**: Arrow keys in magenta, Delete/Backspace in orange
 - **Raise layer**: Numbers in blue, symbols in yellow
 - **Function layer**: F-keys in cyan, RGB controls in green (dark green for decrease), Boot keys in red
+- **Pointer layer**: Dim cyan underlay with color-coded controls; dim red underlay while drag lock is active
 
 ### Keeping RGB in Sync
 
@@ -232,11 +235,12 @@ Thumb:          [Screenshot] [Ctrl] [Cmd] [Aerospace] [Spc]   [Spc] [Raise] [Low
 
 ## Layers
 
-Same as Kyria (shared code):
+Same typing layers as Kyria (shared code); the Kyria-only Pointer layer is omitted:
 1. **Default** - Colemak-DH base layer with number row (`~ 1 2 3 4 5 | 6 7 8 9 0 -`)
-2. **Lower** - Navigation (arrow keys), number row transparent
-3. **Raise** - Symbols and numpad, number row transparent (direct access to numbers)
-4. **Function** - F-keys (F1-F15), RGB controls, Boot keys, number row transparent
+2. **QWERTY** - Gaming base layer with number row
+3. **Lower** - Navigation (arrow keys), number row transparent
+4. **Raise** - Symbols and numpad, number row transparent (direct access to numbers)
+5. **Function** - F-keys (F1-F15), RGB controls, Boot keys, number row transparent
 
 ## RGB Layer Indicators
 

@@ -156,6 +156,9 @@ static void keymap_draw_layer_icon(
     case KEYMAP_TRAY_LAYER_FUNCTION:
         keymap_draw_layer_text(device_context, L"FN", 27, foreground);
         break;
+    case KEYMAP_TRAY_LAYER_POINTER:
+        keymap_draw_layer_text(device_context, L"P", 38, foreground);
+        break;
     default:
         break;
     }

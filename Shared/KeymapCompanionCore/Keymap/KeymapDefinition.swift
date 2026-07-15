@@ -6,6 +6,9 @@ public struct KeymapDefinition: Equatable, Sendable {
     /// The model's renderer geometry.
     public let geometry: KeyboardGeometry
 
+    /// The ordered layers supplied by the connected firmware.
+    public let supportedLayers: [KeymapLayer]
+
     /// The physical switches and their firmware-owned mappings.
     public let positionedKeys: [PositionedKey]
 
@@ -19,6 +22,13 @@ public struct KeymapDefinition: Equatable, Sendable {
     /// - Parameter firmwareKeymap: The complete firmware keymap to transform.
     public init?(firmwareKeymap: FirmwareKeymap) {
         let geometry = KeyboardGeometryCatalog.geometry(for: firmwareKeymap.keyboardKind)
+        guard firmwareKeymap.layerCount >= Int(KeymapLayer.function.rawValue) + 1,
+            firmwareKeymap.layerCount <= KeymapLayer.allCases.count
+        else {
+            return nil
+        }
+
+        let supportedLayers = Array(KeymapLayer.allCases.prefix(firmwareKeymap.layerCount))
         let matrixEntryCount =
             firmwareKeymap.layerCount
             * firmwareKeymap.matrixRowCount
@@ -27,7 +37,7 @@ public struct KeymapDefinition: Equatable, Sendable {
             firmwareKeymap.layerCount
             * firmwareKeymap.encoderCount
             * EncoderDirection.allCases.count
-        guard firmwareKeymap.layerCount == KeymapLayer.allCases.count,
+        guard supportedLayers.count == firmwareKeymap.layerCount,
             firmwareKeymap.encoderCount > 0,
             firmwareKeymap.entries.count == matrixEntryCount + encoderEntryCount,
             geometry.placements.count == geometry.matrixPositions.count,
@@ -37,26 +47,26 @@ public struct KeymapDefinition: Equatable, Sendable {
         }
 
         let keys = geometry.matrixPositions.compactMap { position -> KeymapKey? in
-            let entries = KeymapLayer.allCases.compactMap { layer in
+            let entries = supportedLayers.compactMap { layer in
                 firmwareKeymap.entry(
                     onLayer: Int(layer.rawValue),
                     row: position.row,
                     column: position.column
                 )
             }
-            guard entries.count == KeymapLayer.allCases.count else { return nil }
+            guard entries.count == supportedLayers.count else { return nil }
             return KeymapKey(id: "r\(position.row)c\(position.column)", entries: entries)
         }
         guard keys.count == geometry.placements.count else { return nil }
 
-        let counterclockwiseEntries = KeymapLayer.allCases.compactMap { layer in
+        let counterclockwiseEntries = supportedLayers.compactMap { layer in
             firmwareKeymap.encoderEntry(
                 onLayer: Int(layer.rawValue),
                 encoderIndex: 0,
                 direction: .counterclockwise
             )
         }
-        let clockwiseEntries = KeymapLayer.allCases.compactMap { layer in
+        let clockwiseEntries = supportedLayers.compactMap { layer in
             firmwareKeymap.encoderEntry(
                 onLayer: Int(layer.rawValue),
                 encoderIndex: 0,
@@ -64,22 +74,23 @@ public struct KeymapDefinition: Equatable, Sendable {
             )
         }
         let pressRow = firmwareKeymap.matrixRowCount - 1
-        let pressEntries = KeymapLayer.allCases.compactMap { layer in
+        let pressEntries = supportedLayers.compactMap { layer in
             firmwareKeymap.entry(
                 onLayer: Int(layer.rawValue),
                 row: pressRow,
                 column: 0
             )
         }
-        guard counterclockwiseEntries.count == KeymapLayer.allCases.count,
-            pressEntries.count == KeymapLayer.allCases.count,
-            clockwiseEntries.count == KeymapLayer.allCases.count
+        guard counterclockwiseEntries.count == supportedLayers.count,
+            pressEntries.count == supportedLayers.count,
+            clockwiseEntries.count == supportedLayers.count
         else {
             return nil
         }
 
         keyboardKind = firmwareKeymap.keyboardKind
         self.geometry = geometry
+        self.supportedLayers = supportedLayers
         positionedKeys = zip(keys, geometry.placements).map {
             PositionedKey(key: $0, placement: $1)
         }
@@ -108,7 +119,10 @@ public struct KeymapDefinition: Equatable, Sendable {
         ///
         /// - Returns: Deterministic renderer input for previews and tests.
         public static func makePreview(for keyboardKind: KeyboardKind) -> KeymapDefinition {
-            let layerCount = KeymapLayer.allCases.count
+            let layerCount =
+                keyboardKind == .kyria
+                ? KeymapLayer.allCases.count
+                : Int(KeymapLayer.function.rawValue) + 1
             let rowCount = keyboardKind == .kyria ? 10 : 12
             let columnCount = 7
             let matrixSize = rowCount * columnCount
@@ -136,9 +150,13 @@ public struct KeymapDefinition: Equatable, Sendable {
                 (0x00AA, 0x00A9), (0x00AA, 0x00A9), (0x00AC, 0x00AB),
                 (0x00AA, 0x00A9), (0x7844, 0x7843),
             ]
-            for keycodes in encoderKeycodes {
+            for keycodes in encoderKeycodes.prefix(layerCount) {
                 entries.append(FirmwareKeymapEntry(keycode: keycodes.0, semantic: .none, style: .standard))
                 entries.append(FirmwareKeymapEntry(keycode: keycodes.1, semantic: .none, style: .standard))
+            }
+            if layerCount > encoderKeycodes.count {
+                entries.append(FirmwareKeymapEntry(keycode: 0x00AA, semantic: .none, style: .standard))
+                entries.append(FirmwareKeymapEntry(keycode: 0x00A9, semantic: .none, style: .standard))
             }
 
             let firmwareKeymap = FirmwareKeymap(

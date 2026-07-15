@@ -42,6 +42,8 @@ static const wchar_t *keymap_tray_layer_name(uint32_t active_layer) {
         return L"Raise";
     case KEYMAP_TRAY_LAYER_FUNCTION:
         return L"Function";
+    case KEYMAP_TRAY_LAYER_POINTER:
+        return L"Pointer";
     default:
         return L"Default";
     }

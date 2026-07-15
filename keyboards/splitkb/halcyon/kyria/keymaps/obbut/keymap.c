@@ -45,6 +45,14 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
                     FUNC_THUMB_L,                                  FUNC_THUMB_R,
         FUNC_MODULE_L,                                             FUNC_MODULE_R
     ),
+
+    [_POINTER] = LAYOUT_wrapper(
+        POINTER_L1,                                                POINTER_R1,
+        POINTER_L2,                                                POINTER_R2,
+        POINTER_L3, _______, _______,          _______, _______,   POINTER_R3,
+                    POINTER_THUMB_L,                               POINTER_THUMB_R,
+        POINTER_MODULE_L,                                         POINTER_MODULE_R
+    ),
 };
 // clang-format on
 
@@ -55,6 +63,7 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
     [_LOWER]    = { ENCODER_MAP_LOWER,    ENCODER_MAP_LOWER,    ENCODER_MAP_LOWER,    ENCODER_MAP_LOWER    },
     [_RAISE]    = { ENCODER_MAP_RAISE,    ENCODER_MAP_RAISE,    ENCODER_MAP_RAISE,    ENCODER_MAP_RAISE    },
     [_FUNCTION] = { ENCODER_MAP_FUNCTION, ENCODER_MAP_FUNCTION, ENCODER_MAP_FUNCTION, ENCODER_MAP_FUNCTION },
+    [_POINTER]  = { ENCODER_MAP_POINTER,  ENCODER_MAP_POINTER,  ENCODER_MAP_POINTER,  ENCODER_MAP_POINTER  },
 };
 #endif
 

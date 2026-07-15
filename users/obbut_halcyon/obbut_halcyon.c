@@ -8,8 +8,13 @@
 #    include "raw_hid.h"
 #endif
 
-// Track if RGB controls should show the actual base-layer effect on Function.
-static bool rgb_preview_mode = false;
+typedef struct {
+    bool rgb_preview_mode;
+    bool pointer_drag_lock_active;
+} obbut_split_state_t;
+
+// Visual state mirrored to the other half for consistent RGB indicators.
+static obbut_split_state_t obbut_split_state = {0};
 
 // ============== KEYMAP COMPANION PROTOCOL ==============
 
@@ -100,6 +105,8 @@ static uint16_t keymap_companion_encoder_keycode(uint8_t layer, uint8_t directio
             return clockwise ? ENCODER_RAISE_CW : ENCODER_RAISE_CCW;
         case _FUNCTION:
             return clockwise ? ENCODER_FUNCTION_CW : ENCODER_FUNCTION_CCW;
+        case _POINTER:
+            return clockwise ? ENCODER_POINTER_CW : ENCODER_POINTER_CCW;
         default:
             return KC_NO;
     }
@@ -134,11 +141,35 @@ static uint16_t keymap_companion_keycode_at(uint16_t index) {
 }
 
 static uint8_t keymap_companion_semantic_for_keycode(uint16_t keycode) {
-    if (keycode == SCREENSHOT) {
-        return KEYMAP_PROTOCOL_PLATFORM_SEMANTIC_SCREENSHOT;
-    }
-    if (keycode == AEROSPACE) {
-        return KEYMAP_PROTOCOL_PLATFORM_SEMANTIC_AEROSPACE;
+    switch (keycode) {
+        case SCREENSHOT:
+            return KEYMAP_PROTOCOL_PLATFORM_SEMANTIC_SCREENSHOT;
+        case AEROSPACE:
+            return KEYMAP_PROTOCOL_PLATFORM_SEMANTIC_AEROSPACE;
+        case MS_BTN1:
+            return KEYMAP_PROTOCOL_PLATFORM_SEMANTIC_POINTER_LEFT_CLICK;
+        case MS_BTN2:
+            return KEYMAP_PROTOCOL_PLATFORM_SEMANTIC_POINTER_RIGHT_CLICK;
+        case MS_BTN3:
+            return KEYMAP_PROTOCOL_PLATFORM_SEMANTIC_POINTER_MIDDLE_CLICK;
+        case KC_WBAK:
+            return KEYMAP_PROTOCOL_PLATFORM_SEMANTIC_BROWSER_BACK;
+        case KC_WFWD:
+            return KEYMAP_PROTOCOL_PLATFORM_SEMANTIC_BROWSER_FORWARD;
+        case PTR_SCROLL:
+            return KEYMAP_PROTOCOL_PLATFORM_SEMANTIC_POINTER_SCROLL;
+        case PTR_SNIPER:
+            return KEYMAP_PROTOCOL_PLATFORM_SEMANTIC_POINTER_SNIPER;
+        case PTR_DRAG_LOCK:
+            return KEYMAP_PROTOCOL_PLATFORM_SEMANTIC_POINTER_DRAG_LOCK;
+        case PTR_SENS_DOWN:
+            return KEYMAP_PROTOCOL_PLATFORM_SEMANTIC_POINTER_SENSITIVITY_DOWN;
+        case PTR_SENS_UP:
+            return KEYMAP_PROTOCOL_PLATFORM_SEMANTIC_POINTER_SENSITIVITY_UP;
+        case PTR_SCROLL_DOWN:
+            return KEYMAP_PROTOCOL_PLATFORM_SEMANTIC_POINTER_SCROLL_SPEED_DOWN;
+        case PTR_SCROLL_UP:
+            return KEYMAP_PROTOCOL_PLATFORM_SEMANTIC_POINTER_SCROLL_SPEED_UP;
     }
     return KEYMAP_PROTOCOL_PLATFORM_SEMANTIC_NONE;
 }
@@ -185,6 +216,26 @@ static uint8_t keymap_companion_style_for_keycode(uint8_t layer, uint16_t keycod
             }
             if (keycode == TG_QWERTY) {
                 return KEYMAP_PROTOCOL_PLATFORM_STYLE_PURPLE;
+            }
+            break;
+        case _POINTER:
+            if (keycode == MS_BTN1 || keycode == MS_BTN2 || keycode == MS_BTN3) {
+                return KEYMAP_PROTOCOL_PLATFORM_STYLE_CYAN;
+            }
+            if (keycode == KC_WBAK || keycode == KC_WFWD) {
+                return KEYMAP_PROTOCOL_PLATFORM_STYLE_PURPLE;
+            }
+            if (keycode == PTR_SCROLL || keycode == PTR_SNIPER) {
+                return KEYMAP_PROTOCOL_PLATFORM_STYLE_YELLOW;
+            }
+            if (keycode == PTR_SENS_UP || keycode == PTR_SCROLL_UP) {
+                return KEYMAP_PROTOCOL_PLATFORM_STYLE_GREEN;
+            }
+            if (keycode == PTR_SENS_DOWN || keycode == PTR_SCROLL_DOWN) {
+                return KEYMAP_PROTOCOL_PLATFORM_STYLE_DARK_GREEN;
+            }
+            if (keycode == PTR_DRAG_LOCK) {
+                return KEYMAP_PROTOCOL_PLATFORM_STYLE_RED;
             }
             break;
     }
@@ -249,7 +300,7 @@ uint8_t keymap_protocol_platform_apply_rgb(uint8_t effect_index, uint8_t hue, ui
         rgb_matrix_disable_noeeprom();
     }
     eeconfig_force_flush_rgb_matrix();
-    rgb_preview_mode = get_highest_layer(layer_state) == _FUNCTION;
+    obbut_split_state.rgb_preview_mode = get_highest_layer(layer_state) == _FUNCTION;
     return 1;
 #    else
     (void)effect_index;
@@ -272,43 +323,117 @@ void obbut_raw_hid_receive(uint8_t *data, uint8_t length) {
 
 // ============== POINTING DEVICE SETTINGS ==============
 
-#ifndef SCROLL_DIVISOR_H
-#define SCROLL_DIVISOR_H 4.0
-#endif
-#ifndef SCROLL_DIVISOR_V
-#define SCROLL_DIVISOR_V 4.0
-#endif
-#ifndef MOUSE_SENSITIVITY
-#define MOUSE_SENSITIVITY 1.0
+#define POINTER_SENSITIVITY_DEFAULT_INDEX 2
+#define POINTER_SCROLL_DEFAULT_INDEX 2
+#define POINTER_SNIPER_PERCENT 35
+#define POINTER_SCROLL_AXIS_THRESHOLD 6
+
+static const uint8_t pointer_sensitivity_levels[] = {40, 55, 67, 85, 100};
+static const uint8_t pointer_scroll_divisors[] = {48, 40, 32, 24, 16};
+
+typedef enum {
+    POINTER_SCROLL_AXIS_NONE,
+    POINTER_SCROLL_AXIS_HORIZONTAL,
+    POINTER_SCROLL_AXIS_VERTICAL,
+} pointer_scroll_axis_t;
+
+static uint8_t pointer_sensitivity_index = POINTER_SENSITIVITY_DEFAULT_INDEX;
+static uint8_t pointer_scroll_index = POINTER_SCROLL_DEFAULT_INDEX;
+static bool pointer_scroll_key_held = false;
+static bool pointer_sniper_held = false;
+static bool pointer_scrolling_was_active = false;
+static pointer_scroll_axis_t pointer_scroll_axis = POINTER_SCROLL_AXIS_NONE;
+static int32_t pointer_mouse_accumulated_x = 0;
+static int32_t pointer_mouse_accumulated_y = 0;
+static int32_t pointer_scroll_accumulated = 0;
+static int32_t pointer_scroll_pending_x = 0;
+static int32_t pointer_scroll_pending_y = 0;
+static uint16_t pointer_scroll_absolute_x = 0;
+static uint16_t pointer_scroll_absolute_y = 0;
+
+static void pointer_reset_cursor_accumulators(void) {
+    pointer_mouse_accumulated_x = 0;
+    pointer_mouse_accumulated_y = 0;
+}
+
+static void pointer_reset_scroll_state(void) {
+    pointer_scroll_axis = POINTER_SCROLL_AXIS_NONE;
+    pointer_scroll_accumulated = 0;
+    pointer_scroll_pending_x = 0;
+    pointer_scroll_pending_y = 0;
+    pointer_scroll_absolute_x = 0;
+    pointer_scroll_absolute_y = 0;
+}
+
+#if defined(POINTING_DEVICE_AUTO_MOUSE_ENABLE)
+static bool pointer_is_action_keycode(uint16_t keycode) {
+    switch (keycode) {
+        case MS_BTN1:
+        case MS_BTN2:
+        case MS_BTN3:
+        case KC_WBAK:
+        case KC_WFWD:
+        case PTR_SCROLL:
+        case PTR_SNIPER:
+        case PTR_DRAG_LOCK:
+        case PTR_SENS_DOWN:
+        case PTR_SENS_UP:
+        case PTR_SCROLL_DOWN:
+        case PTR_SCROLL_UP:
+            return true;
+        default:
+            return false;
+    }
+}
+
+static bool pointer_is_modifier_keycode(uint16_t keycode) {
+    return (keycode >= KC_LEFT_CTRL && keycode <= KC_RIGHT_GUI) ||
+           (keycode >= QK_MODS && keycode <= QK_MODS_MAX);
+}
 #endif
 
-static float scroll_accumulated_h = 0;
-static float scroll_accumulated_v = 0;
-static float mouse_accumulated_x = 0;
-static float mouse_accumulated_y = 0;
+static void pointer_set_drag_lock(bool active) {
+    if (obbut_split_state.pointer_drag_lock_active == active) {
+        return;
+    }
+
+    obbut_split_state.pointer_drag_lock_active = active;
+#if defined(POINTING_DEVICE_ENABLE)
+    if (!active) {
+        report_mouse_t mouse_report = pointing_device_get_report();
+        mouse_report.buttons &= ~MOUSE_BTN1;
+        pointing_device_set_report(mouse_report);
+    }
+#endif
+#if defined(POINTING_DEVICE_AUTO_MOUSE_ENABLE)
+    if (get_auto_mouse_toggle() != active) {
+        auto_mouse_toggle();
+    }
+#endif
+}
 
 // ============== RGB PREVIEW MODE ==============
-// Handler for receiving RGB preview mode sync from master
+// Handler for receiving visual state sync from master
 void rgb_preview_sync_handler(uint8_t in_buflen, const void* in_data, uint8_t out_buflen, void* out_data) {
-    if (in_buflen == sizeof(rgb_preview_mode)) {
-        memcpy(&rgb_preview_mode, in_data, sizeof(rgb_preview_mode));
+    if (in_buflen == sizeof(obbut_split_state)) {
+        memcpy(&obbut_split_state, in_data, sizeof(obbut_split_state));
     }
 }
 
 void obbut_keyboard_post_init(void) {
-    // Register the sync handler for RGB preview mode
+    // Register the sync handler for cross-half visual state.
     transaction_register_rpc(USER_SYNC_RGB_PREVIEW, rgb_preview_sync_handler);
 }
 
 void obbut_housekeeping_task(void) {
     if (is_keyboard_master()) {
-        static bool last_rgb_preview_mode = false;
+        static obbut_split_state_t last_split_state = {0};
         static uint32_t last_sync = 0;
 
         // Sync when state changes or every 500ms
-        if (rgb_preview_mode != last_rgb_preview_mode || timer_elapsed32(last_sync) > 500) {
-            if (transaction_rpc_send(USER_SYNC_RGB_PREVIEW, sizeof(rgb_preview_mode), &rgb_preview_mode)) {
-                last_rgb_preview_mode = rgb_preview_mode;
+        if (memcmp(&obbut_split_state, &last_split_state, sizeof(obbut_split_state)) != 0 || timer_elapsed32(last_sync) > 500) {
+            if (transaction_rpc_send(USER_SYNC_RGB_PREVIEW, sizeof(obbut_split_state), &obbut_split_state)) {
+                last_split_state = obbut_split_state;
                 last_sync = timer_read32();
             }
         }
@@ -329,7 +454,64 @@ static inline bool is_windows(void) {
 
 // ============== KEY PROCESSING ==============
 
+#if defined(POINTING_DEVICE_AUTO_MOUSE_ENABLE)
+bool is_mouse_record_user(uint16_t keycode, keyrecord_t* record) {
+    (void)record;
+    return pointer_is_action_keycode(keycode);
+}
+#endif
+
 bool obbut_process_record(uint16_t keycode, keyrecord_t *record) {
+#if defined(POINTING_DEVICE_AUTO_MOUSE_ENABLE)
+    // Normal typing exits Pointer immediately; modifiers remain available for drag operations.
+    if (record->event.pressed && !pointer_is_action_keycode(keycode) && !pointer_is_modifier_keycode(keycode)) {
+        if (obbut_split_state.pointer_drag_lock_active) {
+            pointer_set_drag_lock(false);
+        }
+        auto_mouse_reset_trigger(true);
+    }
+#endif
+
+    switch (keycode) {
+        case PTR_SCROLL:
+            pointer_scroll_key_held = record->event.pressed;
+            pointer_reset_scroll_state();
+            return false;
+        case PTR_SNIPER:
+            pointer_sniper_held = record->event.pressed;
+            pointer_reset_cursor_accumulators();
+            return false;
+        case PTR_DRAG_LOCK:
+            if (record->event.pressed) {
+                pointer_set_drag_lock(!obbut_split_state.pointer_drag_lock_active);
+            }
+            return false;
+        case PTR_SENS_DOWN:
+            if (record->event.pressed && pointer_sensitivity_index > 0) {
+                pointer_sensitivity_index--;
+                pointer_reset_cursor_accumulators();
+            }
+            return false;
+        case PTR_SENS_UP:
+            if (record->event.pressed && pointer_sensitivity_index + 1 < ARRAY_SIZE(pointer_sensitivity_levels)) {
+                pointer_sensitivity_index++;
+                pointer_reset_cursor_accumulators();
+            }
+            return false;
+        case PTR_SCROLL_DOWN:
+            if (record->event.pressed && pointer_scroll_index > 0) {
+                pointer_scroll_index--;
+                pointer_reset_scroll_state();
+            }
+            return false;
+        case PTR_SCROLL_UP:
+            if (record->event.pressed && pointer_scroll_index + 1 < ARRAY_SIZE(pointer_scroll_divisors)) {
+                pointer_scroll_index++;
+                pointer_reset_scroll_state();
+            }
+            return false;
+    }
+
     // When pressing RGB control keys on Function layer, enable preview mode
     if (record->event.pressed && get_highest_layer(layer_state) == _FUNCTION) {
         switch (keycode) {
@@ -342,7 +524,7 @@ bool obbut_process_record(uint16_t keycode, keyrecord_t *record) {
             case RM_SATD:
             case RM_VALU:
             case RM_VALD:
-                rgb_preview_mode = true;
+                obbut_split_state.rgb_preview_mode = true;
                 break;
         }
     }
@@ -403,46 +585,118 @@ bool obbut_process_record(uint16_t keycode, keyrecord_t *record) {
 }
 
 layer_state_t obbut_layer_state_set(layer_state_t state) {
+#if defined(POINTING_DEVICE_AUTO_MOUSE_ENABLE)
+    layer_state_t state_without_pointer = remove_auto_mouse_layer(state, true);
+    uint8_t underlying_layer = get_highest_layer(state_without_pointer);
+    bool utility_layer_active = underlying_layer == _LOWER || underlying_layer == _RAISE || underlying_layer == _FUNCTION;
+
+    if (utility_layer_active) {
+        pointer_set_drag_lock(false);
+        state = remove_auto_mouse_layer(state, true);
+        set_auto_mouse_enable(false);
+    } else {
+        set_auto_mouse_enable(true);
+    }
+#endif
+
     // Reset preview mode when leaving Function layer
     if (get_highest_layer(state) != _FUNCTION) {
-        rgb_preview_mode = false;
+        obbut_split_state.rgb_preview_mode = false;
     }
     return state;
 }
 
-// ============== POINTING DEVICE (TRACKPAD SCROLL) ==============
+// ============== POINTING DEVICE ==============
 
 #ifdef POINTING_DEVICE_ENABLE
+
+void pointing_device_init_user(void) {
+    pointer_sensitivity_index = POINTER_SENSITIVITY_DEFAULT_INDEX;
+    pointer_scroll_index = POINTER_SCROLL_DEFAULT_INDEX;
+    pointer_scroll_key_held = false;
+    pointer_sniper_held = false;
+    pointer_scrolling_was_active = false;
+    obbut_split_state.pointer_drag_lock_active = false;
+    pointer_reset_cursor_accumulators();
+    pointer_reset_scroll_state();
+
+#if defined(POINTING_DEVICE_AUTO_MOUSE_ENABLE)
+    set_auto_mouse_layer(_POINTER);
+    set_auto_mouse_enable(true);
+#endif
+}
+
+static uint16_t pointer_absolute_movement(mouse_xy_report_t movement) {
+    return movement < 0 ? (uint16_t)(-movement) : (uint16_t)movement;
+}
+
 report_mouse_t pointing_device_task_user(report_mouse_t mouse_report) {
-    // On Lower layer, convert mouse movement to scrolling
-    if (get_highest_layer(layer_state) == _LOWER) {
-        // Accumulate for smooth scrolling with fractional values
-        scroll_accumulated_h += (float)mouse_report.x / SCROLL_DIVISOR_H;
-        scroll_accumulated_v += (float)mouse_report.y / SCROLL_DIVISOR_V;
+    bool scrolling_active = layer_state_is(_LOWER) || pointer_scroll_key_held;
+    if (scrolling_active != pointer_scrolling_was_active) {
+        pointer_reset_scroll_state();
+        pointer_scrolling_was_active = scrolling_active;
+    }
 
-        // Convert to scroll values
-        mouse_report.h = (int8_t)scroll_accumulated_h;
-        mouse_report.v = -(int8_t)scroll_accumulated_v;  // Negative for natural scroll direction
+    if (scrolling_active) {
+        mouse_xy_report_t movement_x = mouse_report.x;
+        mouse_xy_report_t movement_y = mouse_report.y;
 
-        // Keep fractional remainder for next iteration
-        scroll_accumulated_h -= (int8_t)scroll_accumulated_h;
-        scroll_accumulated_v -= (int8_t)scroll_accumulated_v;
-
-        // Clear mouse movement (cursor shouldn't move while scrolling)
+        mouse_report.h = 0;
+        mouse_report.v = 0;
         mouse_report.x = 0;
         mouse_report.y = 0;
+
+        if (pointer_scroll_axis == POINTER_SCROLL_AXIS_NONE) {
+            pointer_scroll_pending_x += movement_x;
+            pointer_scroll_pending_y += movement_y;
+            pointer_scroll_absolute_x += pointer_absolute_movement(movement_x);
+            pointer_scroll_absolute_y += pointer_absolute_movement(movement_y);
+
+            if (pointer_scroll_absolute_x + pointer_scroll_absolute_y >= POINTER_SCROLL_AXIS_THRESHOLD) {
+                pointer_scroll_axis = pointer_scroll_absolute_x >= pointer_scroll_absolute_y
+                                          ? POINTER_SCROLL_AXIS_HORIZONTAL
+                                          : POINTER_SCROLL_AXIS_VERTICAL;
+                pointer_scroll_accumulated = pointer_scroll_axis == POINTER_SCROLL_AXIS_HORIZONTAL
+                                                 ? pointer_scroll_pending_x
+                                                 : pointer_scroll_pending_y;
+            }
+        } else {
+            pointer_scroll_accumulated += pointer_scroll_axis == POINTER_SCROLL_AXIS_HORIZONTAL
+                                              ? movement_x
+                                              : movement_y;
+        }
+
+        if (pointer_scroll_axis != POINTER_SCROLL_AXIS_NONE) {
+            int32_t scroll_units = pointer_scroll_accumulated / pointer_scroll_divisors[pointer_scroll_index];
+            pointer_scroll_accumulated -= scroll_units * pointer_scroll_divisors[pointer_scroll_index];
+            if (pointer_scroll_axis == POINTER_SCROLL_AXIS_HORIZONTAL) {
+                mouse_report.h = (mouse_hv_report_t)scroll_units;
+            } else {
+                mouse_report.v = (mouse_hv_report_t)-scroll_units;
+            }
+        }
     } else {
-        // Apply mouse sensitivity scaling
-        mouse_accumulated_x += (float)mouse_report.x * MOUSE_SENSITIVITY;
-        mouse_accumulated_y += (float)mouse_report.y * MOUSE_SENSITIVITY;
+        uint16_t sensitivity_denominator = 100;
+        uint16_t sensitivity_numerator = pointer_sensitivity_levels[pointer_sensitivity_index];
+        if (pointer_sniper_held) {
+            sensitivity_numerator *= POINTER_SNIPER_PERCENT;
+            sensitivity_denominator *= 100;
+        }
 
-        mouse_report.x = (mouse_xy_report_t)mouse_accumulated_x;
-        mouse_report.y = (mouse_xy_report_t)mouse_accumulated_y;
+        pointer_mouse_accumulated_x += (int32_t)mouse_report.x * sensitivity_numerator;
+        pointer_mouse_accumulated_y += (int32_t)mouse_report.y * sensitivity_numerator;
 
-        // Keep fractional remainder for smooth movement
-        mouse_accumulated_x -= (mouse_xy_report_t)mouse_accumulated_x;
-        mouse_accumulated_y -= (mouse_xy_report_t)mouse_accumulated_y;
+        mouse_report.x = (mouse_xy_report_t)(pointer_mouse_accumulated_x / sensitivity_denominator);
+        mouse_report.y = (mouse_xy_report_t)(pointer_mouse_accumulated_y / sensitivity_denominator);
+
+        pointer_mouse_accumulated_x -= (int32_t)mouse_report.x * sensitivity_denominator;
+        pointer_mouse_accumulated_y -= (int32_t)mouse_report.y * sensitivity_denominator;
     }
+
+    if (obbut_split_state.pointer_drag_lock_active) {
+        mouse_report.buttons |= MOUSE_BTN1;
+    }
+
     return mouse_report;
 }
 #endif
@@ -454,11 +708,48 @@ bool obbut_rgb_matrix_indicators(uint8_t led_min, uint8_t led_max) {
     uint8_t layer = get_highest_layer(layer_state);
 
     // Skip Function layer indicators if in preview mode
-    if (layer == _FUNCTION && rgb_preview_mode) {
+    if (layer == _FUNCTION && obbut_split_state.rgb_preview_mode) {
         return false;
     }
 
-    if (layer == _LOWER) {
+    if (layer == _POINTER) {
+        // Keep a dim whole-board state color visible on both halves.
+        for (uint8_t i = led_min; i < led_max; i++) {
+            if (obbut_split_state.pointer_drag_lock_active) {
+                rgb_matrix_set_color(i, 48, 0, 0);
+            } else {
+                rgb_matrix_set_color(i, 0, 24, 32);
+            }
+        }
+
+        for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
+            for (uint8_t col = 0; col < MATRIX_COLS; col++) {
+                uint8_t led_index = g_led_config.matrix_co[row][col];
+                if (led_index >= led_min && led_index < led_max && led_index != NO_LED) {
+                    keypos_t pos = {.row = row, .col = col};
+                    uint16_t keycode = keymap_key_to_keycode(_POINTER, pos);
+
+                    if (keycode == MS_BTN1 || keycode == MS_BTN2 || keycode == MS_BTN3) {
+                        rgb_matrix_set_color(led_index, 0, 220, 220);
+                    } else if (keycode == KC_WBAK || keycode == KC_WFWD) {
+                        rgb_matrix_set_color(led_index, 148, 0, 211);
+                    } else if (keycode == PTR_SCROLL || keycode == PTR_SNIPER) {
+                        rgb_matrix_set_color(led_index, 255, 180, 0);
+                    } else if (keycode == PTR_SENS_UP || keycode == PTR_SCROLL_UP) {
+                        rgb_matrix_set_color(led_index, 0, 255, 0);
+                    } else if (keycode == PTR_SENS_DOWN || keycode == PTR_SCROLL_DOWN) {
+                        rgb_matrix_set_color(led_index, 0, 50, 0);
+                    } else if (keycode == PTR_DRAG_LOCK) {
+                        if (obbut_split_state.pointer_drag_lock_active) {
+                            rgb_matrix_set_color(led_index, 255, 68, 68);
+                        } else {
+                            rgb_matrix_set_color(led_index, 255, 128, 0);
+                        }
+                    }
+                }
+            }
+        }
+    } else if (layer == _LOWER) {
         // Turn off all LEDs first
         for (uint8_t i = led_min; i < led_max; i++) {
             rgb_matrix_set_color(i, RGB_OFF);

@@ -43,6 +43,49 @@ func supportedGeometryMapsVisibleSwitchesToUniqueMatrixPositions() {
     #expect(Set(KeyboardGeometryCatalog.elora.matrixPositions).count == 62)
 }
 
+/// Verifies five- and six-layer Kyria firmware advertise only their supplied layers.
+@Test
+func keymapDefinitionSupportsLegacyAndPointerLayerCounts() throws {
+    let legacy = try #require(KeymapDefinition(firmwareKeymap: TestKeymaps.makeKyria(layerCount: 5)))
+    let current = try #require(KeymapDefinition(firmwareKeymap: TestKeymaps.makeKyria()))
+
+    #expect(legacy.supportedLayers == [.base, .qwerty, .lower, .raise, .function])
+    #expect(current.supportedLayers == KeymapLayer.allCases)
+    #expect(current.supportedLayers.last == .pointer)
+}
+
+/// Verifies protocol-v3 pointer semantic identifiers remain append-only and stable.
+@Test
+func pointerSemanticRawValuesAreStable() {
+    #expect(KeySemantic.pointerLeftClick.rawValue == 3)
+    #expect(KeySemantic.pointerRightClick.rawValue == 4)
+    #expect(KeySemantic.pointerMiddleClick.rawValue == 5)
+    #expect(KeySemantic.browserBack.rawValue == 6)
+    #expect(KeySemantic.browserForward.rawValue == 7)
+    #expect(KeySemantic.pointerScroll.rawValue == 8)
+    #expect(KeySemantic.pointerSniper.rawValue == 9)
+    #expect(KeySemantic.pointerDragLock.rawValue == 10)
+    #expect(KeySemantic.pointerSensitivityDown.rawValue == 11)
+    #expect(KeySemantic.pointerSensitivityUp.rawValue == 12)
+    #expect(KeySemantic.pointerScrollSpeedDown.rawValue == 13)
+    #expect(KeySemantic.pointerScrollSpeedUp.rawValue == 14)
+}
+
+/// Verifies automatic pointer activity never opens the transient layer HUD.
+@MainActor
+@Test
+func pointerLayerDoesNotPresentHUD() async throws {
+    let hud = LayerHUDModel(transitionDelay: .milliseconds(20))
+    let mask = UInt32(1 << KeymapLayer.pointer.rawValue) | 1
+
+    hud.update(activeLayer: .pointer, activeLayerMask: mask)
+    try await Task.sleep(for: .milliseconds(80))
+
+    #expect(hud.presentation == nil)
+    #expect(KeymapLayer.pointer.displayName == "Pointer")
+    #expect(KeymapLayer.pointer.legendName == "P")
+}
+
 /// Verifies normalized RGB controls clamp and round to firmware byte ranges.
 @Test
 func normalizedRGBControlsClampToFirmwareRanges() {

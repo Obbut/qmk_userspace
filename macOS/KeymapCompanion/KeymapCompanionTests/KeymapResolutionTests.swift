@@ -68,6 +68,31 @@ func firmwareSemanticOverridesNumericKeycodeLabel() throws {
     #expect(key.resolvedLegend(forActiveLayerMask: 1).label == "Screenshot")
 }
 
+/// Verifies pointer semantics produce stable user-facing legends for custom keycodes.
+@Test
+func pointerSemanticOverridesProduceReadableLegends() throws {
+    let firmwareKeymap = makeFirmwareKeymap(for: .kyria) { entries, rows, columns in
+        setEntry(
+            keycode: 0x7E02,
+            semantic: .pointerDragLock,
+            style: .red,
+            layer: .pointer,
+            row: 7,
+            column: 4,
+            in: &entries,
+            rows: rows,
+            columns: columns
+        )
+    }
+    let definition = try #require(KeymapDefinition(firmwareKeymap: firmwareKeymap))
+    let key = try #require(definition.positionedKeys.first { $0.id == "r7c4" }?.key)
+    let pointerMask = UInt32(1 << KeymapLayer.pointer.rawValue) | 1
+
+    let legend = key.resolvedLegend(forActiveLayerMask: pointerMask)
+    #expect(legend.label == "Drag Lock")
+    #expect(legend.style == .red)
+}
+
 /// Verifies standard macOS keys use native Apple glyphs instead of abbreviations.
 @Test
 func standardMacKeysUseNativeAppleGlyphs() {
@@ -110,6 +135,18 @@ func everyVisibleKeyHasAUniquePhysicalPosition() throws {
     #expect(elora.positionedKeys.count == 62)
     #expect(Set(kyria.positionedKeys.map(\.id)).count == 50)
     #expect(Set(elora.positionedKeys.map(\.id)).count == 62)
+    #expect(kyria.supportedLayers == KeymapLayer.allCases)
+    #expect(elora.supportedLayers == [.base, .qwerty, .lower, .raise, .function])
+}
+
+/// Verifies an older five-layer Kyria keymap remains compatible with the renderer.
+@Test
+func legacyFiveLayerKyriaRemainsSupported() throws {
+    let legacyKyria = makeFirmwareKeymap(for: .kyria, layerCount: 5)
+    let definition = try #require(KeymapDefinition(firmwareKeymap: legacyKyria))
+
+    #expect(definition.supportedLayers == [.base, .qwerty, .lower, .raise, .function])
+    #expect(!definition.supportedLayers.contains(.pointer))
 }
 
 /// Verifies representative matrix-to-geometry mappings against the README SVGs.
@@ -187,16 +224,20 @@ func rightEncoderMatchesFirmwareAndPhysicalGeometry() throws {
 /// Creates a dimensionally accurate firmware matrix and encoder map for tests.
 /// - Parameters:
 ///   - keyboardKind: The matrix shape to create.
+///   - layerCount: An optional firmware layer count override.
 ///   - customize: Optional entry mutations applied before returning.
-/// - Returns: A complete five-layer test keymap.
+/// - Returns: A complete test keymap.
 private func makeFirmwareKeymap(
     for keyboardKind: KeyboardKind,
+    layerCount: Int? = nil,
     customize: (_ entries: inout [FirmwareKeymapEntry], _ rows: Int, _ columns: Int) -> Void = { _, _, _ in }
 ) -> FirmwareKeymap {
     let rows = keyboardKind == .kyria ? 10 : 12
     let columns = 7
-    let layerCount = KeymapLayer.allCases.count
-    let matrixEntryCount = layerCount * rows * columns
+    let resolvedLayerCount =
+        layerCount
+        ?? (keyboardKind == .kyria ? KeymapLayer.allCases.count : Int(KeymapLayer.function.rawValue) + 1)
+    let matrixEntryCount = resolvedLayerCount * rows * columns
     let transparent = FirmwareKeymapEntry(
         keycode: 0x0001,
         semantic: .none,
@@ -209,7 +250,7 @@ private func makeFirmwareKeymap(
     )
     var entries = Array(
         repeating: transparent,
-        count: matrixEntryCount + layerCount * EncoderDirection.allCases.count
+        count: matrixEntryCount + resolvedLayerCount * EncoderDirection.allCases.count
     )
     for row in 0..<rows {
         for column in 0..<columns {
@@ -240,8 +281,9 @@ private func makeFirmwareKeymap(
         (0x00AC, 0x00AB),
         (0x00AA, 0x00A9),
         (0x7844, 0x7843),
+        (0x00AA, 0x00A9),
     ]
-    for (layerIndex, keycodes) in encoderKeycodes.enumerated() {
+    for (layerIndex, keycodes) in encoderKeycodes.prefix(resolvedLayerCount).enumerated() {
         let encoderOffset =
             matrixEntryCount
             + layerIndex * EncoderDirection.allCases.count
@@ -260,7 +302,7 @@ private func makeFirmwareKeymap(
     customize(&entries, rows, columns)
     return FirmwareKeymap(
         keyboardKind: keyboardKind,
-        layerCount: layerCount,
+        layerCount: resolvedLayerCount,
         matrixRowCount: rows,
         matrixColumnCount: columns,
         encoderCount: 1,

@@ -100,6 +100,30 @@
                 .screenshot
             case UInt8(KEYMAP_PROTOCOL_PLATFORM_SEMANTIC_AEROSPACE):
                 .aerospace
+            case UInt8(KEYMAP_PROTOCOL_PLATFORM_SEMANTIC_POINTER_LEFT_CLICK):
+                .pointerLeftClick
+            case UInt8(KEYMAP_PROTOCOL_PLATFORM_SEMANTIC_POINTER_RIGHT_CLICK):
+                .pointerRightClick
+            case UInt8(KEYMAP_PROTOCOL_PLATFORM_SEMANTIC_POINTER_MIDDLE_CLICK):
+                .pointerMiddleClick
+            case UInt8(KEYMAP_PROTOCOL_PLATFORM_SEMANTIC_BROWSER_BACK):
+                .browserBack
+            case UInt8(KEYMAP_PROTOCOL_PLATFORM_SEMANTIC_BROWSER_FORWARD):
+                .browserForward
+            case UInt8(KEYMAP_PROTOCOL_PLATFORM_SEMANTIC_POINTER_SCROLL):
+                .pointerScroll
+            case UInt8(KEYMAP_PROTOCOL_PLATFORM_SEMANTIC_POINTER_SNIPER):
+                .pointerSniper
+            case UInt8(KEYMAP_PROTOCOL_PLATFORM_SEMANTIC_POINTER_DRAG_LOCK):
+                .pointerDragLock
+            case UInt8(KEYMAP_PROTOCOL_PLATFORM_SEMANTIC_POINTER_SENSITIVITY_DOWN):
+                .pointerSensitivityDown
+            case UInt8(KEYMAP_PROTOCOL_PLATFORM_SEMANTIC_POINTER_SENSITIVITY_UP):
+                .pointerSensitivityUp
+            case UInt8(KEYMAP_PROTOCOL_PLATFORM_SEMANTIC_POINTER_SCROLL_SPEED_DOWN):
+                .pointerScrollSpeedDown
+            case UInt8(KEYMAP_PROTOCOL_PLATFORM_SEMANTIC_POINTER_SCROLL_SPEED_UP):
+                .pointerScrollSpeedUp
             default:
                 nil
             }

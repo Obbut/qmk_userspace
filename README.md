@@ -29,7 +29,7 @@ Each half must be flashed separately:
 
 ### Keymap
 
-4-layer Colemak-DH layout with per-layer RGB indicators.
+Six-layer Colemak-DH layout with per-layer RGB indicators and an automatic pointer layer.
 
 #### Default Layer
 
@@ -55,6 +55,21 @@ F-keys, RGB controls, and bootloader. RGB indicators: cyan for F-keys, green for
 
 ![Function layer](images/kyria-function.svg)
 
+#### Pointer Layer
+
+Touching or moving on the Cirque trackpad activates Pointer automatically. The layer remains available briefly after movement and stays active while a pointer action is held.
+
+- `M N E I O`: Browser Back, Left Click, Right Click, Middle Click, Browser Forward
+- `L` / `U`: Pointer sensitivity down/up
+- `Y` / `;`: Drag-scroll speed down/up
+- `H`: Hold for dominant-axis scrolling
+- `,`: Hold for sniper precision
+- `.`: Toggle drag lock
+
+Pointer mode uses a dim cyan RGB underlay. Drag lock changes the underlay to red and is released by another drag-lock tap, ordinary typing, or entry into Lower, Raise, or Function. Sensitivity and scroll-speed adjustments last until reboot.
+
+![Pointer layer](images/kyria-pointer.svg)
+
 ---
 
 ## Elora Rev2 (Halcyon)
@@ -63,7 +78,7 @@ Split ergonomic keyboard with number row:
 - **Left half**: No module
 - **Right half**: Encoder module
 
-The Elora shares code with the Kyria - all layers and settings are identical except for the additional number row.
+The Elora shares the Kyria's typing layers and settings, except for the Kyria-only automatic Pointer layer and the Elora's additional number row.
 
 ### Flashing
 
@@ -75,7 +90,7 @@ Each half must be flashed separately:
 
 ### Keymap
 
-4-layer Colemak-DH layout with number row and per-layer RGB indicators.
+Five-layer Colemak-DH layout with number row and per-layer RGB indicators.
 
 #### Default Layer
 
@@ -159,7 +174,7 @@ The Planck EZ uses DFU mode:
 
 ### Keymap
 
-5-layer Colemak-DH layout matching the Kyria, with per-layer RGB indicators.
+Five-layer Colemak-DH layout matching the Kyria typing layers, with per-layer RGB indicators.
 
 #### Default Layer
 

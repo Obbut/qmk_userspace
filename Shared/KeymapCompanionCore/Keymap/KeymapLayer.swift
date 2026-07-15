@@ -1,4 +1,4 @@
-/// The layers shared by the Elora and Kyria firmware.
+/// The known layers supplied by supported firmware versions.
 public enum KeymapLayer: UInt8, CaseIterable, Equatable, Hashable, Identifiable, Sendable {
     /// The default typing layer.
     case base = 0
@@ -10,6 +10,8 @@ public enum KeymapLayer: UInt8, CaseIterable, Equatable, Hashable, Identifiable,
     case raise = 3
     /// The function and system-control layer.
     case function = 4
+    /// The Kyria automatic pointer layer.
+    case pointer = 5
 
     /// The firmware layer index.
     public var id: UInt8 { rawValue }
@@ -22,18 +24,23 @@ public enum KeymapLayer: UInt8, CaseIterable, Equatable, Hashable, Identifiable,
         case .lower: "Lower"
         case .raise: "Raise"
         case .function: "Function"
+        case .pointer: "Pointer"
         }
     }
 
     /// The compact layer name shown on key legends.
     public var legendName: String {
-        self == .function ? "Fn" : displayName
+        switch self {
+        case .function: "Fn"
+        case .pointer: "P"
+        default: displayName
+        }
     }
 
     /// Whether activating the layer is eligible to present the transient HUD.
     public var isHUDLayer: Bool {
         switch self {
-        case .base, .qwerty: false
+        case .base, .qwerty, .pointer: false
         case .lower, .raise, .function: true
         }
     }

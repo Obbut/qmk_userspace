@@ -4,9 +4,9 @@
 enum TestKeymaps {
     /// Creates a dimensionally valid Kyria keymap.
     ///
+    /// - Parameter layerCount: The number of firmware layers to include.
     /// - Returns: An unassigned keymap with every supported layer and encoder direction.
-    static func makeKyria() -> FirmwareKeymap {
-        let layerCount = KeymapLayer.allCases.count
+    static func makeKyria(layerCount: Int = KeymapLayer.allCases.count) -> FirmwareKeymap {
         let rowCount = 10
         let columnCount = 7
         let matrixEntryCount = layerCount * rowCount * columnCount

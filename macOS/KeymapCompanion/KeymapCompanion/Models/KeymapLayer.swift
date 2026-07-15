@@ -1,7 +1,7 @@
 import KeymapCompanionCore
 import Foundation
 
-/// A firmware layer shared by the Elora and Kyria keymaps.
+/// A known firmware layer supplied by a supported keyboard.
 typealias KeymapLayer = KeymapCompanionCore.KeymapLayer
 
 /// macOS-localized presentation for shared firmware layers.
@@ -14,6 +14,7 @@ extension KeymapCompanionCore.KeymapLayer {
         case .lower: "Lower"
         case .raise: "Raise"
         case .function: "Function"
+        case .pointer: "Pointer"
         }
     }
 }

@@ -37,3 +37,10 @@ layers:
     - ["", {t: F1, type: rgb-cyan}, {t: F2, type: rgb-cyan}, {t: F3, type: rgb-cyan}, {t: F4, type: rgb-cyan}, {t: F5, type: rgb-cyan},     "", {t: QWERTY, type: rgb-purple},    "", "", "", {t: Sat-, type: rgb-green-dark}, {t: Hue-, type: rgb-green-dark}, {t: Brt-, type: rgb-green-dark}, {t: Prev, type: rgb-green-dark}, ""]
     - ["", "", "", "", "",    "", "", "", "", ""]
     - ["", "", "", "", "",    "", "", "", "", ""]
+
+  Pointer:
+    - ["", "", "", "", "", "",    "", {t: Pointer−, type: rgb-green-dark}, {t: Pointer+, type: rgb-green}, {t: Scroll−, type: rgb-green-dark}, {t: Scroll+, type: rgb-green}, ""]
+    - ["", "", "", "", "", "",    {t: Back, type: rgb-purple}, {t: Left Click, type: rgb-cyan}, {t: Right Click, type: rgb-cyan}, {t: Middle Click, type: rgb-cyan}, {t: Forward, type: rgb-purple}, ""]
+    - ["", "", "", "", "", "",    "", "",    "", "", "", {t: Scroll, type: rgb-yellow}, {t: Sniper, type: rgb-yellow}, {t: Drag Lock, type: rgb-red}, "", ""]
+    - ["", "", "", "", "",    "", "", "", "", ""]
+    - ["", "", "", "", "",    "", "", "", "", ""]

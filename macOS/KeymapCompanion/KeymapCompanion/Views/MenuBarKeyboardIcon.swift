@@ -213,6 +213,8 @@ private enum MenuBarKeyboardIconRenderer {
             cutOutText("Q", in: badgeRect, context: &context)
         case .function:
             cutOutText("FN", in: badgeRect, context: &context)
+        case .pointer:
+            cutOutText("P", in: badgeRect, context: &context)
         }
 
         context.blendMode = .normal

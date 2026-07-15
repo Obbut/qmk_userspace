@@ -38,7 +38,7 @@ draw_keymap() {
 }
 
 # Kyria layers
-draw_keymap "keymap-kyria.yaml" "kyria" "Default" "QWERTY" "Lower" "Raise" "Function"
+draw_keymap "keymap-kyria.yaml" "kyria" "Default" "QWERTY" "Lower" "Raise" "Function" "Pointer"
 
 # Elora layers
 draw_keymap "keymap-elora.yaml" "elora" "Default" "QWERTY" "Lower" "Raise" "Function"

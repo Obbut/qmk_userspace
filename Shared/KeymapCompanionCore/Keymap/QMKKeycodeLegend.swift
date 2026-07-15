@@ -24,6 +24,18 @@ enum QMKKeycodeLegend {
         switch entry.semantic {
         case .screenshot: return "Screenshot"
         case .aerospace: return "Aerospace"
+        case .pointerLeftClick: return "Left Click"
+        case .pointerRightClick: return "Right Click"
+        case .pointerMiddleClick: return "Middle Click"
+        case .browserBack: return "Browser Back"
+        case .browserForward: return "Browser Forward"
+        case .pointerScroll: return "Scroll"
+        case .pointerSniper: return "Sniper"
+        case .pointerDragLock: return "Drag Lock"
+        case .pointerSensitivityDown: return "Pointer −"
+        case .pointerSensitivityUp: return "Pointer +"
+        case .pointerScrollSpeedDown: return "Scroll −"
+        case .pointerScrollSpeedUp: return "Scroll +"
         case .none: break
         }
 

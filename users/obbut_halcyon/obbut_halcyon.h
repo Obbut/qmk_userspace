@@ -15,9 +15,14 @@ enum layers {
     _LOWER,
     _RAISE,
     _FUNCTION,
+    _POINTER,
 };
 
-#define OBBUT_KEYMAP_LAYER_COUNT (_FUNCTION + 1)
+#if defined(KEYBOARD_splitkb_halcyon_kyria_rev4)
+#    define OBBUT_KEYMAP_LAYER_COUNT (_POINTER + 1)
+#else
+#    define OBBUT_KEYMAP_LAYER_COUNT (_FUNCTION + 1)
+#endif
 
 #define LOWER    MO(_LOWER)
 #define RAISE    MO(_RAISE)
@@ -25,6 +30,16 @@ enum layers {
 #define TG_QWERTY  TG(_QWERTY)
 
 // ============== CUSTOM KEYCODES ==============
+
+enum custom_keycodes {
+    PTR_SCROLL = SAFE_RANGE,
+    PTR_SNIPER,
+    PTR_DRAG_LOCK,
+    PTR_SENS_DOWN,
+    PTR_SENS_UP,
+    PTR_SCROLL_DOWN,
+    PTR_SCROLL_UP,
+};
 
 // Aerospace window manager modifier (Cmd+Ctrl+Opt)
 #define AEROSPACE LCTL(LGUI(KC_RALT))
@@ -147,6 +162,23 @@ enum layers {
 #define FUNC_NUM_L   _______, _______, _______, _______, _______, _______
 #define FUNC_NUM_R   _______, _______, _______, _______, _______, _______
 
+// ----- POINTER LAYER (Kyria only) -----
+
+#define POINTER_L1   _______, _______, _______, _______, _______, _______
+#define POINTER_R1   _______, PTR_SENS_DOWN, PTR_SENS_UP, PTR_SCROLL_DOWN, PTR_SCROLL_UP, _______
+
+#define POINTER_L2   _______, _______, _______, _______, _______, _______
+#define POINTER_R2   KC_WBAK, MS_BTN1, MS_BTN2, MS_BTN3, KC_WFWD, _______
+
+#define POINTER_L3   _______, _______, _______, _______, _______, _______
+#define POINTER_R3   _______, PTR_SCROLL, PTR_SNIPER, PTR_DRAG_LOCK, _______, _______
+
+#define POINTER_THUMB_L   _______, _______, _______, _______, _______
+#define POINTER_THUMB_R   _______, _______, _______, _______, _______
+
+#define POINTER_MODULE_L  _______, _______, _______, _______, _______
+#define POINTER_MODULE_R  _______, _______, _______, _______, _______
+
 // ============== SHARED ENCODER MAPS ==============
 // Define encoder behavior per layer (same for all Halcyon keyboards)
 
@@ -160,12 +192,15 @@ enum layers {
 #define ENCODER_RAISE_CW      KC_KB_VOLUME_UP
 #define ENCODER_FUNCTION_CCW  RM_PREV
 #define ENCODER_FUNCTION_CW   RM_NEXT
+#define ENCODER_POINTER_CCW   KC_KB_VOLUME_DOWN
+#define ENCODER_POINTER_CW    KC_KB_VOLUME_UP
 
 #define ENCODER_MAP_DEFAULT   ENCODER_CCW_CW(ENCODER_DEFAULT_CCW, ENCODER_DEFAULT_CW)
 #define ENCODER_MAP_QWERTY    ENCODER_CCW_CW(ENCODER_QWERTY_CCW, ENCODER_QWERTY_CW)
 #define ENCODER_MAP_LOWER     ENCODER_CCW_CW(ENCODER_LOWER_CCW, ENCODER_LOWER_CW)
 #define ENCODER_MAP_RAISE     ENCODER_CCW_CW(ENCODER_RAISE_CCW, ENCODER_RAISE_CW)
 #define ENCODER_MAP_FUNCTION  ENCODER_CCW_CW(ENCODER_FUNCTION_CCW, ENCODER_FUNCTION_CW)
+#define ENCODER_MAP_POINTER   ENCODER_CCW_CW(ENCODER_POINTER_CCW, ENCODER_POINTER_CW)
 
 // ============== LAYOUT WRAPPER MACROS ==============
 // These wrapper macros force expansion of row macros before passing to LAYOUT.

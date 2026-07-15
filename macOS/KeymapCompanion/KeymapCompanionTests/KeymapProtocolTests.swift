@@ -50,24 +50,24 @@ func parsesKeyboardStateReport() {
 func parsesKeymapMetadataReport() {
     var packet = makePacket(type: 4)
     packet[6] = KeyboardKind.kyria.rawValue
-    packet[7] = 5
+    packet[7] = 6
     packet[8] = 10
     packet[9] = 7
     packet[10] = 4
     packet[11] = 5
     packet.replaceSubrange(12..<16, with: [0x78, 0x56, 0x34, 0x12])
-    packet.replaceSubrange(16..<18, with: [0x68, 0x01])
+    packet.replaceSubrange(16..<18, with: [0xB0, 0x01])
     packet[18] = 1
     packet[19] = 2
 
     let metadata = KeymapProtocol.keymapMetadataReport(from: packet)
 
     #expect(metadata?.keyboardKind == .kyria)
-    #expect(metadata?.layerCount == 5)
+    #expect(metadata?.layerCount == 6)
     #expect(metadata?.matrixRowCount == 10)
     #expect(metadata?.matrixColumnCount == 7)
     #expect(metadata?.entriesPerChunk == 5)
-    #expect(metadata?.entryCount == 360)
+    #expect(metadata?.entryCount == 432)
     #expect(metadata?.encoderCount == 1)
     #expect(metadata?.fingerprint == 0x1234_5678)
 }
@@ -104,11 +104,12 @@ func sharedMetadataEncoderRoundTripsProtocolV3() {
 func parsesKeymapChunkReport() {
     var packet = makePacket(type: 6)
     packet[6] = KeyboardKind.kyria.rawValue
-    packet[7] = 2
+    packet[7] = 3
     packet.replaceSubrange(8..<10, with: [5, 0])
     packet.replaceSubrange(10..<12, with: [0x68, 0x01])
     packet.replaceSubrange(12..<16, with: [0x1E, 0x02, 0, KeyStyle.yellow.rawValue])
     packet.replaceSubrange(16..<20, with: [0x20, 0x52, 1, KeyStyle.purple.rawValue])
+    packet.replaceSubrange(20..<24, with: [0x02, 0x7E, KeySemantic.pointerDragLock.rawValue, KeyStyle.red.rawValue])
 
     let chunk = KeymapProtocol.keymapChunkReport(from: packet)
 
@@ -118,6 +119,7 @@ func parsesKeymapChunkReport() {
         chunk?.entries == [
             FirmwareKeymapEntry(keycode: 0x021E, semantic: .none, style: .yellow),
             FirmwareKeymapEntry(keycode: 0x5220, semantic: .screenshot, style: .purple),
+            FirmwareKeymapEntry(keycode: 0x7E02, semantic: .pointerDragLock, style: .red),
         ])
 }
 

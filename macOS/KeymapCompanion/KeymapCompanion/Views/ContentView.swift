@@ -10,6 +10,7 @@ struct ContentView: View {
         VStack(spacing: 20) {
             if let definition = model.keymapDefinition {
                 LayerStrip(
+                    supportedLayers: definition.supportedLayers,
                     activeLayer: model.activeLayer,
                     activeLayerMask: model.effectiveLayerMask
                 )
@@ -62,6 +63,7 @@ struct ContentView: View {
 
     #Preview("Layer Strip") {
         LayerStrip(
+            supportedLayers: KeymapLayer.allCases,
             activeLayer: .lower,
             activeLayerMask: 0b0_0111
         )
@@ -83,6 +85,9 @@ struct ContentView: View {
 
 /// The stable list of supported layers and their active bits.
 private struct LayerStrip: View {
+    /// The layers supplied by the connected firmware.
+    let supportedLayers: [KeymapLayer]
+
     /// The highest active layer.
     let activeLayer: KeymapLayer
 
@@ -92,7 +97,7 @@ private struct LayerStrip: View {
     /// The layer strip content.
     var body: some View {
         HStack(spacing: 8) {
-            ForEach(KeymapLayer.allCases) { layer in
+            ForEach(supportedLayers) { layer in
                 LayerChip(
                     layer: layer,
                     isHighest: layer == activeLayer,

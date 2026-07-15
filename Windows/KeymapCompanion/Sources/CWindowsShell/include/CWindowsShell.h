@@ -36,7 +36,8 @@ enum {
     KEYMAP_TRAY_LAYER_QWERTY = 1,
     KEYMAP_TRAY_LAYER_LOWER = 2,
     KEYMAP_TRAY_LAYER_RAISE = 3,
-    KEYMAP_TRAY_LAYER_FUNCTION = 4
+    KEYMAP_TRAY_LAYER_FUNCTION = 4,
+    KEYMAP_TRAY_LAYER_POINTER = 5
 };
 
 keymap_tray_handle *keymap_tray_create(
