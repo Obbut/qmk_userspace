@@ -8,7 +8,7 @@ Personal QMK firmware for four keyboards:
 
 ## Keymap Companion for macOS
 
-The repository includes a native macOS 27 menu-bar app that visualizes the connected Kyria or Elora and follows QMK layer changes in realtime. See [macOS/KeymapCompanion/README.md](macOS/KeymapCompanion/README.md) for build, flashing, and protocol details.
+The repository includes a native macOS 26+ menu-bar app that visualizes the connected Kyria or Elora and follows QMK layer changes in realtime. See [macOS/KeymapCompanion/README.md](macOS/KeymapCompanion/README.md) for build, flashing, and protocol details.
 
 ## Kyria Rev4 (Halcyon)
 

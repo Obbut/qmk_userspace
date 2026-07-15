@@ -1,13 +1,13 @@
 # Keymap Companion
 
-Keymap Companion is a native SwiftUI utility for macOS 27. It discovers the Raw HID interface exposed by this userspace's Kyria and Elora firmware, downloads the complete compiled keymap and encoder map, and follows momentary or toggled layers in realtime. The connected firmware is the source of truth for keycodes, semantic overrides, and RGB-inspired styles; the app retains only physical board geometry and generic QMK keycode formatting.
+Keymap Companion is a native SwiftUI utility for macOS 26 or later. It discovers the Raw HID interface exposed by this userspace's Kyria and Elora firmware, downloads the complete compiled keymap and encoder map, and follows momentary or toggled layers in realtime. The connected firmware is the source of truth for keycodes, semantic overrides, and RGB-inspired styles; the app retains only physical board geometry and generic QMK keycode formatting.
 
 The app has both a normal window and a `MenuBarExtra`. Closing the main window leaves the same process-level `AppModel` and HID monitor running. Holding Lower, Raise, or Function for three seconds presents a compact glass keymap HUD above other apps; returning to Default or QWERTY updates the visible keymap immediately and dismisses it after three seconds. The HUD is a click-through, nonactivating AppKit panel anchored 10 points from the active screen's top-right usable corner, and it stays hidden while the main keymap window is active. Use the keyboard item in the menu bar to reopen the main window, retry discovery, or quit.
 
 ## Requirements
 
-- macOS 27
-- Xcode 27 with Swift 6
+- macOS 26 or later
+- Xcode 26 or later with Swift 6
 - XcodeGen only when regenerating the checked-in Xcode project
 - Docker/OrbStack for QMK firmware builds
 - A Kyria Rev4 or Elora Rev2 connected over USB
