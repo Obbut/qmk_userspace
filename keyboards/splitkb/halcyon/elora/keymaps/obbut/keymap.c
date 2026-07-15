@@ -11,5 +11,13 @@ const uint16_t PROGMEM encoder_map[1][NUM_ENCODERS][NUM_DIRECTIONS] = {{{KC_NO}}
 #endif
 
 uint16_t keymap_key_to_keycode(uint8_t layer, keypos_t key) {
+#if defined(ENCODER_MAP_ENABLE)
+    if (key.row == KEYLOC_ENCODER_CW && key.col < NUM_ENCODERS) {
+        return qmk_swift_encoder_keycode_at(layer, key.col, 1);
+    }
+    if (key.row == KEYLOC_ENCODER_CCW && key.col < NUM_ENCODERS) {
+        return qmk_swift_encoder_keycode_at(layer, key.col, 0);
+    }
+#endif
     return qmk_swift_keycode_at(layer, key.row, key.col);
 }
