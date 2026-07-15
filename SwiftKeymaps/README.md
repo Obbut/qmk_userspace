@@ -102,7 +102,10 @@ public enum KyriaFirmware: QMKFirmware {
     }
 }
 
-#if canImport(SwiftUI)
+#if canImport(SwiftUI) && !QMK_DIRECT_HOST_BUILD
+import QMKKeymapRenderer
+import SwiftUI
+
 #Preview("Kyria") {
     KeymapPreviewView(KyriaFirmware.self)
 }
@@ -195,7 +198,9 @@ dependency. QMK Make derives the ARM target and ABI settings, compiles Embedded
 Swift, and links generated, ignored C artifacts. `draw-keymap.sh` regenerates
 diagram YAML from the same Swift definitions before rendering SVGs.
 
-Open `macOS/KeymapCompanion/KeymapCompanion.xcodeproj` to edit the local package.
-Each firmware constructs `KeymapPreviewView` inside Apple's discoverable
-`#Preview` macro. The previews and live macOS app use `QMKKeymapRenderer` and
-the same catalog-resolved document model.
+Open `SwiftKeymaps/Package.swift` in Xcode and choose My Mac. Each firmware
+module owns its preview in the firmware source itself; select the matching
+scheme (`KyriaFirmware`, `EloraFirmware`, `Q15Firmware`, or `PlanckFirmware`)
+to use its Canvas. The package is the preview workspace and has no dependency
+on either companion app. The previews and companion apps independently consume
+`QMKKeymapRenderer` and the same catalog-resolved document model.

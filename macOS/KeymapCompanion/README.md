@@ -17,18 +17,12 @@ keycodes continue to render.
 Open `KeymapCompanion.xcodeproj`, choose the `KeymapCompanion` scheme and My
 Mac, then Run. The local package dependency graph includes `SwiftKeymaps`, so
 the four firmware modules, `ObbutKeymaps`, and renderer are editable in
-the same Xcode workspace. Each firmware source ends with:
+the same Xcode workspace.
 
-```swift
-#if canImport(SwiftUI)
-import QMKKeymapRenderer
-import SwiftUI
-
-#Preview("Kyria") {
-    KeymapPreviewView(KyriaFirmware.self)
-}
-#endif
-```
+Keymap previews are deliberately independent of this app. Open
+`../../SwiftKeymaps/Package.swift`, select My Mac and the matching firmware
+scheme, then open that firmware's Swift source. Its `#Preview` declaration lives
+in the same file as the keymap.
 
 The generated preview starts with an all-layers overview and includes an
 interactive layer selector. It renders the real authored firmware definition,
