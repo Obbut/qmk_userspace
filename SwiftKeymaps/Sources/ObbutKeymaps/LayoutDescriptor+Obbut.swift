@@ -166,7 +166,7 @@ fileprivate enum ObbutLayoutFactory {
                 let x: Double
                 let width: Double
                 if index == 5 {
-                    x = 6
+                    x = 5
                     width = 2
                 } else if index > 5 {
                     x = Double(index + 1)

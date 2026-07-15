@@ -68,6 +68,23 @@ func allFirmwareDefinitionsAreGeneratorReady() {
     }
 }
 
+/// Pins the two-unit Planck spacebar between its adjacent bottom-row keys.
+@Test
+func planckSpacebarGeometryIsContiguous() throws {
+    let planck = try #require(
+        ObbutKeyboardCatalog.all.first { $0.outputName == "zsa_planck_ez_glow_obbut" }
+    )
+    let bottomRow = planck.layout.keys.suffix(11)
+    let leftKey = bottomRow[bottomRow.index(bottomRow.startIndex, offsetBy: 4)].geometry
+    let spacebar = bottomRow[bottomRow.index(bottomRow.startIndex, offsetBy: 5)].geometry
+    let rightKey = bottomRow[bottomRow.index(bottomRow.startIndex, offsetBy: 6)].geometry
+    let halfUnit = 28.0
+
+    #expect(spacebar.width == 2)
+    #expect(leftKey.centerX + leftKey.width * halfUnit == spacebar.centerX - spacebar.width * halfUnit)
+    #expect(spacebar.centerX + spacebar.width * halfUnit == rightKey.centerX - rightKey.width * halfUnit)
+}
+
 /// Pins every matrix action, semantic, style, and encoder mapping.
 @Test
 func allKeymapsMatchGoldenFingerprints() {
