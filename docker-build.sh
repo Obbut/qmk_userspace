@@ -164,6 +164,19 @@ check_dfu_device() {
     fi
 }
 
+# Fail before waiting when the host has no tool capable of flashing STM32 DFU.
+require_dfu_util() {
+    if command -v dfu-util &>/dev/null || command -v dfu-util.exe &>/dev/null; then
+        return 0
+    fi
+
+    echo "Error: dfu-util is required to flash STM32 keyboards."
+    if [[ "$(uname -s)" == "Darwin" ]] && command -v brew &>/dev/null; then
+        echo "Install it with: brew install dfu-util"
+    fi
+    exit 1
+}
+
 # Convert path to native format (MSYS→Windows) for native Windows tools
 to_native_path() {
     if command -v cygpath &>/dev/null; then
@@ -176,6 +189,8 @@ to_native_path() {
 # Flash Q15 Max via DFU
 flash_q15_dfu() {
     local bin_file="$1"
+
+    require_dfu_util
 
     if [[ ! -f "$SCRIPT_DIR/$bin_file" ]]; then
         echo "Error: Firmware file not found: $bin_file"
@@ -367,6 +382,8 @@ generate_docs() {
 # Flash Planck EZ via DFU (same mechanism as Q15 Max)
 flash_planck_dfu() {
     local bin_file="$1"
+
+    require_dfu_util
 
     if [[ ! -f "$SCRIPT_DIR/$bin_file" ]]; then
         echo "Error: Firmware file not found: $bin_file"

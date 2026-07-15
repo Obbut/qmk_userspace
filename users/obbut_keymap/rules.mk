@@ -41,15 +41,28 @@ EMBEDDED_MACRO_HASH := $(shell cat $(EMBEDDED_MACRO_SOURCES) | sha256sum | cut -
 EMBEDDED_MACRO_EXECUTABLE := \
     $(INTERMEDIATE_OUTPUT)/swift-host/6.3.3-$(EMBEDDED_MACRO_HASH)/QMKFirmwareMacros
 
-EMBEDDED_SWIFT_ALL_SOURCES := \
+# Swift specializes the complete generic firmware graph into the final module.
+# Make every stage observe changes anywhere in that graph, including changes to
+# imported modules that do not alter their public module interface.
+EMBEDDED_SWIFT_INPUTS := \
     $(EMBEDDED_QMK_KEYMAP_KIT_SOURCES) \
     $(EMBEDDED_QMK_FIRMWARE_RUNTIME_SOURCES) \
     $(EMBEDDED_OBBUT_KEYMAP_SOURCES) \
     $(EMBEDDED_FIRMWARE_SOURCES) \
-    $(EMBEDDED_SELECTED_FIRMWARE_SOURCE)
-EMBEDDED_SWIFT_BUILD_HASH := $(shell cat $(EMBEDDED_SWIFT_ALL_SOURCES) | sha256sum | cut -c1-16)
-EMBEDDED_SWIFT_BUILD_STAMP := \
-    $(EMBEDDED_SWIFT_MODULE_DIR)/sources-$(EMBEDDED_SWIFT_BUILD_HASH).stamp
+    $(EMBEDDED_SELECTED_FIRMWARE_SOURCE) \
+    $(EMBEDDED_MACRO_SOURCES) \
+    $(EMBEDDED_SWIFT_BRIDGING_HEADER) \
+    $(QMK_USERSPACE)/users/obbut_keymap/rules.mk
+EMBEDDED_SWIFT_INPUT_HASH := $(shell cat $(EMBEDDED_SWIFT_INPUTS) | sha256sum | cut -c1-16)
+EMBEDDED_SWIFT_INPUT_STAMP := $(EMBEDDED_SWIFT_MODULE_DIR)/input-hash.txt
+
+.PHONY: embedded-swift-input-force
+embedded-swift-input-force:
+
+$(EMBEDDED_SWIFT_INPUT_STAMP): embedded-swift-input-force
+	@mkdir -p $(@D)
+	@printf '%s\n' '$(EMBEDDED_SWIFT_INPUT_HASH)' | cmp -s - $@ || \
+		printf '%s\n' '$(EMBEDDED_SWIFT_INPUT_HASH)' > $@
 
 ifneq ($(filter RP2040 rp2040,$(MCU)),)
     EMBEDDED_SWIFT_TARGET := armv6m-none-none-eabi
@@ -112,16 +125,10 @@ $(EMBEDDED_MACRO_EXECUTABLE): $(EMBEDDED_MACRO_SOURCES) $(QMK_USERSPACE)/users/o
 		$(EMBEDDED_MACRO_SOURCES) \
 		-o $@
 
-$(EMBEDDED_SWIFT_BUILD_STAMP): \
-        $(EMBEDDED_SWIFT_ALL_SOURCES) \
-        $(EMBEDDED_SWIFT_BRIDGING_HEADER) \
-        $(QMK_USERSPACE)/users/obbut_keymap/rules.mk
-	@mkdir -p $(@D)
-	@touch $@
-
 $(INTERMEDIATE_OUTPUT)/embedded_qmk_keymap_kit.o: \
         $(EMBEDDED_QMK_KEYMAP_KIT_SOURCES) \
-        $(EMBEDDED_SWIFT_BUILD_STAMP) \
+        $(EMBEDDED_SWIFT_INPUT_STAMP) \
+        $(INTERMEDIATE_OUTPUT)/cflags.txt \
         $(EMBEDDED_MACRO_EXECUTABLE) \
         $(EMBEDDED_SWIFT_BRIDGING_HEADER) \
         $(QMK_USERSPACE)/users/obbut_keymap/rules.mk
@@ -133,10 +140,12 @@ $(INTERMEDIATE_OUTPUT)/embedded_qmk_keymap_kit.o: \
 		-emit-module-path $(EMBEDDED_SWIFT_MODULE_DIR)/QMKKeymapKit.swiftmodule \
 		-c $(EMBEDDED_QMK_KEYMAP_KIT_SOURCES) \
 		-o $@
+	@touch $@
 
 $(INTERMEDIATE_OUTPUT)/embedded_qmk_firmware_runtime.o: \
         $(EMBEDDED_QMK_FIRMWARE_RUNTIME_SOURCES) \
-        $(EMBEDDED_SWIFT_BUILD_STAMP) \
+        $(EMBEDDED_SWIFT_INPUT_STAMP) \
+        $(INTERMEDIATE_OUTPUT)/cflags.txt \
         $(INTERMEDIATE_OUTPUT)/embedded_qmk_keymap_kit.o \
         $(EMBEDDED_MACRO_EXECUTABLE) \
         $(EMBEDDED_SWIFT_BRIDGING_HEADER) \
@@ -149,10 +158,12 @@ $(INTERMEDIATE_OUTPUT)/embedded_qmk_firmware_runtime.o: \
 		-emit-module-path $(EMBEDDED_SWIFT_MODULE_DIR)/QMKFirmwareRuntime.swiftmodule \
 		-c $(EMBEDDED_QMK_FIRMWARE_RUNTIME_SOURCES) \
 		-o $@
+	@touch $@
 
 $(INTERMEDIATE_OUTPUT)/embedded_obbut_keymaps.o: \
         $(EMBEDDED_OBBUT_KEYMAP_SOURCES) \
-        $(EMBEDDED_SWIFT_BUILD_STAMP) \
+        $(EMBEDDED_SWIFT_INPUT_STAMP) \
+        $(INTERMEDIATE_OUTPUT)/cflags.txt \
         $(INTERMEDIATE_OUTPUT)/embedded_qmk_firmware_runtime.o \
         $(EMBEDDED_MACRO_EXECUTABLE) \
         $(EMBEDDED_SWIFT_BRIDGING_HEADER) \
@@ -165,10 +176,12 @@ $(INTERMEDIATE_OUTPUT)/embedded_obbut_keymaps.o: \
 		-emit-module-path $(EMBEDDED_SWIFT_MODULE_DIR)/ObbutKeymaps.swiftmodule \
 		-c $(EMBEDDED_OBBUT_KEYMAP_SOURCES) \
 		-o $@
+	@touch $@
 
 $(INTERMEDIATE_OUTPUT)/embedded_firmware_module.o: \
         $(EMBEDDED_FIRMWARE_SOURCES) \
-        $(EMBEDDED_SWIFT_BUILD_STAMP) \
+        $(EMBEDDED_SWIFT_INPUT_STAMP) \
+        $(INTERMEDIATE_OUTPUT)/cflags.txt \
         $(INTERMEDIATE_OUTPUT)/embedded_obbut_keymaps.o \
         $(EMBEDDED_MACRO_EXECUTABLE) \
         $(EMBEDDED_SWIFT_BRIDGING_HEADER) \
@@ -181,10 +194,12 @@ $(INTERMEDIATE_OUTPUT)/embedded_firmware_module.o: \
 		-emit-module-path $(EMBEDDED_SWIFT_MODULE_DIR)/$(OBBUT_SWIFT_FIRMWARE_MODULE).swiftmodule \
 		-c $(EMBEDDED_FIRMWARE_SOURCES) \
 		-o $@
+	@touch $@
 
 $(INTERMEDIATE_OUTPUT)/embedded_selected_firmware.o: \
         $(EMBEDDED_SELECTED_FIRMWARE_SOURCE) \
-        $(EMBEDDED_SWIFT_BUILD_STAMP) \
+        $(EMBEDDED_SWIFT_INPUT_STAMP) \
+        $(INTERMEDIATE_OUTPUT)/cflags.txt \
         $(INTERMEDIATE_OUTPUT)/embedded_firmware_module.o \
         $(EMBEDDED_MACRO_EXECUTABLE) \
         $(EMBEDDED_SWIFT_BRIDGING_HEADER) \
@@ -196,3 +211,4 @@ $(INTERMEDIATE_OUTPUT)/embedded_selected_firmware.o: \
 		-module-name ObbutFirmwareExecutable \
 		-c $(EMBEDDED_SELECTED_FIRMWARE_SOURCE) \
 		-o $@
+	@touch $@

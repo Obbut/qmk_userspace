@@ -3,11 +3,25 @@ public struct Key: Sendable {
     /// The keycode emitted at the QMK ABI boundary.
     public let keycode: QMKKeycode
 
+#if hasFeature(Embedded)
+    /// The compact semantic identifier retained by firmware builds.
+    @usableFromInline
+    internal let embeddedSemanticID: UInt16
+
+    /// Renderer legends are host presentation data and are not retained in firmware.
+    public var legend: StaticString? { nil }
+
+    /// Reconstructs the compact semantic value used by executable firmware behavior.
+    public var semantic: KeySemantic? {
+        embeddedSemanticID == 0 ? nil : KeySemantic(contentID: embeddedSemanticID)
+    }
+#else
     /// An optional explicit renderer legend.
     public let legend: StaticString?
 
     /// Optional stable meaning used by renderers and custom behavior.
     public let semantic: KeySemantic?
+#endif
 
     /// The resolved appearance used by renderers and firmware lighting.
     public let appearance: KeyAppearance
@@ -26,8 +40,13 @@ public struct Key: Sendable {
         appearance: KeyAppearance = .standard
     ) {
         self.keycode = keycode
+#if hasFeature(Embedded)
+        _ = legend
+        embeddedSemanticID = semantic?.contentID ?? 0
+#else
         self.legend = legend
         self.semantic = semantic
+#endif
         self.appearance = appearance
     }
 
