@@ -11,7 +11,11 @@ loop, matrix scanning, Embedded Swift runtime, firmware hooks, layer logic,
 metadata, encoder lookup, and RGB policy in the executed ARM binary. After
 boot, it calls every exported matrix and encoder lookup in that same ELF and
 compares the result with a committed snapshot independently resolved by the
-host model.
+host model. It also traverses QMK's own matrix/encoder resolution boundary,
+runs ordinary key events through the complete feature tuple, checks Planck's
+tri-layer transitions, executes RGB indicator policy, and requests protocol-v4
+metadata plus the first and last keymap chunks through the board's real Raw HID
+receive entry point.
 
 Run both production builds and boot checks with:
 
