@@ -12,9 +12,16 @@ FROM ghcr.io/qmk/qmk_cli
 # library. Only compiler executables and their runtime resources are needed.
 COPY --from=swift-toolchain /usr/bin/swift-driver /usr/bin/swift-driver
 COPY --from=swift-toolchain /usr/bin/swift-frontend /usr/bin/swift-frontend
+COPY --from=swift-toolchain /usr/bin/clang-21 /usr/bin/clang-21
 COPY --from=swift-toolchain /usr/lib/swift /usr/lib/swift
+COPY --from=swift-toolchain /usr/lib/clang/21 /usr/lib/clang/21
 COPY --from=swift-toolchain /tmp/libncurses.so.6 /usr/local/lib/libncurses.so.6
-RUN ldconfig && ln -s swift-driver /usr/bin/swiftc && swiftc --version
+RUN ldconfig \
+    && ln -s swift-driver /usr/bin/swift \
+    && ln -s swift-driver /usr/bin/swiftc \
+    && ln -s clang-21 /usr/bin/clang \
+    && ln -s swift-frontend /usr/bin/swift-autolink-extract \
+    && swift --version
 
 # Clone QMK firmware (shallow clone to save space)
 RUN git clone --depth 1 https://github.com/qmk/qmk_firmware.git /qmk_firmware

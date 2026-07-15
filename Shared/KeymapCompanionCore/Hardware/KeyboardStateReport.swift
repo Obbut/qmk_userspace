@@ -1,7 +1,7 @@
 /// A validated keyboard-state packet received from QMK.
 public struct KeyboardStateReport: Equatable, Sendable {
-    /// The keyboard model that produced the report.
-    public let keyboardKind: KeyboardKind
+    /// The keyboard layout that produced the report.
+    public let layoutID: LayoutID
 
     /// The nonpersistent QMK layer-state mask.
     public let layerStateMask: UInt32
@@ -21,21 +21,21 @@ public struct KeyboardStateReport: Equatable, Sendable {
     /// Creates a validated keyboard-state report.
     ///
     /// - Parameters:
-    ///   - keyboardKind: The keyboard model that produced the report.
+    ///   - layoutID: The keyboard layout that produced the report.
     ///   - layerStateMask: The nonpersistent QMK layer-state mask.
     ///   - defaultLayerStateMask: The persistent QMK default-layer-state mask.
     ///   - sequence: The monotonically increasing firmware sequence number.
     ///   - capabilities: The protocol capabilities advertised by the firmware.
     ///   - rgbSettings: The reported lighting configuration, when supported.
     init(
-        keyboardKind: KeyboardKind,
+        layoutID: LayoutID,
         layerStateMask: UInt32,
         defaultLayerStateMask: UInt32,
         sequence: UInt32,
         capabilities: UInt32,
         rgbSettings: RGBSettings?
     ) {
-        self.keyboardKind = keyboardKind
+        self.layoutID = layoutID
         self.layerStateMask = layerStateMask
         self.defaultLayerStateMask = defaultLayerStateMask
         self.sequence = sequence

@@ -1,30 +1,13 @@
-// Shared Raw HID report encoders for firmware and desktop use.
+// Protocol-v4 Raw HID report encoders.
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-/// Firmware-side protocol report encoders.
+/// Firmware-side protocol-v4 report encoders.
 extension KeymapProtocol {
     /// Encodes one complete keyboard-state report.
-    ///
-    /// - Parameters:
-    ///   - bytes: Storage for exactly one report.
-    ///   - keyboardKind: The keyboard identifier byte.
-    ///   - highestActiveLayer: The highest active QMK layer.
-    ///   - layerStateMask: The active nonpersistent layer mask.
-    ///   - defaultLayerStateMask: The active persistent layer mask.
-    ///   - sequence: The monotonically increasing packet sequence.
-    ///   - includesRGBSettings: Whether RGB fields and capability are present.
-    ///   - rgbEffect: The stable RGB effect identifier.
-    ///   - rgbHue: The QMK hue component.
-    ///   - rgbSaturation: The QMK saturation component.
-    ///   - rgbBrightness: The QMK brightness component.
-    ///   - isRGBEnabled: Whether RGB output is enabled.
-    ///   - rgbSpeed: The QMK animation speed.
-    /// - Returns: Whether the report was encoded successfully.
     @discardableResult
     public static func encodeStateReport(
         to bytes: UnsafeMutableBufferPointer<UInt8>,
-        keyboardKind: UInt8,
-        highestActiveLayer: UInt8,
+        layoutID: UInt32,
         layerStateMask: UInt32,
         defaultLayerStateMask: UInt32,
         sequence: UInt32,
@@ -37,77 +20,59 @@ extension KeymapProtocol {
         rgbSpeed: UInt8
     ) -> Bool {
         guard initializeReport(bytes, as: .state) else { return false }
-        bytes[6] = keyboardKind
-        bytes[7] = highestActiveLayer
-        writeUInt32(layerStateMask, to: bytes, at: 8)
-        writeUInt32(defaultLayerStateMask, to: bytes, at: 12)
-        writeUInt32(sequence, to: bytes, at: 16)
-
+        writeUInt32(layoutID, to: bytes, at: 6)
+        writeUInt32(layerStateMask, to: bytes, at: 10)
+        writeUInt32(defaultLayerStateMask, to: bytes, at: 14)
+        writeUInt32(sequence, to: bytes, at: 18)
         var capabilities = layerStateCapability | keymapReadCapability
         if includesRGBSettings {
             capabilities |= rgbSettingsCapability
-            bytes[24] = rgbEffect
-            bytes[25] = rgbHue
-            bytes[26] = rgbSaturation
-            bytes[27] = rgbBrightness
-            bytes[28] = isRGBEnabled ? 1 : 0
-            bytes[29] = rgbSpeed
-            bytes[30] = rgbEffectCount
+            bytes[26] = rgbEffect
+            bytes[27] = rgbHue
+            bytes[28] = rgbSaturation
+            bytes[29] = rgbBrightness
+            bytes[30] = isRGBEnabled ? 1 : 0
+            bytes[31] = rgbSpeed
         }
-        writeUInt32(capabilities, to: bytes, at: 20)
+        writeUInt32(capabilities, to: bytes, at: 22)
         return true
     }
 
-    /// Encodes the metadata that begins a keymap transfer.
-    ///
-    /// - Parameters:
-    ///   - bytes: Storage for exactly one report.
-    ///   - keyboardKind: The keyboard identifier byte.
-    ///   - layerCount: The number of compiled layers.
-    ///   - matrixRowCount: The complete matrix row count.
-    ///   - matrixColumnCount: The matrix column count.
-    ///   - fingerprint: The keymap fingerprint.
-    ///   - entryCount: The total number of keymap entries.
-    ///   - encoderCount: The number of physical encoders represented after matrix entries.
-    /// - Returns: Whether the report was encoded successfully.
+    /// Encodes keymap dimensions and all catalog fingerprints.
     @discardableResult
     public static func encodeKeymapMetadataReport(
         to bytes: UnsafeMutableBufferPointer<UInt8>,
-        keyboardKind: UInt8,
+        layoutID: UInt32,
         layerCount: UInt8,
         matrixRowCount: UInt8,
         matrixColumnCount: UInt8,
         fingerprint: UInt32,
+        semanticCatalogFingerprint: UInt32,
+        styleCatalogFingerprint: UInt32,
         entryCount: UInt16,
         encoderCount: UInt8
     ) -> Bool {
         guard initializeReport(bytes, as: .keymapMetadata) else { return false }
-        bytes[6] = keyboardKind
-        bytes[7] = layerCount
-        bytes[8] = matrixRowCount
-        bytes[9] = matrixColumnCount
-        bytes[10] = UInt8(keymapEntrySize)
-        bytes[11] = UInt8(entriesPerChunk)
-        writeUInt32(fingerprint, to: bytes, at: 12)
+        writeUInt32(layoutID, to: bytes, at: 6)
+        bytes[10] = layerCount
+        bytes[11] = matrixRowCount
+        bytes[12] = matrixColumnCount
+        bytes[13] = UInt8(keymapEntrySize)
+        bytes[14] = UInt8(entriesPerChunk)
+        bytes[15] = encoderCount
         writeUInt16(entryCount, to: bytes, at: 16)
-        bytes[18] = encoderCount
-        bytes[19] = encoderDirectionCount
+        writeUInt32(fingerprint, to: bytes, at: 18)
+        writeUInt32(semanticCatalogFingerprint, to: bytes, at: 22)
+        writeUInt32(styleCatalogFingerprint, to: bytes, at: 26)
+        bytes[30] = encoderDirectionCount
         return true
     }
 
-    /// Encodes the envelope and pagination fields for a keymap chunk.
-    ///
-    /// - Parameters:
-    ///   - bytes: Storage for exactly one report.
-    ///   - keyboardKind: The keyboard identifier byte.
-    ///   - entryCount: The number of entries in this chunk.
-    ///   - startIndex: The first entry's layer-major offset.
-    ///   - totalEntryCount: The complete keymap entry count.
-    /// - Returns: Whether the pagination values fit a valid chunk.
+    /// Encodes the envelope for one page of keymap entries.
     @discardableResult
     public static func encodeKeymapChunkHeader(
         to bytes: UnsafeMutableBufferPointer<UInt8>,
-        keyboardKind: UInt8,
+        layoutID: UInt32,
         entryCount: UInt8,
         startIndex: UInt16,
         totalEntryCount: UInt16
@@ -116,43 +81,31 @@ extension KeymapProtocol {
             Int(entryCount) <= entriesPerChunk,
             Int(startIndex) + Int(entryCount) <= Int(totalEntryCount),
             initializeReport(bytes, as: .keymapChunk)
-        else {
-            return false
-        }
-        bytes[6] = keyboardKind
-        bytes[7] = entryCount
-        writeUInt16(startIndex, to: bytes, at: 8)
-        writeUInt16(totalEntryCount, to: bytes, at: 10)
+        else { return false }
+        writeUInt32(layoutID, to: bytes, at: 6)
+        writeUInt16(startIndex, to: bytes, at: 10)
+        writeUInt16(totalEntryCount, to: bytes, at: 12)
+        bytes[14] = entryCount
         return true
     }
 
-    /// Encodes one entry into an initialized keymap chunk.
-    ///
-    /// - Parameters:
-    ///   - keycode: The compiled QMK keycode.
-    ///   - semantic: The semantic override byte.
-    ///   - style: The visual-style byte.
-    ///   - entryIndex: The zero-based position within this chunk.
-    ///   - bytes: The initialized chunk report.
-    /// - Returns: Whether the entry index is present in this chunk.
+    /// Encodes one keycode and opaque domain-ID tuple.
     @discardableResult
     public static func encodeKeymapEntry(
         keycode: UInt16,
-        semantic: UInt8,
-        style: UInt8,
+        semanticID: UInt16,
+        styleID: UInt16,
         at entryIndex: UInt8,
         to bytes: UnsafeMutableBufferPointer<UInt8>
     ) -> Bool {
         guard bytes.count == reportSize,
             hasValidHeader(in: UnsafeBufferPointer(bytes), messageType: .keymapChunk),
-            entryIndex < bytes[7]
-        else {
-            return false
-        }
+            entryIndex < bytes[14]
+        else { return false }
         let offset = keymapChunkOffset + Int(entryIndex) * keymapEntrySize
         writeUInt16(keycode, to: bytes, at: offset)
-        bytes[offset + 2] = semantic
-        bytes[offset + 3] = style
+        writeUInt16(semanticID, to: bytes, at: offset + 2)
+        writeUInt16(styleID, to: bytes, at: offset + 4)
         return true
     }
 }

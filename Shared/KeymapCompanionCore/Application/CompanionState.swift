@@ -4,7 +4,7 @@ struct CompanionState: Equatable, Sendable {
     private(set) var connectionStatus: ConnectionStatus = .searching
 
     /// The last compatible keyboard that sent a validated report.
-    private(set) var keyboardKind: KeyboardKind?
+    private(set) var layoutID: LayoutID?
 
     /// The visual keymap built from the downloaded firmware matrix.
     private(set) var keymapDefinition: KeymapDefinition?
@@ -31,7 +31,7 @@ struct CompanionState: Equatable, Sendable {
     ///
     /// - Parameters:
     ///   - connectionStatus: The current device-monitoring phase.
-    ///   - keyboardKind: The connected keyboard model, if known.
+    ///   - layoutID: The connected keyboard layout, if known.
     ///   - keymapDefinition: The downloaded visual keymap, if available.
     ///   - layerStateMask: The nonpersistent QMK layer-state mask.
     ///   - defaultLayerStateMask: The persistent QMK default-layer-state mask.
@@ -40,7 +40,7 @@ struct CompanionState: Equatable, Sendable {
     ///   - rgbSettings: The current lighting configuration.
     init(
         connectionStatus: ConnectionStatus,
-        keyboardKind: KeyboardKind?,
+        layoutID: LayoutID?,
         keymapDefinition: KeymapDefinition?,
         layerStateMask: UInt32,
         defaultLayerStateMask: UInt32,
@@ -49,7 +49,7 @@ struct CompanionState: Equatable, Sendable {
         rgbSettings: RGBSettings
     ) {
         self.connectionStatus = connectionStatus
-        self.keyboardKind = keyboardKind
+        self.layoutID = layoutID
         self.keymapDefinition = keymapDefinition
         self.layerStateMask = layerStateMask
         self.defaultLayerStateMask = defaultLayerStateMask
@@ -65,7 +65,7 @@ struct CompanionState: Equatable, Sendable {
 
     /// The highest layer in the effective layer stack.
     var activeLayer: KeymapLayer {
-        KeymapLayer.highestActiveLayer(inLayerMask: effectiveLayerMask)
+        keymapDefinition?.highestActiveLayer(in: effectiveLayerMask) ?? .base
     }
 
     /// Whether the connected firmware supports explicit lighting settings.
@@ -89,7 +89,7 @@ struct CompanionState: Equatable, Sendable {
         switch event {
         case .searching:
             connectionStatus = .searching
-            keyboardKind = nil
+            layoutID = nil
             keymapDefinition = nil
             capabilities = 0
 
@@ -100,12 +100,12 @@ struct CompanionState: Equatable, Sendable {
                 )
                 return previous != self
             }
-            keyboardKind = firmwareKeymap.keyboardKind
+            layoutID = firmwareKeymap.layoutID
             keymapDefinition = definition
 
         case let .state(report):
-            guard keymapDefinition?.keyboardKind == report.keyboardKind else { return false }
-            keyboardKind = report.keyboardKind
+            guard keymapDefinition?.layoutID == report.layoutID else { return false }
+            layoutID = report.layoutID
             layerStateMask = report.layerStateMask
             defaultLayerStateMask = report.defaultLayerStateMask
             latestSequence = report.sequence

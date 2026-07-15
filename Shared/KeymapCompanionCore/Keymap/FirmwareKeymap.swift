@@ -1,7 +1,7 @@
 /// A complete validated keymap downloaded from one keyboard.
 public struct FirmwareKeymap: Equatable, Sendable {
-    /// The keyboard model that supplied the keymap.
-    public let keyboardKind: KeyboardKind
+    /// The keyboard layout that supplied the keymap.
+    public let layoutID: LayoutID
 
     /// The number of firmware layers.
     public let layerCount: Int
@@ -18,34 +18,46 @@ public struct FirmwareKeymap: Equatable, Sendable {
     /// The firmware-provided FNV-1a fingerprint.
     public let fingerprint: UInt32
 
+    /// The firmware's semantic-catalog fingerprint.
+    public let semanticCatalogFingerprint: UInt32
+
+    /// The firmware's style-catalog fingerprint.
+    public let styleCatalogFingerprint: UInt32
+
     /// The layer-major matrix and encoder entries.
     public let entries: [FirmwareKeymapEntry]
 
     /// Creates a complete firmware keymap.
     ///
     /// - Parameters:
-    ///   - keyboardKind: The keyboard model that supplied the keymap.
+    ///   - layoutID: The keyboard layout that supplied the keymap.
     ///   - layerCount: The number of firmware layers.
     ///   - matrixRowCount: The number of rows in the complete split matrix.
     ///   - matrixColumnCount: The number of columns in each matrix row.
     ///   - encoderCount: The number of physical encoders.
     ///   - fingerprint: The firmware-provided FNV-1a fingerprint.
+    ///   - semanticCatalogFingerprint: The firmware semantic-catalog fingerprint.
+    ///   - styleCatalogFingerprint: The firmware style-catalog fingerprint.
     ///   - entries: The layer-major matrix and encoder entries.
     public init(
-        keyboardKind: KeyboardKind,
+        layoutID: LayoutID,
         layerCount: Int,
         matrixRowCount: Int,
         matrixColumnCount: Int,
         encoderCount: Int,
         fingerprint: UInt32,
+        semanticCatalogFingerprint: UInt32,
+        styleCatalogFingerprint: UInt32,
         entries: [FirmwareKeymapEntry]
     ) {
-        self.keyboardKind = keyboardKind
+        self.layoutID = layoutID
         self.layerCount = layerCount
         self.matrixRowCount = matrixRowCount
         self.matrixColumnCount = matrixColumnCount
         self.encoderCount = encoderCount
         self.fingerprint = fingerprint
+        self.semanticCatalogFingerprint = semanticCatalogFingerprint
+        self.styleCatalogFingerprint = styleCatalogFingerprint
         self.entries = entries
     }
 
@@ -122,7 +134,7 @@ public struct FirmwareKeymap: Equatable, Sendable {
             return nil
         }
         var hash = KeymapProtocol.fingerprintSeed(
-            keyboardKind: keyboardKind.rawValue,
+            layoutID: layoutID.rawValue,
             layerCount: encodedLayerCount,
             matrixRowCount: encodedMatrixRowCount,
             matrixColumnCount: encodedMatrixColumnCount,
@@ -131,8 +143,8 @@ public struct FirmwareKeymap: Equatable, Sendable {
         for entry in entries {
             hash = KeymapProtocol.fingerprint(
                 afterAddingKeycode: entry.keycode,
-                semantic: entry.semantic.rawValue,
-                style: entry.style.rawValue,
+                semanticID: entry.semanticID.rawValue,
+                styleID: entry.styleID.rawValue,
                 to: hash
             )
         }

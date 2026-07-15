@@ -7,7 +7,7 @@ struct WindowsViewSnapshot: Equatable {
     let connectionStatus: ConnectionStatus
 
     /// The connected keyboard model.
-    let keyboardKind: KeyboardKind?
+    let layoutID: LayoutID?
 
     /// The downloaded renderer input.
     let keymapDefinition: KeymapDefinition?
@@ -26,7 +26,7 @@ struct WindowsViewSnapshot: Equatable {
     /// - Parameter model: The shared observable source of truth.
     init(model: KeymapCompanionModel) {
         connectionStatus = model.connectionStatus
-        keyboardKind = model.keyboardKind
+        layoutID = model.layoutID
         keymapDefinition = model.keymapDefinition
         effectiveLayerMask = model.effectiveLayerMask
         supportsRGBSettings = model.supportsRGBSettings

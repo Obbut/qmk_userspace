@@ -6,11 +6,15 @@ on:
       - ".github/workflows/macos.yaml"
       - "macOS/**"
       - "Shared/KeymapProtocol/**"
+      - "Shared/KeymapCompanionCore/**"
+      - "SwiftKeymaps/**"
   pull_request:
     paths:
       - ".github/workflows/macos.yaml"
       - "macOS/**"
       - "Shared/KeymapProtocol/**"
+      - "Shared/KeymapCompanionCore/**"
+      - "SwiftKeymaps/**"
   workflow_dispatch:
 
 permissions:
@@ -37,3 +41,9 @@ jobs:
             -destination 'platform=macOS,arch=arm64' \
             CODE_SIGNING_ALLOWED=NO \
             test
+
+      - name: Test Swift keymap framework
+        run: swift test --package-path SwiftKeymaps
+
+      - name: Test shared protocol and companion model
+        run: swift test --package-path Shared

@@ -1,21 +1,38 @@
-# Keymap Companion
+# Keymap Companion for macOS
 
-Keymap Companion is a native SwiftUI utility. It discovers the Raw HID interface exposed by this userspace's Kyria and Elora firmware, downloads the complete compiled keymap and encoder map, and follows momentary or toggled layers in realtime. The connected firmware is the source of truth for keycodes, semantic overrides, and RGB-inspired styles; the app retains only physical board geometry and generic QMK keycode formatting.
+Keymap Companion is a native SwiftUI utility for all four Swift-authored
+firmwares in this repository. It discovers QMK Raw HID devices, downloads the
+compiled keymap, resolves domain-owned semantics and styles, follows layer
+changes in realtime, and renders the result with the same
+`QMKKeymapRenderer` used by `#KeymapPreview`.
 
-The app has both a normal window and a `MenuBarExtra`. Closing the main window leaves the same process-level `AppModel` and HID monitor running. Holding Lower, Raise, or Function for three seconds presents a compact glass keymap HUD above other apps; returning to Default or QWERTY updates the visible keymap immediately and dismisses it after three seconds. The HUD is a click-through, nonactivating AppKit panel anchored 10 points from the active screen's top-right usable corner, and it stays hidden while the main keymap window is active. Use the keyboard item in the menu bar to reopen the main window, retry discovery, or quit.
+The app uses protocol v4 only. There is intentionally no legacy decoder or
+compatibility mode. The protocol carries a stable layout ID, keymap and catalog
+fingerprints, arbitrary layers, arbitrary matrix placements, and zero or more
+encoders. Unknown catalog IDs remain visible as diagnostics while ordinary QMK
+keycodes continue to render.
 
-## Requirements
+## Open in Xcode
 
-- Xcode 27 with Swift 6
-- XcodeGen only when regenerating the checked-in Xcode project
-- Docker/OrbStack for QMK firmware builds
-- A Kyria Rev4 or Elora Rev2 connected over USB
+Open `KeymapCompanion.xcodeproj`, choose the `KeymapCompanion` scheme and My
+Mac, then Run. The local package dependency graph includes `SwiftKeymaps`, so
+the four firmware modules, `ObbutKeymaps`, macros, and renderer are editable in
+the same Xcode workspace. Each firmware source ends with:
 
-## Build and run the app
+```swift
+#if canImport(SwiftUI)
+import QMKKeymapRenderer
+import SwiftUI
 
-Open `KeymapCompanion.xcodeproj`, select the `KeymapCompanion` scheme and My Mac, then run it. The target uses Swift 6 language mode, complete strict-concurrency checking, Main Actor default isolation, and warnings as errors.
+#KeymapPreview(KyriaFirmware.self)
+#endif
+```
 
-From the command line:
+The generated preview starts with an all-layers overview and includes an
+interactive layer selector. It renders the real authored firmware definition,
+not a preview-only model.
+
+Command-line validation:
 
 ```sh
 cd macOS/KeymapCompanion
@@ -27,134 +44,41 @@ xcodebuild \
   test
 ```
 
-The project is generated from `project.yml`. After changing targets or build settings, regenerate it with:
+The project is generated from `project.yml`. Regenerate after project-structure
+changes with `xcodegen generate --spec project.yml`.
 
-```sh
-cd macOS/KeymapCompanion
-xcodegen generate --spec project.yml
-```
+The app is intentionally not sandboxed because it opens QMK's vendor-defined
+IOHID interface directly. Hardened Runtime remains enabled.
 
-The app is intentionally not sandboxed because it opens the QMK vendor-defined IOHID interface directly. Hardened Runtime remains enabled.
+## Shared implementation
 
-## Build and flash companion-enabled firmware
+`Shared/KeymapCompanionCore` owns the `@MainActor @Observable` application
+model and protocol transfer state. macOS injects IOHID transport and Windows
+injects its native SetupAPI transport. Both consume `ObbutKeyboardCatalog` and
+the same domain-resolved document model.
 
-Raw HID is compiled into all four Elora/Kyria half variants. Flash both halves so either side can become the USB master:
+`Shared/KeymapProtocol` is compiled twice from the same Swift source: once for
+the host apps and once with Embedded Swift for firmware. Swift owns packet
+layout, transfer pagination, fingerprints, and state. Generated C and the small
+QMK platform shim expose ABI facts such as matrix entries, timers, Raw HID, and
+RGB persistence; they contain no authored keymap or protocol semantics.
+
+All Raw HID reports are 32 bytes and begin with `KMAP` plus version `4`.
+Metadata reports identify the layout and catalog fingerprints; chunk reports
+stream variable-sized layer, matrix, and encoder entries. Corrupt or reordered
+transfers are rejected by the fingerprint check.
+
+## Firmware
+
+Build companion-enabled firmware through the existing Docker interface:
 
 ```sh
 ./docker-build.sh kyria-all
 ./docker-build.sh elora-all
+./docker-build.sh q15
+./docker-build.sh planck
 ```
 
-Then flash each half with the existing commands:
-
-```sh
-./docker-build.sh flash-kyria-left
-./docker-build.sh flash-kyria-right
-./docker-build.sh flash-elora-left
-./docker-build.sh flash-elora-right
-```
-
-Once a flashed board enumerates, the app finds QMK's vendor usage page `0xFF60` and usage `0x61`, opens the matching endpoint, downloads and fingerprint-validates the keymap, and then requests current state. The keyboard identity comes from the validated responses, so the host does not depend on hardcoded USB vendor or product IDs.
-
-## Shared Swift implementation
-
-Both desktop apps use `KeymapCompanionModel`, the `@MainActor @Observable`
-source of truth in the local `Shared` Swift package. The model owns connection,
-keymap, layer, lighting, and delayed-HUD state. It accesses the shared
-`KeyboardHardwareClient` protocol with Point-Free's `@Dependency`; the macOS
-app injects its IOHID implementation and the Windows app injects its native
-SetupAPI implementation. This keeps platform frameworks and final UI code out
-of the shared package while giving both apps the same state transitions and
-hardware-facing behavior.
-
-Protocol v3 has one source of truth: `Shared/KeymapProtocol`. The same files are included directly in the Keymap Companion target and compiled as Embedded Swift for the RP2040. Swift owns message dispatch, connection state, report encoding and decoding, transfer pagination, and fingerprinting. QMK's C code provides the narrow platform adapter in `users/obbut_halcyon/keymap_protocol_bridge.h`: it exposes keyboard state and compiled keymap entries, sends completed reports, applies RGB settings, and forwards receive and housekeeping callbacks into Swift. The C side contains no protocol version, message identifiers, packet offsets, capability bits, wire semantic/style identifiers, RGB identifiers, or fingerprint algorithm.
-
-The firmware compiler stays inside Docker. `Dockerfile.qmk` combines the official Swift 6.3.3 toolchain with QMK's image, and `users/obbut_halcyon/rules.mk` compiles the shared sources for `armv6m-none-none-eabi` with Embedded Swift enabled. QMK archives that object as `embedded_keymap_protocol.a` and links it into each Kyria and Elora firmware image.
-
-## Protocol
-
-Every Raw HID report is exactly 32 bytes and starts with `KMAP` plus protocol version `3`.
-
-| Message type | Value | Direction | Purpose |
-|---|---:|---|---|
-| Get state | `1` | Host → firmware | Request immediate layer state |
-| State | `2` | Firmware → host | Current layer masks and capabilities |
-| Get keymap info | `3` | Host → firmware | Begin a complete keymap transfer |
-| Keymap info | `4` | Firmware → host | Matrix and encoder dimensions, entry count, and fingerprint |
-| Get keymap chunk | `5` | Host → firmware | Request entries beginning at a 16-bit offset |
-| Keymap chunk | `6` | Firmware → host | Return up to five consecutive entries |
-| Set RGB settings | `7` | Host → firmware | Persist a complete RGB Matrix configuration |
-
-### State packet
-
-| Offset | Size | State packet field |
-|---:|---:|---|
-| 0 | 4 | ASCII magic `KMAP` |
-| 4 | 1 | Protocol version |
-| 5 | 1 | Message type: `1` request, `2` state |
-| 6 | 1 | Keyboard: `1` Kyria, `2` Elora |
-| 7 | 1 | Highest active layer |
-| 8 | 4 | QMK `layer_state`, little-endian |
-| 12 | 4 | QMK `default_layer_state`, little-endian |
-| 16 | 4 | Packet sequence, little-endian |
-| 20 | 4 | Capability flags, little-endian |
-| 24 | 1 | Stable companion RGB effect identifier |
-| 25 | 1 | RGB hue |
-| 26 | 1 | RGB saturation |
-| 27 | 1 | RGB brightness |
-| 28 | 1 | RGB enabled flag |
-| 29 | 1 | RGB animation speed |
-| 30 | 1 | Number of available RGB effects |
-| 31 | 1 | Reserved |
-
-Capability bit `0` advertises realtime layer state. Bit `1` advertises firmware keymap reads. Bit `2` advertises explicit RGB Matrix settings.
-
-### Keymap info packet
-
-| Offset | Size | Field |
-|---:|---:|---|
-| 0 | 4 | ASCII magic `KMAP` |
-| 4 | 1 | Protocol version `3` |
-| 5 | 1 | Message type `4` |
-| 6 | 1 | Keyboard: `1` Kyria, `2` Elora |
-| 7 | 1 | Layer count |
-| 8 | 1 | Matrix row count |
-| 9 | 1 | Matrix column count |
-| 10 | 1 | Entry size: `4` bytes |
-| 11 | 1 | Entries per chunk: `5` |
-| 12 | 4 | FNV-1a keymap fingerprint, little-endian |
-| 16 | 2 | Total entry count, little-endian |
-| 18 | 1 | Encoder count |
-| 19 | 1 | Encoder direction count: `2` |
-| 20 | 12 | Reserved for future versions |
-
-The fingerprint covers keyboard kind, matrix and encoder dimensions, and every encoded entry. The app rejects an incomplete, reordered, or corrupted transfer.
-
-### Keymap chunk packet
-
-The host writes the desired 16-bit start index at offsets `6...7` of a Get keymap chunk request. The firmware returns:
-
-| Offset | Size | Field |
-|---:|---:|---|
-| 0 | 4 | ASCII magic `KMAP` |
-| 4 | 1 | Protocol version `3` |
-| 5 | 1 | Message type `6` |
-| 6 | 1 | Keyboard kind |
-| 7 | 1 | Entry count in this chunk |
-| 8 | 2 | Start index, little-endian |
-| 10 | 2 | Total entry count, little-endian |
-| 12 | 20 | Up to five four-byte entries |
-
-Each entry contains a 16-bit compiled QMK keycode, a one-byte semantic override, and a one-byte visual style. The complete layer-major matrix comes first, followed by counter-clockwise and clockwise encoder entries for each layer. The encoder push switch remains a normal matrix entry (`r9c0` on Kyria and `r11c0` on Elora). Semantic overrides preserve names such as `Screenshot` and `Aerospace` that cannot be recovered from the compiled keycode after C preprocessing.
-
-The app maps the downloaded matrix coordinates onto its physical Kyria or Elora geometry, combines both layer masks, and resolves transparent keys through the complete active stack. For example, a transparent key on Lower still displays its firmware-provided QWERTY mapping when QWERTY is toggled underneath it.
-
-Firmware sends keymap metadata and chunks only in response to host requests. After that handshake, state notifications are sent when layer or RGB state changes. Callbacks mark state dirty; the actual state write is throttled and performed from QMK's housekeeping task on the USB master.
-
-The RGB settings popover is shown only when capability bit `2` is present.
-
-An RGB settings request uses message type `7`. Byte `6` is the enabled flag, byte `7` is the stable effect identifier, and bytes `8` through `11` contain hue, saturation, brightness, and speed. Firmware maps the stable identifiers to QMK's build-dependent effect enum, applies the complete configuration, persists it once, and immediately echoes the resulting state.
-
-## Extension point for OS-driven keymap features
-
-The HID transport is deliberately bidirectional and versioned. Future work such as Aerospace workspace state can add a host-to-keyboard message type and a capability bit without coupling workspace integration to the layer monitor. Keep OS integrations above `KeymapProtocol` in the app, then translate their state into compact protocol packets; keep rendering or RGB behavior in the shared `users/obbut_halcyon` firmware layer so Kyria and Elora remain synchronized.
+The build runs `qmk-keymapc` first, then compiles the protocol runtime,
+`ObbutKeymaps`, and the selected board module with Swift 6.3.3 for the QMK MCU
+target before linking the normal firmware artifact.

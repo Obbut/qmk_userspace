@@ -58,10 +58,11 @@ fileprivate struct LayerHUDHeader: View {
 
 #if DEBUG
     #Preview("Lower Layer HUD") {
+        let definition = KeymapDefinition.makePreview(for: .elora)
         LayerHUDView(
-            definition: .makePreview(for: .elora),
+            definition: definition,
             presentation: LayerHUDPresentation(
-                layer: .lower,
+                layer: definition.supportedLayers[2],
                 activeLayerMask: 0b0_0101
             )
         )

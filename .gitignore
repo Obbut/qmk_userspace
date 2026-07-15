@@ -8,6 +8,20 @@
 .docker-build-cache/
 .docker-build-cache-keychron/
 .docker-build-cache-zsa/
+.docker-swift-build-cache/
+.docker-swift-build-cache-keychron/
+.docker-swift-build-cache-zsa/
+SwiftKeymaps/.build-direct/
+
+# Swift-authored keymaps generate these QMK ABI and documentation files.
+keyboards/**/keymaps/obbut/keymap.c
+keyboards/**/keymaps/obbut/config.h
+keyboards/**/keymaps/obbut/rules.mk
+keyboards/**/keymaps/obbut/keymap.generated.h
+keymap-kyria.yaml
+keymap-elora.yaml
+keymap-q15.yaml
+keymap-planck.yaml
 
 # macOS
 .DS_Store

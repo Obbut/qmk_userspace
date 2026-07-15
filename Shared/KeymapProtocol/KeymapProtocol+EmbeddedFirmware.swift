@@ -1,33 +1,31 @@
-// Embedded Swift protocol engine that owns Raw HID communication behavior.
+// Embedded Swift protocol-v4 engine.
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #if hasFeature(Embedded)
-    /// The protocol v3 engine built on a narrow set of QMK platform services.
-    ///
-    /// QMK serializes both entry points on the master keyboard's event loop.
+    /// The allocation-free protocol-v4 runtime serialized on QMK's event loop.
     enum KeymapProtocolFirmware {
-        /// The minimum delay between unsolicited state reports, in milliseconds.
+        /// The minimum delay between unsolicited reports.
         fileprivate static let minimumSendInterval: UInt32 = 5
 
-        /// Whether a protocol request has established a host connection.
+        /// Whether a request established a host connection.
         nonisolated(unsafe) fileprivate static var isConnected = false
 
         /// The sequence written into the next state report.
         nonisolated(unsafe) fileprivate static var sequence: UInt32 = 0
 
-        /// The platform timestamp of the most recently sent state.
+        /// The timestamp of the most recently sent state.
         nonisolated(unsafe) fileprivate static var lastSendTimestamp: UInt32 = 0
 
-        /// The last reported nonpersistent layer state.
+        /// The last reported momentary layer mask.
         nonisolated(unsafe) fileprivate static var lastLayerState = UInt32.max
 
-        /// The last reported persistent layer state.
+        /// The last reported persistent layer mask.
         nonisolated(unsafe) fileprivate static var lastDefaultLayerState = UInt32.max
 
-        /// Whether the previous state included RGB settings.
+        /// The last reported RGB capability flag.
         nonisolated(unsafe) fileprivate static var lastIncludesRGBSettings = UInt8.max
 
-        /// The last reported QMK RGB effect-table index.
+        /// The last reported RGB effect.
         nonisolated(unsafe) fileprivate static var lastRGBEffectIndex = UInt8.max
 
         /// The last reported RGB hue.
@@ -42,94 +40,70 @@
         /// The last reported RGB enabled flag.
         nonisolated(unsafe) fileprivate static var lastRGBEnabled = UInt8.max
 
-        /// The last reported RGB animation speed.
+        /// The last reported RGB speed.
         nonisolated(unsafe) fileprivate static var lastRGBSpeed = UInt8.max
 
         /// Handles one complete Raw HID report supplied by QMK.
-        ///
-        /// - Parameters:
-        ///   - data: The bytes received from the host.
-        ///   - length: The number of received bytes.
         static func receive(_ data: UnsafePointer<UInt8>, length: UInt8) {
             let bytes = UnsafeBufferPointer(start: data, count: Int(length))
             guard let messageType = KeymapProtocol.messageType(in: bytes) else { return }
-
             switch messageType {
             case .getState:
                 isConnected = true
                 sendState(using: keymap_protocol_platform_get_snapshot())
-
             case .getKeymapMetadata:
                 isConnected = true
                 sendKeymapMetadata(using: keymap_protocol_platform_get_snapshot())
-
             case .getKeymapChunk:
                 isConnected = true
                 sendKeymapChunk(
                     startingAt: KeymapProtocol.uint16(from: bytes, at: 6),
                     using: keymap_protocol_platform_get_snapshot()
                 )
-
             case .setRGBSettings:
                 applyRGBSettings(from: bytes)
-
             case .state, .keymapMetadata, .keymapChunk:
                 break
             }
         }
 
-        /// Sends an unsolicited state report when observable QMK state changes.
+        /// Sends state when observable QMK state changes.
         static func performHousekeeping() {
             guard isConnected else { return }
             let snapshot = keymap_protocol_platform_get_snapshot()
             guard hasStateChanged(snapshot),
                 snapshot.timestamp &- lastSendTimestamp >= minimumSendInterval
-            else {
-                return
-            }
+            else { return }
             sendState(using: snapshot)
         }
 
-        /// Applies a validated host RGB request through the QMK adapter.
-        ///
-        /// - Parameter bytes: A complete protocol report.
+        /// Applies a validated host RGB request through QMK.
         fileprivate static func applyRGBSettings(from bytes: UnsafeBufferPointer<UInt8>) {
-            guard let effect = KeymapProtocol.RGBEffect(rawValue: bytes[7]) else { return }
+            guard KeymapProtocol.RGBEffect(rawValue: bytes[7]) != nil else { return }
             let applied = keymap_protocol_platform_apply_rgb(
-                effect.rawValue &- 1,
-                bytes[8],
-                bytes[9],
-                bytes[10],
-                bytes[6] == 0 ? 0 : 1,
-                bytes[11]
+                bytes[7], bytes[8], bytes[9], bytes[10],
+                bytes[6] == 0 ? 0 : 1, bytes[11]
             )
             guard applied != 0 else { return }
             isConnected = true
             sendState(using: keymap_protocol_platform_get_snapshot())
         }
 
-        /// Encodes and sends the current keyboard state.
-        ///
-        /// - Parameter snapshot: The QMK state to encode.
-        fileprivate static func sendState(
-            using snapshot: keymap_protocol_platform_snapshot_t
-        ) {
-            guard let keyboardKind = keyboardKind(for: snapshot.keyboard) else { return }
-            let effect = rgbEffect(at: snapshot.rgb_effect_index)
-            let includesRGBSettings = snapshot.includes_rgb_settings != 0 && effect != nil
+        /// Encodes and sends current keyboard state.
+        fileprivate static func sendState(using snapshot: keymap_protocol_platform_snapshot_t) {
+            let includesRGBSettings = snapshot.includes_rgb_settings != 0
+                && KeymapProtocol.RGBEffect(rawValue: snapshot.rgb_effect_index) != nil
             sequence &+= 1
-
             var report: [32 of UInt8] = .init(repeating: 0)
             let encoded = withUnsafeMutableBytes(of: &report) { rawBytes in
                 KeymapProtocol.encodeStateReport(
                     to: rawBytes.bindMemory(to: UInt8.self),
-                    keyboardKind: keyboardKind.rawValue,
-                    highestActiveLayer: snapshot.highest_active_layer,
+                    layoutID: snapshot.layout_id,
                     layerStateMask: snapshot.layer_state_mask,
                     defaultLayerStateMask: snapshot.default_layer_state_mask,
                     sequence: sequence,
                     includesRGBSettings: includesRGBSettings,
-                    rgbEffect: effect?.rawValue ?? 0,
+                    rgbEffect: includesRGBSettings ? snapshot.rgb_effect_index : 0,
                     rgbHue: snapshot.rgb_hue,
                     rgbSaturation: snapshot.rgb_saturation,
                     rgbBrightness: snapshot.rgb_brightness,
@@ -142,32 +116,23 @@
             recordSentState(snapshot)
         }
 
-        /// Encodes and sends keymap dimensions and fingerprint.
-        ///
-        /// - Parameter snapshot: The QMK state containing static keymap dimensions.
+        /// Encodes and sends dimensions and fingerprints.
         fileprivate static func sendKeymapMetadata(
             using snapshot: keymap_protocol_platform_snapshot_t
         ) {
-            guard let keyboardKind = keyboardKind(for: snapshot.keyboard),
-                let entryCount = entryCount(for: snapshot),
-                let fingerprint = fingerprint(
-                    for: snapshot,
-                    keyboardKind: keyboardKind,
-                    entryCount: entryCount
-                )
-            else {
-                return
-            }
-
+            guard let entryCount = entryCount(for: snapshot) else { return }
+            let fingerprint = fingerprint(for: snapshot, entryCount: entryCount)
             var report: [32 of UInt8] = .init(repeating: 0)
             let encoded = withUnsafeMutableBytes(of: &report) { rawBytes in
                 KeymapProtocol.encodeKeymapMetadataReport(
                     to: rawBytes.bindMemory(to: UInt8.self),
-                    keyboardKind: keyboardKind.rawValue,
+                    layoutID: snapshot.layout_id,
                     layerCount: snapshot.layer_count,
                     matrixRowCount: snapshot.matrix_row_count,
                     matrixColumnCount: snapshot.matrix_column_count,
                     fingerprint: fingerprint,
+                    semanticCatalogFingerprint: snapshot.semantic_catalog_fingerprint,
+                    styleCatalogFingerprint: snapshot.style_catalog_fingerprint,
                     entryCount: entryCount,
                     encoderCount: snapshot.encoder_count
                 )
@@ -177,52 +142,33 @@
         }
 
         /// Encodes and sends one page of compiled keymap entries.
-        ///
-        /// - Parameters:
-        ///   - startIndex: The first requested keymap entry.
-        ///   - snapshot: The QMK state containing static keymap dimensions.
         fileprivate static func sendKeymapChunk(
             startingAt startIndex: UInt16,
             using snapshot: keymap_protocol_platform_snapshot_t
         ) {
-            guard let keyboardKind = keyboardKind(for: snapshot.keyboard),
-                let totalEntryCount = entryCount(for: snapshot),
-                startIndex < totalEntryCount
-            else {
+            guard let totalEntryCount = entryCount(for: snapshot), startIndex < totalEntryCount else {
                 return
             }
-
-            let remaining = Int(totalEntryCount - startIndex)
-            let count = UInt8(min(remaining, KeymapProtocol.entriesPerChunk))
+            let count = UInt8(min(Int(totalEntryCount - startIndex), KeymapProtocol.entriesPerChunk))
             var report: [32 of UInt8] = .init(repeating: 0)
             let encoded = withUnsafeMutableBytes(of: &report) { rawBytes -> Bool in
                 let bytes = rawBytes.bindMemory(to: UInt8.self)
-                guard
-                    KeymapProtocol.encodeKeymapChunkHeader(
-                        to: bytes,
-                        keyboardKind: keyboardKind.rawValue,
-                        entryCount: count,
-                        startIndex: startIndex,
-                        totalEntryCount: totalEntryCount
-                    )
-                else {
-                    return false
-                }
-
+                guard KeymapProtocol.encodeKeymapChunkHeader(
+                    to: bytes,
+                    layoutID: snapshot.layout_id,
+                    entryCount: count,
+                    startIndex: startIndex,
+                    totalEntryCount: totalEntryCount
+                ) else { return false }
                 for chunkIndex in 0..<count {
                     let entry = keymap_protocol_platform_get_entry(startIndex + UInt16(chunkIndex))
-                    guard let semantic = semantic(for: entry.semantic_role),
-                        let style = style(for: entry.style_role),
-                        KeymapProtocol.encodeKeymapEntry(
-                            keycode: entry.keycode,
-                            semantic: semantic.rawValue,
-                            style: style.rawValue,
-                            at: chunkIndex,
-                            to: bytes
-                        )
-                    else {
-                        return false
-                    }
+                    guard KeymapProtocol.encodeKeymapEntry(
+                        keycode: entry.keycode,
+                        semanticID: entry.semantic_id,
+                        styleID: entry.style_id,
+                        at: chunkIndex,
+                        to: bytes
+                    ) else { return false }
                 }
                 return true
             }
@@ -230,11 +176,7 @@
             send(&report)
         }
 
-        /// Whether the current snapshot differs from the last sent state.
-        ///
-        /// - Parameter snapshot: The state to compare.
-        ///
-        /// - Returns: Whether a new state report is necessary.
+        /// Whether current state differs from the last sent state.
         fileprivate static func hasStateChanged(
             _ snapshot: keymap_protocol_platform_snapshot_t
         ) -> Bool {
@@ -249,9 +191,7 @@
                 || snapshot.rgb_speed != lastRGBSpeed
         }
 
-        /// Records a successfully sent state for later change detection.
-        ///
-        /// - Parameter snapshot: The state represented by the sent report.
+        /// Records a successfully sent state.
         fileprivate static func recordSentState(
             _ snapshot: keymap_protocol_platform_snapshot_t
         ) {
@@ -268,8 +208,6 @@
         }
 
         /// Passes one fixed-size stack report to QMK.
-        ///
-        /// - Parameter report: The report to transmit.
         fileprivate static func send(_ report: inout [32 of UInt8]) {
             withUnsafeMutableBytes(of: &report) { rawBytes in
                 guard let baseAddress = rawBytes.baseAddress else { return }

@@ -6,8 +6,8 @@ permissions:
   contents: write
 
 jobs:
-  build-kyria:
-    name: 'Build Kyria Rev4'
+  build-halcyon:
+    name: 'Build all Swift firmware outputs'
     runs-on: ubuntu-latest
 
     steps:
@@ -25,7 +25,7 @@ jobs:
             -e SKIP_GIT=1 \
             -e SKIP_VERSION=1 \
             qmk-builder \
-            sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/kyria/rev4 -km obbut -e HLC_CIRQUE_TRACKPAD=1 -e TARGET=kyria_rev4_obbut_left_cirque'
+            sh -c 'make -C /qmk_userspace/SwiftKeymaps qmk-keymapc && /qmk_userspace/SwiftKeymaps/.build-direct/bin/qmk-keymapc --keyboard all --output-root /qmk_userspace && qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/kyria/rev4 -km obbut -e HLC_CIRQUE_TRACKPAD=1 -e TARGET=kyria_rev4_obbut_left_cirque'
 
       - name: Build right half (Encoder)
         run: |
@@ -37,13 +37,35 @@ jobs:
             qmk-builder \
             sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/kyria/rev4 -km obbut -e HLC_ENCODER=1 -e TARGET=kyria_rev4_obbut_right_encoder'
 
+      - name: Build Elora left half
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}:/qmk_userspace" \
+            -e QMK_USERSPACE=/qmk_userspace \
+            -e SKIP_GIT=1 \
+            -e SKIP_VERSION=1 \
+            qmk-builder \
+            sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/elora/rev2 -km obbut -e HLC_NONE=1 -e TARGET=elora_rev2_obbut_left'
+
+      - name: Build Elora right half
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}:/qmk_userspace" \
+            -e QMK_USERSPACE=/qmk_userspace \
+            -e SKIP_GIT=1 \
+            -e SKIP_VERSION=1 \
+            qmk-builder \
+            sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/elora/rev2 -km obbut -e HLC_ENCODER=1 -e TARGET=elora_rev2_obbut_right_encoder'
+
       - name: Upload Kyria firmware
         uses: actions/upload-artifact@v4
         with:
-          name: kyria-firmware
+          name: halcyon-firmware
           path: |
             kyria_rev4_obbut_left_cirque.uf2
             kyria_rev4_obbut_right_encoder.uf2
+            elora_rev2_obbut_left.uf2
+            elora_rev2_obbut_right_encoder.uf2
           retention-days: 1
 
   build-q15:
@@ -63,7 +85,7 @@ jobs:
             -v "${{ github.workspace }}:/qmk_userspace" \
             -e QMK_USERSPACE=/qmk_userspace \
             qmk-keychron-builder \
-            sh -c 'cd /qmk_firmware && make keychron/q15_max/ansi_encoder:obbut'
+            sh -c 'make -C /qmk_userspace/SwiftKeymaps qmk-keymapc && /qmk_userspace/SwiftKeymaps/.build-direct/bin/qmk-keymapc --keyboard q15 --output-root /qmk_userspace && cd /qmk_firmware && make keychron/q15_max/ansi_encoder:obbut'
 
       - name: Upload Q15 Max firmware
         uses: actions/upload-artifact@v4
@@ -89,7 +111,7 @@ jobs:
             -v "${{ github.workspace }}:/qmk_userspace" \
             -e QMK_USERSPACE=/qmk_userspace \
             qmk-zsa-builder \
-            sh -c 'cd /qmk_firmware && make zsa/planck_ez/glow:obbut'
+            sh -c 'make -C /qmk_userspace/SwiftKeymaps qmk-keymapc && /qmk_userspace/SwiftKeymaps/.build-direct/bin/qmk-keymapc --keyboard planck --output-root /qmk_userspace && cd /qmk_firmware && make zsa/planck_ez/glow:obbut'
 
       - name: Upload Planck EZ Glow firmware
         uses: actions/upload-artifact@v4
@@ -101,13 +123,13 @@ jobs:
   publish:
     name: 'Publish Release'
     runs-on: ubuntu-latest
-    needs: [build-kyria, build-q15, build-planck]
+    needs: [build-halcyon, build-q15, build-planck]
 
     steps:
-      - name: Download Kyria firmware
+      - name: Download Halcyon firmware
         uses: actions/download-artifact@v4
         with:
-          name: kyria-firmware
+          name: halcyon-firmware
 
       - name: Download Q15 Max firmware
         uses: actions/download-artifact@v4
@@ -135,6 +157,10 @@ jobs:
           - \`kyria_rev4_obbut_left_cirque.uf2\` - Left half with Cirque trackpad
           - \`kyria_rev4_obbut_right_encoder.uf2\` - Right half with encoder
 
+          **Elora Rev2 (Halcyon)**
+          - \`elora_rev2_obbut_left.uf2\` - Left half
+          - \`elora_rev2_obbut_right_encoder.uf2\` - Right half with encoder
+
           **Keychron Q15 Max**
           - \`keychron_q15_max_ansi_encoder_obbut.bin\` - ANSI encoder variant
 
@@ -144,6 +170,8 @@ jobs:
           Built from commit ${{ github.sha }}" \
             kyria_rev4_obbut_left_cirque.uf2 \
             kyria_rev4_obbut_right_encoder.uf2 \
+            elora_rev2_obbut_left.uf2 \
+            elora_rev2_obbut_right_encoder.uf2 \
             keychron_q15_max_ansi_encoder_obbut.bin \
             zsa_planck_ez_glow_obbut.bin
         env:

@@ -23,9 +23,9 @@ struct KeymapCompanionApp: App {
         MenuBarExtra {
             MenuBarView(model: model)
         } label: {
-            if model.connectionStatus.isConnected, let keyboardKind = model.keyboardKind {
+            if model.connectionStatus.isConnected, let layoutID = model.layoutID {
                 MenuBarKeyboardIcon(
-                    keyboardKind: keyboardKind,
+                    layoutID: layoutID,
                     activeLayer: model.activeLayer
                 )
             } else {

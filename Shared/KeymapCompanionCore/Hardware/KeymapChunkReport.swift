@@ -1,7 +1,7 @@
 /// An ordered page of firmware keymap entries.
 public struct KeymapChunkReport: Equatable, Sendable {
-    /// The keyboard model represented by the transfer.
-    public let keyboardKind: KeyboardKind
+    /// The opaque keyboard layout represented by the transfer.
+    public let layoutID: LayoutID
 
     /// The layer-major index of the first entry in this page.
     public let startIndex: Int
@@ -15,17 +15,17 @@ public struct KeymapChunkReport: Equatable, Sendable {
     /// Creates a validated keymap page.
     ///
     /// - Parameters:
-    ///   - keyboardKind: The keyboard model represented by the transfer.
+    ///   - layoutID: The opaque keyboard layout represented by the transfer.
     ///   - startIndex: The layer-major index of the first entry in this page.
     ///   - totalEntryCount: The complete entry count advertised by transfer metadata.
     ///   - entries: The consecutive entries in this page.
     init(
-        keyboardKind: KeyboardKind,
+        layoutID: LayoutID,
         startIndex: Int,
         totalEntryCount: Int,
         entries: [FirmwareKeymapEntry]
     ) {
-        self.keyboardKind = keyboardKind
+        self.layoutID = layoutID
         self.startIndex = startIndex
         self.totalEntryCount = totalEntryCount
         self.entries = entries

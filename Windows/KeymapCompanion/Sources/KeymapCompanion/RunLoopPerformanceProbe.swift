@@ -61,8 +61,8 @@
         @MainActor
         private static func renderingMeasurements() -> (rebuildAverage: Double, updateAverage: Double) {
             let definition = KeymapDefinition.makePreview(for: .elora)
-            let baseMask = UInt32(1) << UInt32(KeymapLayer.base.rawValue)
-            let lowerMask = baseMask | (UInt32(1) << UInt32(KeymapLayer.lower.rawValue))
+            let baseMask = UInt32(1) << UInt32(definition.supportedLayers[0].rawValue)
+            let lowerMask = baseMask | (UInt32(1) << UInt32(definition.supportedLayers[2].rawValue))
 
             let rebuildIterations = 20
             let rebuildStarted = DispatchTime.now().uptimeNanoseconds

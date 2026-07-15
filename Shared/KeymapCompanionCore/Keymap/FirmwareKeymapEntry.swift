@@ -3,21 +3,21 @@ public struct FirmwareKeymapEntry: Equatable, Sendable {
     /// The compiled QMK keycode.
     public let keycode: UInt16
 
-    /// The optional companion-specific semantic identifier.
-    public let semantic: KeySemantic
+    /// The opaque catalog-scoped semantic identifier.
+    public let semanticID: SemanticID
 
-    /// The firmware-assigned visual category.
-    public let style: KeyStyle
+    /// The opaque catalog-scoped visual-style identifier.
+    public let styleID: StyleID
 
     /// Creates one decoded firmware keymap entry.
     ///
     /// - Parameters:
     ///   - keycode: The compiled QMK keycode.
-    ///   - semantic: The optional companion-specific semantic identifier.
-    ///   - style: The firmware-assigned visual category.
-    public init(keycode: UInt16, semantic: KeySemantic, style: KeyStyle) {
+    ///   - semanticID: The catalog-scoped semantic identifier.
+    ///   - styleID: The catalog-scoped visual-style identifier.
+    public init(keycode: UInt16, semanticID: SemanticID, styleID: StyleID) {
         self.keycode = keycode
-        self.semantic = semantic
-        self.style = style
+        self.semanticID = semanticID
+        self.styleID = styleID
     }
 }

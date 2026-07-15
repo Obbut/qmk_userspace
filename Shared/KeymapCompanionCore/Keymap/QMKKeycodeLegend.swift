@@ -4,39 +4,45 @@ import Foundation
 enum QMKKeycodeLegend {
     /// Returns the renderer legend for a firmware keymap entry.
     ///
-    /// - Parameter entry: The firmware keymap entry to describe.
+    /// - Parameters:
+    ///   - entry: The firmware keymap entry to describe.
+    ///   - semanticLegend: The domain-catalog legend, when resolved.
+    ///   - semanticSymbolName: The domain-catalog symbol name, when resolved.
+    ///   - style: The resolved domain style.
+    ///   - layers: The firmware-defined layers used for layer-action legends.
     ///
     /// - Returns: A compact renderer legend.
-    static func legend(for entry: FirmwareKeymapEntry) -> KeyLegend {
+    static func legend(
+        for entry: FirmwareKeymapEntry,
+        semanticLegend: String?,
+        semanticSymbolName: String?,
+        style: KeyStyle,
+        layers: [KeymapLayer]
+    ) -> KeyLegend {
         KeyLegend(
-            label: label(for: entry),
-            symbol: entry.semantic == .none ? symbol(for: entry.keycode) : nil,
-            style: entry.style
+            label: label(for: entry, semanticLegend: semanticLegend, layers: layers),
+            symbol: entry.semanticID == .none
+                ? symbol(for: entry.keycode)
+                : semanticSymbol(named: semanticSymbolName),
+            style: style
         )
     }
 
     /// Returns the fallback text for a firmware keymap entry.
     ///
-    /// - Parameter entry: The firmware keymap entry to describe.
+    /// - Parameters:
+    ///   - entry: The firmware keymap entry to describe.
+    ///   - semanticLegend: The resolved domain legend.
+    ///   - layers: The firmware-defined layers.
     ///
     /// - Returns: Compact fallback text.
-    private static func label(for entry: FirmwareKeymapEntry) -> String {
-        switch entry.semantic {
-        case .screenshot: return "Screenshot"
-        case .aerospace: return "Aerospace"
-        case .pointerLeftClick: return "Left Click"
-        case .pointerRightClick: return "Right Click"
-        case .pointerMiddleClick: return "Middle Click"
-        case .browserBack: return "Browser Back"
-        case .browserForward: return "Browser Forward"
-        case .pointerScroll: return "Scroll"
-        case .pointerSniper: return "Sniper"
-        case .pointerDragLock: return "Drag Lock"
-        case .pointerSensitivityDown: return "Pointer −"
-        case .pointerSensitivityUp: return "Pointer +"
-        case .pointerScrollSpeedDown: return "Scroll −"
-        case .pointerScrollSpeedUp: return "Scroll +"
-        case .none: break
+    private static func label(
+        for entry: FirmwareKeymapEntry,
+        semanticLegend: String?,
+        layers: [KeymapLayer]
+    ) -> String {
+        if entry.semanticID != .none {
+            return semanticLegend ?? "Semantic #\(entry.semanticID.rawValue)"
         }
 
         let keycode = entry.keycode
@@ -49,8 +55,8 @@ enum QMKKeycodeLegend {
 
         return switch keycode {
         case 0x0100...0x1FFF: modifiedLabel(for: keycode)
-        case 0x5220...0x523F: layerName(for: keycode) ?? "MO\(keycode & 0x1F)"
-        case 0x5260...0x527F: layerName(for: keycode) ?? "TG\(keycode & 0x1F)"
+        case 0x5220...0x523F: layerName(for: keycode, layers: layers) ?? "MO\(keycode & 0x1F)"
+        case 0x5260...0x527F: layerName(for: keycode, layers: layers) ?? "TG\(keycode & 0x1F)"
         case 0x7842: "RGB"
         case 0x7843: "Next"
         case 0x7844: "Prev"
@@ -174,11 +180,34 @@ enum QMKKeycodeLegend {
 
     /// Returns the display name for the layer encoded in a QMK layer keycode.
     ///
-    /// - Parameter keycode: The compiled QMK layer keycode.
+    /// - Parameters:
+    ///   - keycode: The compiled QMK layer keycode.
+    ///   - layers: The firmware-defined layers.
     ///
     /// - Returns: The layer name, or `nil` when the layer is unknown.
-    private static func layerName(for keycode: UInt16) -> String? {
-        KeymapLayer(rawValue: UInt8(keycode & 0x1F))?.legendName
+    private static func layerName(for keycode: UInt16, layers: [KeymapLayer]) -> String? {
+        let rawValue = UInt8(keycode & 0x1F)
+        return layers.first { $0.rawValue == rawValue }?.legendName
+    }
+
+    /// Maps a renderer-neutral catalog symbol name to native presentation semantics.
+    ///
+    /// - Parameter name: The symbol name supplied by the domain catalog.
+    /// - Returns: A platform-neutral symbol, or `nil` for an unknown name.
+    private static func semanticSymbol(named name: String?) -> KeySymbol? {
+        switch name {
+        case "camera": .camera
+        case "window-management": .windowManagement
+        case "locked-pointer": .lockedPointer
+        case "bluetooth": .bluetooth
+        case "battery": .battery
+        case "pointer-button": .pointerButton
+        case "pointer": .pointer
+        case "scroll": .scroll
+        case "browser-navigation": .browserNavigation
+        case "wireless": .wireless
+        default: nil
+        }
     }
 
     /// Shifted keycodes and their printable legends.

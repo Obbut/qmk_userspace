@@ -13,7 +13,7 @@ public final class KeymapCompanionModel {
     public private(set) var connectionStatus: ConnectionStatus = .searching
 
     /// The connected keyboard model, when known.
-    public private(set) var keyboardKind: KeyboardKind?
+    public private(set) var layoutID: LayoutID?
 
     /// The renderer input downloaded from the connected keyboard.
     public private(set) var keymapDefinition: KeymapDefinition?
@@ -103,7 +103,7 @@ public final class KeymapCompanionModel {
 
     /// The highest layer in ``effectiveLayerMask``.
     public var activeLayer: KeymapLayer {
-        KeymapLayer.highestActiveLayer(inLayerMask: effectiveLayerMask)
+        keymapDefinition?.highestActiveLayer(in: effectiveLayerMask) ?? .base
     }
 
     /// Whether the connected firmware accepts explicit RGB settings.
@@ -186,7 +186,7 @@ public final class KeymapCompanionModel {
 
         case let .state(report):
             keymapMayHaveChanged = false
-            guard keymapDefinition?.keyboardKind == report.keyboardKind else { return }
+            guard keymapDefinition?.layoutID == report.layoutID else { return }
             let acceptsRGBSettings =
                 pendingRGBUpdate == nil
                 && report.rgbSettings != nil
@@ -213,8 +213,8 @@ public final class KeymapCompanionModel {
         if connectionStatus != state.connectionStatus {
             connectionStatus = state.connectionStatus
         }
-        if keyboardKind != state.keyboardKind {
-            keyboardKind = state.keyboardKind
+        if layoutID != state.layoutID {
+            layoutID = state.layoutID
         }
         if includeKeymapDefinition, keymapDefinition != state.keymapDefinition {
             keymapDefinition = state.keymapDefinition
@@ -246,13 +246,13 @@ public final class KeymapCompanionModel {
         ///
         /// - Parameters:
         ///   - connectionStatus: The simulated hardware connection state.
-        ///   - keyboardKind: The simulated keyboard model.
+        ///   - layoutID: The simulated keyboard layout.
         ///   - activeLayers: The simulated momentary active layers.
         ///   - rgbSettings: The simulated RGB Matrix settings.
         /// - Returns: A deterministic model for previews and tests.
         static func makePreview(
             connectionStatus: ConnectionStatus = .connected,
-            keyboardKind: KeyboardKind? = .elora,
+            layoutID: LayoutID? = .elora,
             activeLayers: [KeymapLayer] = [],
             rgbSettings: RGBSettings = .default
         ) -> KeymapCompanionModel {
@@ -262,8 +262,8 @@ public final class KeymapCompanionModel {
             return KeymapCompanionModel(
                 state: CompanionState(
                     connectionStatus: connectionStatus,
-                    keyboardKind: keyboardKind,
-                    keymapDefinition: keyboardKind.map { KeymapDefinition.makePreview(for: $0) },
+                    layoutID: layoutID,
+                    keymapDefinition: layoutID.map { KeymapDefinition.makePreview(for: $0) },
                     layerStateMask: layerStateMask,
                     defaultLayerStateMask: UInt32(1) << UInt32(KeymapLayer.base.rawValue),
                     capabilities: connectionStatus.isConnected ? 7 : 0,

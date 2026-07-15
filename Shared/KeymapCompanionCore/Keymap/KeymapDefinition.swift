@@ -1,34 +1,115 @@
-/// The complete renderer input for one supported keyboard model.
+import ObbutKeyboardCatalog
+import QMKFirmwareRuntime
+import QMKKeymapKit
+
+/// The complete renderer input for one catalog-backed keyboard layout.
 public struct KeymapDefinition: Equatable, Sendable {
-    /// The keyboard model represented by this definition.
-    public let keyboardKind: KeyboardKind
+    /// The stable protocol-v4 layout identifier.
+    public let layoutID: LayoutID
+
+    /// The keyboard name supplied by its Swift layout descriptor.
+    public let displayName: String
 
     /// The model's renderer geometry.
     public let geometry: KeyboardGeometry
 
-    /// The ordered layers supplied by the connected firmware.
+    /// The ordered layers supplied by the authored firmware definition.
     public let supportedLayers: [KeymapLayer]
 
     /// The physical switches and their firmware-owned mappings.
     public let positionedKeys: [PositionedKey]
 
-    /// The right encoder and its firmware-owned mappings.
-    public let rightEncoder: KeymapEncoder
+    /// Every physical encoder supplied by the layout descriptor.
+    public let encoders: [KeymapEncoder]
+
+    /// Whether semantic IDs were resolved using an identical catalog.
+    public let semanticCatalogMatches: Bool
+
+    /// Whether style IDs were resolved using an identical catalog.
+    public let styleCatalogMatches: Bool
 
     /// Creates renderer input from a validated firmware keymap.
     ///
-    /// Returns `nil` when the keymap dimensions do not match supported geometry.
+    /// Returns `nil` when the layout is unknown or its compiled dimensions do not
+    /// match the same layout's authored Swift descriptor.
     ///
     /// - Parameter firmwareKeymap: The complete firmware keymap to transform.
     public init?(firmwareKeymap: FirmwareKeymap) {
-        let geometry = KeyboardGeometryCatalog.geometry(for: firmwareKeymap.keyboardKind)
-        guard firmwareKeymap.layerCount >= Int(KeymapLayer.function.rawValue) + 1,
-            firmwareKeymap.layerCount <= KeymapLayer.allCases.count
-        else {
-            return nil
-        }
+        guard let firmware = ObbutKeyboardCatalog.firmware(layoutID: firmwareKeymap.layoutID.rawValue)
+        else { return nil }
+        self.init(firmwareKeymap: firmwareKeymap, firmware: firmware)
+    }
 
-        let supportedLayers = Array(KeymapLayer.allCases.prefix(firmwareKeymap.layerCount))
+    /// Returns the highest supported layer in a QMK layer mask.
+    ///
+    /// - Parameter mask: The effective momentary and default layer mask.
+    /// - Returns: The highest active authored layer.
+    public func highestActiveLayer(in mask: UInt32) -> KeymapLayer {
+        KeymapLayer.highestActiveLayer(inLayerMask: mask, supportedLayers: supportedLayers)
+    }
+
+    /// Creates a preview from the same authored Swift firmware used by generation.
+    ///
+    /// - Parameter layoutID: The catalog layout to preview.
+    /// - Returns: Production renderer input for every authored layer and encoder.
+    public static func makePreview(for layoutID: LayoutID) -> KeymapDefinition {
+        guard let firmware = ObbutKeyboardCatalog.firmware(layoutID: layoutID.rawValue) else {
+            preconditionFailure("Xcode previews require a layout from ObbutKeyboardCatalog.")
+        }
+        let descriptor = firmware.layout
+        let matrixSize = descriptor.matrixRowCount * descriptor.matrixColumnCount
+        var entries: [FirmwareKeymapEntry] = []
+        entries.reserveCapacity(
+            firmware.layers.count
+                * (matrixSize + descriptor.encoders.count * EncoderDirection.allCases.count)
+        )
+        for layer in firmware.layers {
+            var matrix = Array(repeating: FirmwareKeymapEntry.unassigned, count: matrixSize)
+            for (key, position) in zip(layer.keys, descriptor.matrixMapping) {
+                matrix[position.row * descriptor.matrixColumnCount + position.column] =
+                    key.previewEntry
+            }
+            entries.append(contentsOf: matrix)
+        }
+        for layer in firmware.layers {
+            for encoder in descriptor.encoders.sorted(by: { $0.index < $1.index }) {
+                let authoredEncoder = firmware.encoders.first { $0.index == encoder.index }
+                let mapping = authoredEncoder?.mappings.first { $0.layer == layer.id }
+                entries.append(mapping?.counterclockwise.previewEntry ?? .unassigned)
+                entries.append(mapping?.clockwise.previewEntry ?? .unassigned)
+            }
+        }
+        let previewKeymap = FirmwareKeymap(
+            layoutID: layoutID,
+            layerCount: firmware.layers.count,
+            matrixRowCount: descriptor.matrixRowCount,
+            matrixColumnCount: descriptor.matrixColumnCount,
+            encoderCount: descriptor.encoders.count,
+            fingerprint: 0,
+            semanticCatalogFingerprint: firmware.semanticCatalogFingerprint,
+            styleCatalogFingerprint: firmware.styleCatalogFingerprint,
+            entries: entries
+        )
+        guard let definition = KeymapDefinition(firmwareKeymap: previewKeymap, firmware: firmware) else {
+            preconditionFailure("Authored firmware must match its own layout descriptor.")
+        }
+        return definition
+    }
+
+    /// Creates renderer input after resolving its exact authored firmware catalog.
+    ///
+    /// - Parameters:
+    ///   - firmwareKeymap: The live compiled keymap.
+    ///   - firmware: The matching host-side Swift definition.
+    private init?(firmwareKeymap: FirmwareKeymap, firmware: AnyFirmware) {
+        let descriptor = firmware.layout
+        let layers = firmware.layers.map {
+            KeymapLayer(
+                rawValue: $0.id.rawValue,
+                displayName: $0.name,
+                isHUDLayer: $0.showsHUD
+            )
+        }
         let matrixEntryCount =
             firmwareKeymap.layerCount
             * firmwareKeymap.matrixRowCount
@@ -37,141 +118,230 @@ public struct KeymapDefinition: Equatable, Sendable {
             firmwareKeymap.layerCount
             * firmwareKeymap.encoderCount
             * EncoderDirection.allCases.count
-        guard supportedLayers.count == firmwareKeymap.layerCount,
-            firmwareKeymap.encoderCount > 0,
+        guard firmwareKeymap.layerCount == firmware.layers.count,
+            firmwareKeymap.matrixRowCount == descriptor.matrixRowCount,
+            firmwareKeymap.matrixColumnCount == descriptor.matrixColumnCount,
+            firmwareKeymap.encoderCount == descriptor.encoders.count,
             firmwareKeymap.entries.count == matrixEntryCount + encoderEntryCount,
-            geometry.placements.count == geometry.matrixPositions.count,
-            Set(geometry.matrixPositions).count == geometry.matrixPositions.count
+            Set(descriptor.keys.map(\.matrixPosition)).count == descriptor.keys.count,
+            layers.enumerated().allSatisfy({ $0.offset == Int($0.element.rawValue) })
         else {
             return nil
         }
 
-        let keys = geometry.matrixPositions.compactMap { position -> KeymapKey? in
-            let entries = supportedLayers.compactMap { layer in
+        let semanticCatalogMatches =
+            firmwareKeymap.semanticCatalogFingerprint == firmware.semanticCatalogFingerprint
+        let styleCatalogMatches =
+            firmwareKeymap.styleCatalogFingerprint == firmware.styleCatalogFingerprint
+        let resolver = CatalogResolver(
+            firmware: firmware,
+            semanticCatalogMatches: semanticCatalogMatches,
+            styleCatalogMatches: styleCatalogMatches
+        )
+
+        var positionedKeys: [PositionedKey] = []
+        positionedKeys.reserveCapacity(descriptor.keys.count)
+        for placement in descriptor.keys {
+            let position = placement.matrixPosition
+            let entries = layers.compactMap {
                 firmwareKeymap.entry(
-                    onLayer: Int(layer.rawValue),
+                    onLayer: Int($0.rawValue),
                     row: position.row,
                     column: position.column
                 )
             }
-            guard entries.count == supportedLayers.count else { return nil }
-            return KeymapKey(id: "r\(position.row)c\(position.column)", entries: entries)
-        }
-        guard keys.count == geometry.placements.count else { return nil }
-
-        let counterclockwiseEntries = supportedLayers.compactMap { layer in
-            firmwareKeymap.encoderEntry(
-                onLayer: Int(layer.rawValue),
-                encoderIndex: 0,
-                direction: .counterclockwise
+            guard entries.count == layers.count else { return nil }
+            positionedKeys.append(
+                PositionedKey(
+                    key: Self.makeKey(
+                        id: "r\(position.row)c\(position.column)",
+                        entries: entries,
+                        layers: layers,
+                        resolver: resolver
+                    ),
+                    placement: Self.placement(from: placement.geometry)
+                )
             )
-        }
-        let clockwiseEntries = supportedLayers.compactMap { layer in
-            firmwareKeymap.encoderEntry(
-                onLayer: Int(layer.rawValue),
-                encoderIndex: 0,
-                direction: .clockwise
-            )
-        }
-        let pressRow = firmwareKeymap.matrixRowCount - 1
-        let pressEntries = supportedLayers.compactMap { layer in
-            firmwareKeymap.entry(
-                onLayer: Int(layer.rawValue),
-                row: pressRow,
-                column: 0
-            )
-        }
-        guard counterclockwiseEntries.count == supportedLayers.count,
-            pressEntries.count == supportedLayers.count,
-            clockwiseEntries.count == supportedLayers.count
-        else {
-            return nil
         }
 
-        keyboardKind = firmwareKeymap.keyboardKind
-        self.geometry = geometry
-        self.supportedLayers = supportedLayers
-        positionedKeys = zip(keys, geometry.placements).map {
-            PositionedKey(key: $0, placement: $1)
-        }
-        rightEncoder = KeymapEncoder(
-            id: "encoder-right",
-            placement: geometry.rightEncoderPlacement,
-            counterclockwiseKey: KeymapKey(
-                id: "encoder-right-ccw",
-                entries: counterclockwiseEntries
-            ),
-            pressKey: KeymapKey(
-                id: "r\(pressRow)c0",
-                entries: pressEntries
-            ),
-            clockwiseKey: KeymapKey(
-                id: "encoder-right-cw",
-                entries: clockwiseEntries
+        var encoders: [KeymapEncoder] = []
+        encoders.reserveCapacity(descriptor.encoders.count)
+        for encoder in descriptor.encoders.sorted(by: { $0.index < $1.index }) {
+            let counterclockwiseEntries = layers.compactMap {
+                firmwareKeymap.encoderEntry(
+                    onLayer: Int($0.rawValue),
+                    encoderIndex: encoder.index,
+                    direction: .counterclockwise
+                )
+            }
+            let clockwiseEntries = layers.compactMap {
+                firmwareKeymap.encoderEntry(
+                    onLayer: Int($0.rawValue),
+                    encoderIndex: encoder.index,
+                    direction: .clockwise
+                )
+            }
+            let pressEntries: [FirmwareKeymapEntry]
+            if let pressPosition = encoder.pressPosition {
+                pressEntries = layers.compactMap {
+                    firmwareKeymap.entry(
+                        onLayer: Int($0.rawValue),
+                        row: pressPosition.row,
+                        column: pressPosition.column
+                    )
+                }
+            } else {
+                pressEntries = Array(repeating: .unassigned, count: layers.count)
+            }
+            guard counterclockwiseEntries.count == layers.count,
+                clockwiseEntries.count == layers.count,
+                pressEntries.count == layers.count
+            else { return nil }
+
+            let pressID = encoder.pressPosition.map { "r\($0.row)c\($0.column)" }
+                ?? "encoder-\(encoder.id)-press"
+            encoders.append(
+                KeymapEncoder(
+                    id: "encoder-\(encoder.id)",
+                    placement: Self.placement(from: encoder.geometry),
+                    counterclockwiseKey: Self.makeKey(
+                        id: "encoder-\(encoder.id)-ccw",
+                        entries: counterclockwiseEntries,
+                        layers: layers,
+                        resolver: resolver
+                    ),
+                    pressKey: Self.makeKey(
+                        id: pressID,
+                        entries: pressEntries,
+                        layers: layers,
+                        resolver: resolver
+                    ),
+                    clockwiseKey: Self.makeKey(
+                        id: "encoder-\(encoder.id)-cw",
+                        entries: clockwiseEntries,
+                        layers: layers,
+                        resolver: resolver
+                    )
+                )
             )
+        }
+
+        layoutID = firmwareKeymap.layoutID
+        displayName = descriptor.displayName
+        geometry = KeyboardGeometry(
+            canvasWidth: descriptor.canvasWidth,
+            canvasHeight: descriptor.canvasHeight,
+            placements: descriptor.keys.map { Self.placement(from: $0.geometry) },
+            matrixPositions: descriptor.keys.map {
+                MatrixPosition(row: $0.matrixPosition.row, column: $0.matrixPosition.column)
+            },
+            encoderPlacements: descriptor.encoders.map { Self.placement(from: $0.geometry) }
+        )
+        supportedLayers = layers
+        self.positionedKeys = positionedKeys
+        self.encoders = encoders
+        self.semanticCatalogMatches = semanticCatalogMatches
+        self.styleCatalogMatches = styleCatalogMatches
+    }
+
+    /// Produces one catalog-resolved key from layer-major firmware entries.
+    private static func makeKey(
+        id: String,
+        entries: [FirmwareKeymapEntry],
+        layers: [KeymapLayer],
+        resolver: CatalogResolver
+    ) -> KeymapKey {
+        KeymapKey(
+            id: id,
+            entries: entries,
+            legends: entries.map {
+                QMKKeycodeLegend.legend(
+                    for: $0,
+                    semanticLegend: resolver.semanticLegend(for: $0.semanticID),
+                    semanticSymbolName: resolver.semanticSymbolName(for: $0.semanticID),
+                    style: resolver.style(for: $0.styleID),
+                    layers: layers
+                )
+            }
         )
     }
 
-    #if DEBUG
-        /// Creates representative renderer input without a HID device.
-        ///
-        /// - Parameter keyboardKind: The keyboard model to represent.
-        ///
-        /// - Returns: Deterministic renderer input for previews and tests.
-        public static func makePreview(for keyboardKind: KeyboardKind) -> KeymapDefinition {
-            let layerCount =
-                keyboardKind == .kyria
-                ? KeymapLayer.allCases.count
-                : Int(KeymapLayer.function.rawValue) + 1
-            let rowCount = keyboardKind == .kyria ? 10 : 12
-            let columnCount = 7
-            let matrixSize = rowCount * columnCount
-            let transparent = FirmwareKeymapEntry(keycode: 0x0001, semantic: .none, style: .standard)
-            let unassigned = FirmwareKeymapEntry(keycode: 0x0000, semantic: .none, style: .standard)
-            var entries = Array(repeating: transparent, count: layerCount * matrixSize)
-            entries.replaceSubrange(0..<matrixSize, with: repeatElement(unassigned, count: matrixSize))
+    /// Converts framework geometry to the stable companion rendering model.
+    private static func placement(
+        from placement: QMKKeymapKit.PhysicalKeyPlacement
+    ) -> PhysicalKeyPlacement {
+        PhysicalKeyPlacement(
+            centerX: placement.centerX,
+            centerY: placement.centerY,
+            rotationDegrees: placement.rotationDegrees,
+            width: placement.width,
+            height: placement.height
+        )
+    }
+}
 
-            let rightHomeRow = keyboardKind == .kyria ? 6 : 8
-            let rightHomeKeycodes: [UInt16] = [0x0010, 0x0011, 0x0008, 0x000C, 0x0012, 0x0034]
-            for (columnOffset, keycode) in rightHomeKeycodes.enumerated() {
-                entries[rightHomeRow * columnCount + columnOffset + 1] = FirmwareKeymapEntry(
-                    keycode: keycode,
-                    semantic: .none,
-                    style: .standard
-                )
-            }
+/// Resolves catalog-scoped IDs while preserving useful mismatch diagnostics.
+fileprivate struct CatalogResolver {
+    /// The host-side authored firmware definition.
+    let firmware: AnyFirmware
 
-            let pressIndex =
-                Int(KeymapLayer.lower.rawValue) * matrixSize
-                + (rowCount - 1) * columnCount
-            entries[pressIndex] = FirmwareKeymapEntry(keycode: 0x00AE, semantic: .none, style: .standard)
+    /// Whether semantic values may be interpreted safely.
+    let semanticCatalogMatches: Bool
 
-            let encoderKeycodes: [(UInt16, UInt16)] = [
-                (0x00AA, 0x00A9), (0x00AA, 0x00A9), (0x00AC, 0x00AB),
-                (0x00AA, 0x00A9), (0x7844, 0x7843),
-            ]
-            for keycodes in encoderKeycodes.prefix(layerCount) {
-                entries.append(FirmwareKeymapEntry(keycode: keycodes.0, semantic: .none, style: .standard))
-                entries.append(FirmwareKeymapEntry(keycode: keycodes.1, semantic: .none, style: .standard))
-            }
-            if layerCount > encoderKeycodes.count {
-                entries.append(FirmwareKeymapEntry(keycode: 0x00AA, semantic: .none, style: .standard))
-                entries.append(FirmwareKeymapEntry(keycode: 0x00A9, semantic: .none, style: .standard))
-            }
+    /// Whether style values may be interpreted safely.
+    let styleCatalogMatches: Bool
 
-            let firmwareKeymap = FirmwareKeymap(
-                keyboardKind: keyboardKind,
-                layerCount: layerCount,
-                matrixRowCount: rowCount,
-                matrixColumnCount: columnCount,
-                encoderCount: 1,
-                fingerprint: 0,
-                entries: entries
+    /// Returns the matching domain legend.
+    func semanticLegend(for id: SemanticID) -> String? {
+        guard id != .none, semanticCatalogMatches else { return nil }
+        return firmware.semantics.first { $0.id == id.rawValue }?.legend
+    }
+
+    /// Returns the matching renderer-neutral domain symbol.
+    func semanticSymbolName(for id: SemanticID) -> String? {
+        guard id != .none, semanticCatalogMatches else { return nil }
+        return firmware.semantics.first { $0.id == id.rawValue }?.symbolName
+    }
+
+    /// Returns resolved style presentation or a visible unknown-style fallback.
+    func style(for id: StyleID) -> KeyStyle {
+        guard styleCatalogMatches,
+            let style = firmware.styles.first(where: { $0.id == id.rawValue })
+        else {
+            return KeyStyle(
+                id: id,
+                red: KeyStyle.standard.red,
+                green: KeyStyle.standard.green,
+                blue: KeyStyle.standard.blue,
+                isKnown: false
             )
-            guard let definition = KeymapDefinition(firmwareKeymap: firmwareKeymap) else {
-                preconditionFailure("Preview keymap must match supported geometry.")
-            }
-            return definition
         }
-    #endif
+        return KeyStyle(
+            id: id,
+            red: style.color.red,
+            green: style.color.green,
+            blue: style.color.blue,
+            isKnown: true
+        )
+    }
+}
+
+/// Common empty firmware entry used for encoder controls without a press switch.
+fileprivate extension FirmwareKeymapEntry {
+    static let unassigned = FirmwareKeymapEntry(
+        keycode: 0,
+        semanticID: .none,
+        styleID: .standard
+    )
+}
+
+/// Host-preview conversion for authored keys before QMK compiles their expressions.
+fileprivate extension AnyFirmwareKey {
+    var previewEntry: FirmwareKeymapEntry {
+        FirmwareKeymapEntry(
+            keycode: hidValue ?? 0,
+            semanticID: SemanticID(rawValue: semanticID ?? 0),
+            styleID: StyleID(rawValue: styleID ?? 0)
+        )
+    }
 }

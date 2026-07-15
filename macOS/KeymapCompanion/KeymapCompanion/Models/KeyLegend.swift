@@ -37,6 +37,16 @@ fileprivate extension KeymapCompanionCore.KeySymbol {
         case .shift: "shift"
         case .option: "option"
         case .command: "command"
+        case .camera: "camera"
+        case .windowManagement: "macwindow.on.rectangle"
+        case .lockedPointer: "lock.fill"
+        case .bluetooth: "wave.3.right"
+        case .battery: "battery.75percent"
+        case .pointerButton: "cursorarrow.click"
+        case .pointer: "cursorarrow.motionlines"
+        case .scroll: "scroll"
+        case .browserNavigation: "arrow.left.arrow.right"
+        case .wireless: "antenna.radiowaves.left.and.right"
         }
     }
 }

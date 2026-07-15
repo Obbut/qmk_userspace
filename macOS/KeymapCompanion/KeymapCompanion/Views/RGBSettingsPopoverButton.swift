@@ -171,7 +171,7 @@ private struct RGBPercentageSlider: View {
 #if DEBUG
     #Preview("RGB Toolbar Item") {
         let model = AppModel.makePreview(
-            keyboardKind: .kyria,
+            layoutID: .kyria,
             rgbSettings: RGBSettings(
                 isEnabled: true,
                 effect: .rainbowBeacon,
@@ -189,7 +189,7 @@ private struct RGBPercentageSlider: View {
     #Preview("RGB Settings Popover") {
         RGBSettingsView(
             model: .makePreview(
-                keyboardKind: .elora,
+                layoutID: .elora,
                 rgbSettings: RGBSettings(
                     isEnabled: true,
                     effect: .rainbowLeftToRight,
@@ -205,7 +205,7 @@ private struct RGBPercentageSlider: View {
     #Preview("RGB Settings Popover Dark") {
         RGBSettingsView(
             model: .makePreview(
-                keyboardKind: .kyria,
+                layoutID: .kyria,
                 rgbSettings: RGBSettings(
                     isEnabled: true,
                     effect: .breathing,

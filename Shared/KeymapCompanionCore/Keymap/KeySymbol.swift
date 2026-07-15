@@ -42,4 +42,24 @@ public enum KeySymbol: Equatable, Sendable {
     case option
     /// A Command or Windows modifier.
     case command
+    /// A screenshot camera.
+    case camera
+    /// A window-management action.
+    case windowManagement
+    /// A locked pointer action.
+    case lockedPointer
+    /// A Bluetooth radio.
+    case bluetooth
+    /// A battery level.
+    case battery
+    /// A pointer button.
+    case pointerButton
+    /// Pointer movement.
+    case pointer
+    /// Pointer scrolling.
+    case scroll
+    /// Browser navigation.
+    case browserNavigation
+    /// A generic wireless radio.
+    case wireless
 }

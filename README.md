@@ -1,14 +1,47 @@
 # QMK Userspace
 
 Personal QMK firmware for four keyboards:
+
 - **Kyria Rev4** (Halcyon series) - Split ergonomic with Colemak-DH
 - **Elora Rev2** (Halcyon series) - Split ergonomic with Colemak-DH + number row
 - **Keychron Q15 Max** - Ortholinear with Bluetooth/2.4GHz wireless
 - **ZSA Planck EZ Glow** - 4x12 ortholinear with Colemak-DH
 
+## Swift-first architecture
+
+Swift is the only authored source of truth for keymaps, domain semantics, styles,
+firmware configuration, companion metadata, previews, and generated diagrams.
+The host compiler writes ignored QMK ABI artifacts before each build.
+
+The module boundary is deliberate:
+
+```text
+QMKKeymapKit + QMKFirmwareRuntime
+                ↓
+          ObbutKeymaps
+                ↓
+KyriaFirmware / EloraFirmware / Q15Firmware / PlanckFirmware
+                ↓
+       ObbutKeyboardCatalog
+                ↓
+macOS + Windows companions and Xcode previews
+```
+
+`QMKKeymapKit` has no Obbut-specific vocabulary. `ObbutKeymaps` is the sole
+owner of stable semantic/style identifiers and shared behavior. Individual
+firmware modules select board composition and hardware policy only.
+
+See [SwiftKeymaps/README.md](SwiftKeymaps/README.md) for the authored API,
+Embedded Swift customization, `#Keymap`, `#KeymapPreview`, `#qmkKeycode`, and
+`#qmkBridge`.
+
 ## Keymap Companion
 
-The repository includes native companion apps that visualize a connected Kyria or Elora, follow QMK layer changes in realtime, and control supported keyboard lighting. Platform UI remains native while an `@Observable` view model, hardware dependency interface, protocol, state, keymap-decoding, legend, and geometry code are shared through the local Swift package in [`Shared`](Shared). macOS and Windows inject their own Raw HID implementations through Point-Free's `swift-dependencies`.
+The repository includes native companion apps that visualize all four firmware
+definitions, follow a connected keyboard's layer changes in realtime, and
+control supported keyboard lighting. Platform UI remains native while the
+protocol-v4-only model, dynamic geometry, catalog resolution, and production
+renderer are shared Swift code.
 
 - [Keymap Companion for macOS](macOS/KeymapCompanion/README.md) uses SwiftUI and its Canvas renderer.
 - [Keymap Companion for Windows](Windows/KeymapCompanion/README.md) uses native WinUI 3 and Swift 6.3.3.
@@ -210,7 +243,8 @@ F-keys, RGB controls, and bootloader.
 
 ## Build Commands
 
-All firmware builds use Docker. Kyria and Elora firmware share the same Swift protocol source with the Keymap Companion app.
+All firmware builds use Docker. Every board compiles the same Swift protocol-v4
+runtime and its selected Swift firmware modules.
 
 ### Kyria Rev4
 

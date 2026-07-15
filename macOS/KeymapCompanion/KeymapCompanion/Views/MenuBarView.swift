@@ -17,8 +17,8 @@ struct MenuBarView: View {
                 case .searching:
                     Text("Searching for Keyboard")
                 case .connected:
-                    if let keyboardKind = model.keyboardKind {
-                        Text(keyboardKind.localizedDisplayName)
+                    if let layoutID = model.layoutID {
+                        Text(layoutID.localizedDisplayName)
                     } else {
                         Text("Keyboard Connected")
                     }
@@ -75,8 +75,8 @@ struct MenuBarView: View {
         Menu("Keymap Companion", systemImage: "keyboard.fill") {
             MenuBarView(
                 model: .makePreview(
-                    keyboardKind: .kyria,
-                    activeLayers: [.qwerty, .lower]
+                    layoutID: .kyria,
+                    activeLayers: KeymapDefinition.makePreview(for: .kyria).supportedLayers.prefix(3).map { $0 }
                 )
             )
         }
@@ -88,7 +88,7 @@ struct MenuBarView: View {
             MenuBarView(
                 model: .makePreview(
                     connectionStatus: .searching,
-                    keyboardKind: nil
+                    layoutID: nil
                 )
             )
         }

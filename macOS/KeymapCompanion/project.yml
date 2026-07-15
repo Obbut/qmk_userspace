@@ -22,6 +22,8 @@ settings:
 packages:
   KeymapCompanionShared:
     path: ../../Shared
+  SwiftQMKKeymaps:
+    path: ../../SwiftKeymaps
 
 targets:
   KeymapCompanion:
@@ -33,6 +35,10 @@ targets:
       - sdk: IOKit.framework
       - package: KeymapCompanionShared
         product: KeymapCompanionCore
+      - package: SwiftQMKKeymaps
+        product: QMKKeymapRenderer
+      - package: SwiftQMKKeymaps
+        product: ObbutKeyboardCatalog
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.obbut.KeymapCompanion

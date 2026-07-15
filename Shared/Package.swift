@@ -15,6 +15,7 @@ let package = Package(
         )
     ],
     dependencies: [
+        .package(path: "../SwiftKeymaps"),
         .package(
             url: "https://github.com/pointfreeco/swift-dependencies",
             exact: "1.12.0"
@@ -36,6 +37,22 @@ let package = Package(
         .target(
             name: "KeymapCompanionCore",
             dependencies: [
+                .product(
+                    name: "ObbutKeyboardCatalog",
+                    package: "SwiftKeymaps"
+                ),
+                .product(
+                    name: "QMKFirmwareRuntime",
+                    package: "SwiftKeymaps"
+                ),
+                .product(
+                    name: "QMKKeymapKit",
+                    package: "SwiftKeymaps"
+                ),
+                .product(
+                    name: "QMKKeymapRenderer",
+                    package: "SwiftKeymaps"
+                ),
                 .product(name: "Dependencies", package: "swift-dependencies"),
                 .product(
                     name: "IssueReporting",
@@ -57,7 +74,11 @@ let package = Package(
         ),
         .testTarget(
             name: "KeymapCompanionCoreTests",
-            dependencies: ["KeymapCompanionCore"],
+            dependencies: [
+                "KeymapCompanionCore",
+                .product(name: "ObbutKeyboardCatalog", package: "SwiftKeymaps"),
+                .product(name: "ObbutKeymaps", package: "SwiftKeymaps"),
+            ],
             path: "KeymapCompanionCoreTests"
         ),
     ],

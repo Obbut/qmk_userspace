@@ -44,8 +44,8 @@ struct ContentView: View {
     #Preview("Connected Elora") {
         ContentView(
             model: .makePreview(
-                keyboardKind: .elora,
-                activeLayers: [.raise]
+                layoutID: .elora,
+                activeLayers: KeymapDefinition.makePreview(for: .elora).supportedLayers.dropFirst(3).prefix(1).map { $0 }
             )
         )
         .frame(width: 1_180, height: 720)
@@ -55,16 +55,17 @@ struct ContentView: View {
         ContentView(
             model: .makePreview(
                 connectionStatus: .searching,
-                keyboardKind: nil
+                layoutID: nil
             )
         )
         .frame(width: 1_180, height: 720)
     }
 
     #Preview("Layer Strip") {
+        let definition = KeymapDefinition.makePreview(for: .kyria)
         LayerStrip(
-            supportedLayers: KeymapLayer.allCases,
-            activeLayer: .lower,
+            supportedLayers: definition.supportedLayers,
+            activeLayer: definition.supportedLayers[2],
             activeLayerMask: 0b0_0111
         )
         .padding()
@@ -73,10 +74,9 @@ struct ContentView: View {
 
     #Preview("Layer Chips") {
         HStack(spacing: 12) {
-            LayerChip(layer: .base, isHighest: false, isActive: true)
-            LayerChip(layer: .qwerty, isHighest: false, isActive: true)
-            LayerChip(layer: .lower, isHighest: true, isActive: true)
-            LayerChip(layer: .raise, isHighest: false, isActive: false)
+            ForEach(KeymapDefinition.makePreview(for: .kyria).supportedLayers.prefix(4).map { $0 }) { layer in
+                LayerChip(layer: layer, isHighest: layer.rawValue == 2, isActive: layer.rawValue < 3)
+            }
         }
         .padding()
         .frame(width: 480, height: 70)

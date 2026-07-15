@@ -8,6 +8,9 @@ final class WindowsKeymapSurface {
     /// The root drawing surface.
     let canvas: Canvas
 
+    /// The firmware-defined layers and geometry represented by this surface.
+    private let definition: KeymapDefinition
+
     /// The layer mask represented by retained elements.
     private var renderedLayerMask: UInt32?
 
@@ -15,7 +18,7 @@ final class WindowsKeymapSurface {
     private var keys: [RenderedKey]
 
     /// The retained encoder and encoder-action elements.
-    private var encoder: RenderedEncoder
+    private var encoders: [RenderedEncoder]
 
     /// Creates and lays out a retained keyboard surface.
     ///
@@ -28,6 +31,7 @@ final class WindowsKeymapSurface {
         activeLayerMask: UInt32,
         scale: Double = 0.84
     ) {
+        self.definition = definition
         let canvas = Canvas()
         canvas.width = definition.geometry.canvasWidth * scale
         canvas.height = definition.geometry.canvasHeight * scale
@@ -42,7 +46,9 @@ final class WindowsKeymapSurface {
             canvas.children.append(rendered.border)
             return rendered
         }
-        encoder = Self.makeEncoder(definition: definition.rightEncoder, scale: scale, canvas: canvas)
+        encoders = definition.encoders.map {
+            Self.makeEncoder(definition: $0, scale: scale, canvas: canvas)
+        }
         update(activeLayerMask: activeLayerMask)
     }
 
@@ -52,7 +58,7 @@ final class WindowsKeymapSurface {
     func update(activeLayerMask: UInt32) {
         guard renderedLayerMask != activeLayerMask else { return }
         renderedLayerMask = activeLayerMask
-        let activeLayer = KeymapLayer.highestActiveLayer(inLayerMask: activeLayerMask)
+        let activeLayer = definition.highestActiveLayer(in: activeLayerMask)
 
         for index in keys.indices {
             let legend = keys[index].key.resolvedLegend(forActiveLayerMask: activeLayerMask)
@@ -78,7 +84,15 @@ final class WindowsKeymapSurface {
             }
         }
 
-        updateEncoder(activeLayerMask: activeLayerMask, activeLayer: activeLayer)
+        for index in encoders.indices {
+            var encoder = encoders[index]
+            updateEncoder(
+                &encoder,
+                activeLayerMask: activeLayerMask,
+                activeLayer: activeLayer
+            )
+            encoders[index] = encoder
+        }
     }
 
     /// Updates the retained encoder labels and active-layer emphasis.
@@ -86,7 +100,11 @@ final class WindowsKeymapSurface {
     /// - Parameters:
     ///   - activeLayerMask: The effective firmware layer mask.
     ///   - activeLayer: The highest active firmware layer.
-    private func updateEncoder(activeLayerMask: UInt32, activeLayer: KeymapLayer) {
+    private func updateEncoder(
+        _ encoder: inout RenderedEncoder,
+        activeLayerMask: UInt32,
+        activeLayer: KeymapLayer
+    ) {
         let pressLegend = encoder.pressKey.resolvedLegend(forActiveLayerMask: activeLayerMask)
         if encoder.pressLegend != pressLegend {
             encoder.pressLegend = pressLegend

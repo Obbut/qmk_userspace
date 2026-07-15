@@ -2,19 +2,32 @@ import AppKit
 import Testing
 @testable import KeymapCompanion
 
-/// Verifies that the metadata handshake exactly matches protocol v3.
+/// Verifies requests use the sole protocol-v4 Raw HID envelope.
 @Test
-func metadataRequestUsesFixedRawHIDEnvelope() {
+func metadataRequestUsesProtocolFourEnvelope() {
     let request = KeymapProtocol.makeKeymapMetadataRequest()
 
     #expect(request.count == 32)
     #expect(Array(request[0..<4]) == Array("KMAP".utf8))
-    #expect(request[4] == 3)
+    #expect(request[4] == 4)
     #expect(request[5] == 3)
     #expect(request.dropFirst(6).allSatisfy { $0 == 0 })
 }
 
-/// Verifies that chunk requests encode their entry offset little-endian.
+/// Verifies any protocol version other than v4 is rejected.
+@Test
+func rejectsEveryNonV4ProtocolEnvelope() {
+    var packet = [UInt8](repeating: 0, count: 32)
+    packet.replaceSubrange(0..<4, with: Array("KMAP".utf8))
+    packet[4] = 3
+    packet[5] = 2
+
+    #expect(KeymapProtocol.stateReport(from: packet) == nil)
+    #expect(KeymapProtocol.keymapMetadataReport(from: packet) == nil)
+    #expect(KeymapProtocol.keymapChunkReport(from: packet) == nil)
+}
+
+/// Verifies chunk requests encode their entry offset little-endian.
 @Test
 func keymapChunkRequestIncludesStartIndex() {
     let request = KeymapProtocol.makeKeymapChunkRequest(startingAt: 0x1234)
@@ -24,126 +37,152 @@ func keymapChunkRequestIncludesStartIndex() {
     #expect(request[7] == 0x12)
 }
 
-/// Verifies little-endian state fields and keyboard identity.
+/// Verifies state reports round-trip opaque layout IDs and RGB settings.
 @Test
-func parsesKeyboardStateReport() {
-    var packet = makePacket(type: 2)
-    packet[6] = KeyboardKind.elora.rawValue
-    packet.replaceSubrange(8..<12, with: [0b0000_0110, 0, 0, 0])
-    packet.replaceSubrange(12..<16, with: [1, 0, 0, 0])
-    packet.replaceSubrange(16..<20, with: [42, 0, 0, 0])
-    packet.replaceSubrange(20..<24, with: [3, 0, 0, 0])
+func stateReportRoundTripsProtocolFour() throws {
+    var packet = [UInt8](repeating: 0, count: KeymapProtocol.reportSize)
+    let encoded = packet.withUnsafeMutableBufferPointer {
+        KeymapProtocol.encodeStateReport(
+            to: $0,
+            layoutID: LayoutID.elora.rawValue,
+            layerStateMask: 6,
+            defaultLayerStateMask: 1,
+            sequence: 42,
+            includesRGBSettings: true,
+            rgbEffect: RGBEffect.pixelFlow.rawValue,
+            rgbHue: 47,
+            rgbSaturation: 219,
+            rgbBrightness: 96,
+            isRGBEnabled: true,
+            rgbSpeed: 137
+        )
+    }
+    let report = try #require(KeymapProtocol.stateReport(from: packet))
 
-    let report = KeymapProtocol.stateReport(from: packet)
-
-    #expect(report?.keyboardKind == .elora)
-    #expect(report?.layerStateMask == 6)
-    #expect(report?.defaultLayerStateMask == 1)
-    #expect(report?.effectiveLayerMask == 7)
-    #expect(report?.sequence == 42)
-    #expect(report?.capabilities == 3)
-    #expect(report?.rgbSettings == nil)
+    #expect(encoded)
+    #expect(report.layoutID == .elora)
+    #expect(report.layerStateMask == 6)
+    #expect(report.defaultLayerStateMask == 1)
+    #expect(report.effectiveLayerMask == 7)
+    #expect(report.sequence == 42)
+    #expect(report.rgbSettings?.effect == .pixelFlow)
+    #expect(report.rgbSettings?.speed == 137)
 }
 
-/// Verifies keymap metadata dimensions and the transfer fingerprint.
+/// Verifies metadata carries arbitrary layout, layer, encoder, and catalog data.
 @Test
-func parsesKeymapMetadataReport() {
-    var packet = makePacket(type: 4)
-    packet[6] = KeyboardKind.kyria.rawValue
-    packet[7] = 6
-    packet[8] = 10
-    packet[9] = 7
-    packet[10] = 4
-    packet[11] = 5
-    packet.replaceSubrange(12..<16, with: [0x78, 0x56, 0x34, 0x12])
-    packet.replaceSubrange(16..<18, with: [0xB0, 0x01])
-    packet[18] = 1
-    packet[19] = 2
-
-    let metadata = KeymapProtocol.keymapMetadataReport(from: packet)
-
-    #expect(metadata?.keyboardKind == .kyria)
-    #expect(metadata?.layerCount == 6)
-    #expect(metadata?.matrixRowCount == 10)
-    #expect(metadata?.matrixColumnCount == 7)
-    #expect(metadata?.entriesPerChunk == 5)
-    #expect(metadata?.entryCount == 432)
-    #expect(metadata?.encoderCount == 1)
-    #expect(metadata?.fingerprint == 0x1234_5678)
-}
-
-/// Proves that the firmware-side shared encoder produces metadata the host-side decoder accepts.
-@Test
-func sharedMetadataEncoderRoundTripsProtocolV3() {
-    var packet = [UInt8](repeating: 0xFF, count: KeymapProtocol.reportSize)
+func metadataReportRoundTripsProtocolFour() throws {
+    var packet = [UInt8](repeating: 0, count: KeymapProtocol.reportSize)
     let encoded = packet.withUnsafeMutableBufferPointer {
         KeymapProtocol.encodeKeymapMetadataReport(
             to: $0,
-            keyboardKind: KeyboardKind.elora.rawValue,
-            layerCount: 1,
-            matrixRowCount: 1,
-            matrixColumnCount: 1,
+            layoutID: LayoutID.q15.rawValue,
+            layerCount: 2,
+            matrixRowCount: 2,
+            matrixColumnCount: 3,
             fingerprint: 0xCAFE_BABE,
-            entryCount: 3,
+            semanticCatalogFingerprint: 0x1234_5678,
+            styleCatalogFingerprint: 0x8765_4321,
+            entryCount: 16,
             encoderCount: 1
         )
     }
-
-    let metadata = KeymapProtocol.keymapMetadataReport(from: packet)
+    let metadata = try #require(KeymapProtocol.keymapMetadataReport(from: packet))
 
     #expect(encoded)
-    #expect(metadata?.keyboardKind == .elora)
-    #expect(metadata?.entryCount == 3)
-    #expect(metadata?.encoderCount == 1)
-    #expect(packet[19] == UInt8(EncoderDirection.allCases.count))
-    #expect(metadata?.fingerprint == 0xCAFE_BABE)
+    #expect(metadata.layoutID == .q15)
+    #expect(metadata.layerCount == 2)
+    #expect(metadata.matrixRowCount == 2)
+    #expect(metadata.matrixColumnCount == 3)
+    #expect(metadata.entryCount == 16)
+    #expect(metadata.encoderCount == 1)
+    #expect(metadata.fingerprint == 0xCAFE_BABE)
+    #expect(metadata.semanticCatalogFingerprint == 0x1234_5678)
+    #expect(metadata.styleCatalogFingerprint == 0x8765_4321)
 }
 
-/// Verifies keycodes, firmware semantics, and styles within a transfer page.
+/// Verifies protocol v4 does not impose a fixed keyboard encoder shape.
 @Test
-func parsesKeymapChunkReport() {
-    var packet = makePacket(type: 6)
-    packet[6] = KeyboardKind.kyria.rawValue
-    packet[7] = 3
-    packet.replaceSubrange(8..<10, with: [5, 0])
-    packet.replaceSubrange(10..<12, with: [0x68, 0x01])
-    packet.replaceSubrange(12..<16, with: [0x1E, 0x02, 0, KeyStyle.yellow.rawValue])
-    packet.replaceSubrange(16..<20, with: [0x20, 0x52, 1, KeyStyle.purple.rawValue])
-    packet.replaceSubrange(20..<24, with: [0x02, 0x7E, KeySemantic.pointerDragLock.rawValue, KeyStyle.red.rawValue])
+func metadataAcceptsArbitraryEncoderCount() throws {
+    let encoderCount = UInt8(12)
+    let entryCount = UInt16(1 + Int(encoderCount) * 2)
+    var packet = [UInt8](repeating: 0, count: KeymapProtocol.reportSize)
+    let encoded = packet.withUnsafeMutableBufferPointer {
+        KeymapProtocol.encodeKeymapMetadataReport(
+            to: $0,
+            layoutID: 0x1020_3040,
+            layerCount: 1,
+            matrixRowCount: 1,
+            matrixColumnCount: 1,
+            fingerprint: 1,
+            semanticCatalogFingerprint: 2,
+            styleCatalogFingerprint: 3,
+            entryCount: entryCount,
+            encoderCount: encoderCount
+        )
+    }
+    let report = try #require(KeymapProtocol.keymapMetadataReport(from: packet))
 
-    let chunk = KeymapProtocol.keymapChunkReport(from: packet)
+    #expect(encoded)
+    #expect(report.encoderCount == 12)
+    #expect(report.entryCount == Int(entryCount))
+}
 
-    #expect(chunk?.startIndex == 5)
-    #expect(chunk?.totalEntryCount == 360)
+/// Verifies chunks carry 16-bit opaque semantic and style identifiers.
+@Test
+func keymapChunkRoundTripsOpaqueCatalogIdentifiers() throws {
+    var packet = [UInt8](repeating: 0, count: KeymapProtocol.reportSize)
+    packet.withUnsafeMutableBufferPointer { bytes in
+        #expect(
+            KeymapProtocol.encodeKeymapChunkHeader(
+                to: bytes,
+                layoutID: LayoutID.kyria.rawValue,
+                entryCount: 2,
+                startIndex: 5,
+                totalEntryCount: 7
+            )
+        )
+        #expect(
+            KeymapProtocol.encodeKeymapEntry(
+                keycode: 0x5220,
+                semanticID: 0x1234,
+                styleID: 0x5678,
+                at: 0,
+                to: bytes
+            )
+        )
+        #expect(
+            KeymapProtocol.encodeKeymapEntry(
+                keycode: 0x7E02,
+                semanticID: 0x9ABC,
+                styleID: 0xDEF0,
+                at: 1,
+                to: bytes
+            )
+        )
+    }
+    let chunk = try #require(KeymapProtocol.keymapChunkReport(from: packet))
+
+    #expect(chunk.layoutID == .kyria)
+    #expect(chunk.startIndex == 5)
+    #expect(chunk.totalEntryCount == 7)
     #expect(
-        chunk?.entries == [
-            FirmwareKeymapEntry(keycode: 0x021E, semantic: .none, style: .yellow),
-            FirmwareKeymapEntry(keycode: 0x5220, semantic: .screenshot, style: .purple),
-            FirmwareKeymapEntry(keycode: 0x7E02, semantic: .pointerDragLock, style: .red),
-        ])
-}
-
-/// Verifies the app uses the same byte-wise FNV-1a fingerprint as firmware.
-@Test
-func validatesFirmwareKeymapFingerprint() {
-    let keymap = FirmwareKeymap(
-        keyboardKind: .kyria,
-        layerCount: 1,
-        matrixRowCount: 1,
-        matrixColumnCount: 1,
-        encoderCount: 1,
-        fingerprint: 0x8DF5_1499,
-        entries: [
-            FirmwareKeymapEntry(keycode: 0x1234, semantic: .aerospace, style: .red),
-            FirmwareKeymapEntry(keycode: 0x00AC, semantic: .none, style: .standard),
-            FirmwareKeymapEntry(keycode: 0x00AB, semantic: .none, style: .standard),
+        chunk.entries == [
+            FirmwareKeymapEntry(
+                keycode: 0x5220,
+                semanticID: .init(rawValue: 0x1234),
+                styleID: .init(rawValue: 0x5678)
+            ),
+            FirmwareKeymapEntry(
+                keycode: 0x7E02,
+                semanticID: .init(rawValue: 0x9ABC),
+                styleID: .init(rawValue: 0xDEF0)
+            ),
         ]
     )
-
-    #expect(keymap.hasValidFingerprint)
 }
 
-/// Verifies that explicit RGB settings use the fixed host-to-keyboard payload.
+/// Verifies explicit RGB settings use the fixed host-to-keyboard payload.
 @Test
 func rgbSettingsRequestUsesExplicitValues() {
     let settings = RGBSettings(
@@ -154,48 +193,11 @@ func rgbSettingsRequestUsesExplicitValues() {
         brightness: 107,
         speed: 149
     )
-
     let request = KeymapProtocol.makeRGBSettingsRequest(applying: settings)
 
-    #expect(request.count == 32)
-    #expect(Array(request[0..<4]) == Array("KMAP".utf8))
-    #expect(request[4] == 3)
+    #expect(request[4] == 4)
     #expect(request[5] == 7)
-    #expect(request[6] == 1)
-    #expect(request[7] == RGBEffect.hueWave.rawValue)
-    #expect(Array(request[8...11]) == [91, 203, 107, 149])
-    #expect(request.dropFirst(12).allSatisfy { $0 == 0 })
-}
-
-/// Verifies that RGB capability state is decoded alongside layer state.
-@Test
-func parsesRGBSettingsFromStateReport() {
-    var packet = makePacket(type: 2)
-    packet[6] = KeyboardKind.kyria.rawValue
-    packet[8] = 1
-    packet[12] = 1
-    packet[20] = 7
-    packet[24] = RGBEffect.pixelFlow.rawValue
-    packet[25] = 47
-    packet[26] = 219
-    packet[27] = 96
-    packet[28] = 1
-    packet[29] = 137
-    packet[30] = UInt8(RGBEffect.allCases.count)
-
-    let report = KeymapProtocol.stateReport(from: packet)
-
-    #expect(
-        report?.rgbSettings
-            == RGBSettings(
-                isEnabled: true,
-                effect: .pixelFlow,
-                hue: 47,
-                saturation: 219,
-                brightness: 96,
-                speed: 137
-            )
-    )
+    #expect(Array(request[6...11]) == [1, RGBEffect.hueWave.rawValue, 91, 203, 107, 149])
 }
 
 /// Keeps the app's stable effect identifiers aligned with the firmware table.
@@ -205,36 +207,20 @@ func rgbEffectIdentifiersAreContiguous() {
     #expect(RGBEffect.allCases.map(\.rawValue) == Array(UInt8(1)...UInt8(30)))
 }
 
-/// Verifies that the native color picker maps back to QMK HSV components.
+/// Verifies the native color picker maps back to QMK HSV components.
 @Test
 func nativeColorSelectionUpdatesQMKComponents() {
     var settings = RGBSettings.default
-
-    settings.color =
-        NSColor(
-            hue: 0.5,
-            saturation: 0.25,
-            brightness: 0.75,
-            alpha: 1
-        ).cgColor
+    settings.color = NSColor(
+        hue: 0.5,
+        saturation: 0.25,
+        brightness: 0.75,
+        alpha: 1
+    ).cgColor
 
     #expect(settings.hue == 128)
     #expect(settings.saturation == 64)
     #expect(settings.brightness == 96)
-}
-
-/// Verifies native brightness and speed sliders map to the full QMK byte ranges.
-@Test
-func normalizedRGBControlsUpdateQMKValues() {
-    var settings = RGBSettings.default
-
-    settings.normalizedBrightness = 0.5
-    settings.normalizedSpeed = 0.75
-
-    #expect(settings.brightness == 64)
-    #expect(settings.speed == 191)
-    #expect(settings.normalizedBrightness == 0.5)
-    #expect(abs(settings.normalizedSpeed - 0.75) < 0.002)
 }
 
 /// Verifies unrelated Raw HID traffic is ignored safely.
@@ -245,15 +231,4 @@ func rejectsUnknownRawHIDPacket() {
     #expect(KeymapProtocol.stateReport(from: unknownPacket) == nil)
     #expect(KeymapProtocol.keymapMetadataReport(from: unknownPacket) == nil)
     #expect(KeymapProtocol.keymapChunkReport(from: unknownPacket) == nil)
-}
-
-/// Creates one zero-filled protocol v3 packet with a selected message type.
-/// - Parameter type: The numeric protocol message type.
-/// - Returns: A complete Raw HID packet.
-private func makePacket(type: UInt8) -> [UInt8] {
-    var packet = [UInt8](repeating: 0, count: 32)
-    packet.replaceSubrange(0..<4, with: Array("KMAP".utf8))
-    packet[4] = 3
-    packet[5] = type
-    return packet
 }

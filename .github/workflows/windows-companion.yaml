@@ -2,6 +2,17 @@ name: Windows companion
 
 on:
   push:
+    paths:
+      - ".github/workflows/windows-companion.yaml"
+      - "Windows/**"
+      - "Shared/**"
+      - "SwiftKeymaps/**"
+  pull_request:
+    paths:
+      - ".github/workflows/windows-companion.yaml"
+      - "Windows/**"
+      - "Shared/**"
+      - "SwiftKeymaps/**"
   workflow_dispatch:
 
 permissions:

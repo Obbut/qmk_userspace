@@ -151,7 +151,7 @@ final class WindowsAppController {
     private func observeModel() {
         withObservationTracking {
             _ = model.connectionStatus
-            _ = model.keyboardKind
+            _ = model.layoutID
             _ = model.keymapDefinition
             _ = model.layerStateMask
             _ = model.defaultLayerStateMask
@@ -198,7 +198,7 @@ final class WindowsAppController {
         keymap_tray_update_state(
             tray,
             connectionState,
-            UInt32(model.keyboardKind?.rawValue ?? 0),
+            model.layoutID?.rawValue ?? 0,
             UInt32(model.activeLayer.rawValue)
         )
     }
@@ -251,7 +251,7 @@ final class WindowsAppController {
         guard previous != current else { return }
         let structureChanged =
             previous.connectionStatus != current.connectionStatus
-            || previous.keyboardKind != current.keyboardKind
+            || previous.layoutID != current.layoutID
             || previous.keymapDefinition != current.keymapDefinition
             || previous.supportsRGBSettings != current.supportsRGBSettings
         if structureChanged {

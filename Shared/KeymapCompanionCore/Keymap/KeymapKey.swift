@@ -6,14 +6,20 @@ public struct KeymapKey: Equatable, Identifiable, Sendable {
     /// The firmware entries ordered by layer index.
     public let entries: [FirmwareKeymapEntry]
 
+    /// The catalog-resolved legends ordered by layer index.
+    public let legends: [KeyLegend]
+
     /// Creates a physical key with its layer entries.
     ///
     /// - Parameters:
     ///   - id: The stable identifier derived from the key's matrix position.
     ///   - entries: The firmware entries ordered by layer index.
-    public init(id: String, entries: [FirmwareKeymapEntry]) {
+    ///   - legends: The catalog-resolved legends ordered by layer index.
+    public init(id: String, entries: [FirmwareKeymapEntry], legends: [KeyLegend]) {
+        precondition(entries.count == legends.count, "Every keymap entry needs a resolved legend.")
         self.id = id
         self.entries = entries
+        self.legends = legends
     }
 
     /// Returns the legend resolved from the highest active nontransparent layer.
@@ -22,15 +28,14 @@ public struct KeymapKey: Equatable, Identifiable, Sendable {
     ///
     /// - Returns: The resolved legend, or an empty legend when the key has no entry.
     public func resolvedLegend(forActiveLayerMask activeLayerMask: UInt32) -> KeyLegend {
-        for layer in KeymapLayer.allCases.reversed() where layer.isActive(inLayerMask: activeLayerMask) {
-            let index = Int(layer.rawValue)
-            guard index < entries.count else { continue }
+        for index in entries.indices.reversed()
+        where activeLayerMask & (UInt32(1) << UInt32(index)) != 0 {
             let entry = entries[index]
             if entry.keycode != 0x0001 {
-                return QMKKeycodeLegend.legend(for: entry)
+                return legends[index]
             }
         }
-        return entries.first.map(QMKKeycodeLegend.legend(for:))
+        return legends.first
             ?? KeyLegend(label: "")
     }
 

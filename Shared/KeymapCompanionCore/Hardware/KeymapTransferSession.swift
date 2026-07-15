@@ -40,7 +40,7 @@ public struct KeymapTransferSession: Sendable {
         }
         if let state = KeymapProtocol.stateReport(from: bytes) {
             latestReport = state
-            guard latestKeymap?.keyboardKind == state.keyboardKind else { return [] }
+            guard latestKeymap?.layoutID == state.layoutID else { return [] }
             return [.state(state)]
         }
         return []
@@ -78,7 +78,7 @@ public struct KeymapTransferSession: Sendable {
         with chunk: KeymapChunkReport
     ) -> [KeymapSessionAction] {
         guard let metadata = keymapMetadata,
-            chunk.keyboardKind == metadata.keyboardKind,
+            chunk.layoutID == metadata.layoutID,
             chunk.totalEntryCount == metadata.entryCount,
             chunk.startIndex == keymapEntries.count,
             chunk.entries.count <= metadata.entriesPerChunk
@@ -95,12 +95,14 @@ public struct KeymapTransferSession: Sendable {
         }
 
         let keymap = FirmwareKeymap(
-            keyboardKind: metadata.keyboardKind,
+            layoutID: metadata.layoutID,
             layerCount: metadata.layerCount,
             matrixRowCount: metadata.matrixRowCount,
             matrixColumnCount: metadata.matrixColumnCount,
             encoderCount: metadata.encoderCount,
             fingerprint: metadata.fingerprint,
+            semanticCatalogFingerprint: metadata.semanticCatalogFingerprint,
+            styleCatalogFingerprint: metadata.styleCatalogFingerprint,
             entries: keymapEntries
         )
         guard keymap.hasValidFingerprint else {
@@ -110,7 +112,7 @@ public struct KeymapTransferSession: Sendable {
         latestKeymap = keymap
         keymapMetadata = nil
         var actions: [KeymapSessionAction] = [.keymap(keymap)]
-        if let latestReport, latestReport.keyboardKind == keymap.keyboardKind {
+        if let latestReport, latestReport.layoutID == keymap.layoutID {
             actions.append(.state(latestReport))
         } else {
             actions.append(.write(report: KeymapProtocol.makeStateRequest()))
@@ -125,7 +127,7 @@ public struct KeymapTransferSession: Sendable {
     /// - Returns: A chunk request or a size-validation failure.
     private func keymapChunkRequest(startingAt startIndex: Int) -> [KeymapSessionAction] {
         guard let encodedIndex = UInt16(exactly: startIndex) else {
-            return [.failed(message: "Firmware keymap is too large for protocol v3.")]
+            return [.failed(message: "Firmware keymap is too large for protocol v4.")]
         }
         return [.write(report: KeymapProtocol.makeKeymapChunkRequest(startingAt: encodedIndex))]
     }

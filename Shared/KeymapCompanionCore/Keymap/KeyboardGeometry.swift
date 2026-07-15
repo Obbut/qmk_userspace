@@ -12,8 +12,8 @@ public struct KeyboardGeometry: Equatable, Sendable {
     /// The matrix positions corresponding to ``placements``.
     public let matrixPositions: [MatrixPosition]
 
-    /// The placement of the right encoder.
-    public let rightEncoderPlacement: PhysicalKeyPlacement
+    /// The ordered physical encoder placements.
+    public let encoderPlacements: [PhysicalKeyPlacement]
 
     /// Creates renderer geometry for a keyboard.
     ///
@@ -22,18 +22,18 @@ public struct KeyboardGeometry: Equatable, Sendable {
     ///   - canvasHeight: The height of the renderer's logical coordinate space.
     ///   - placements: The ordered placements of the keyboard's visible switches.
     ///   - matrixPositions: The matrix positions corresponding to `placements`.
-    ///   - rightEncoderPlacement: The placement of the right encoder.
+    ///   - encoderPlacements: The ordered physical encoder placements.
     init(
         canvasWidth: Double,
         canvasHeight: Double,
         placements: [PhysicalKeyPlacement],
         matrixPositions: [MatrixPosition],
-        rightEncoderPlacement: PhysicalKeyPlacement
+        encoderPlacements: [PhysicalKeyPlacement]
     ) {
         self.canvasWidth = canvasWidth
         self.canvasHeight = canvasHeight
         self.placements = placements
         self.matrixPositions = matrixPositions
-        self.rightEncoderPlacement = rightEncoderPlacement
+        self.encoderPlacements = encoderPlacements
     }
 }

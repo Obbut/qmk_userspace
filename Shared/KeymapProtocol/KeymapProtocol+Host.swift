@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #if !hasFeature(Embedded)
-    /// Host-side validation and decoding for protocol reports.
+    /// Host-side validation and decoding for protocol-v4 reports.
     extension KeymapProtocol {
         /// Creates a request for the keyboard's current state.
         ///
@@ -11,7 +11,7 @@
             makeRequest(type: .getState)
         }
 
-        /// Creates a request for the firmware's keymap dimensions and fingerprint.
+        /// Creates a request for keymap dimensions and catalog fingerprints.
         ///
         /// - Returns: One complete Raw HID output report.
         public static func makeKeymapMetadataRequest() -> [UInt8] {
@@ -21,7 +21,6 @@
         /// Creates a request for consecutive keymap entries.
         ///
         /// - Parameter startIndex: The first layer-major matrix entry to return.
-        ///
         /// - Returns: One complete Raw HID output report.
         public static func makeKeymapChunkRequest(startingAt startIndex: UInt16) -> [UInt8] {
             var report = makeRequest(type: .getKeymapChunk)
@@ -34,7 +33,6 @@
         /// Creates a request that persists an explicit RGB Matrix configuration.
         ///
         /// - Parameter settings: The complete base-layer configuration to apply.
-        ///
         /// - Returns: One complete Raw HID output report.
         public static func makeRGBSettingsRequest(applying settings: RGBSettings) -> [UInt8] {
             var report = makeRequest(type: .setRGBSettings)
@@ -50,38 +48,33 @@
         /// Returns state decoded from a Raw HID packet.
         ///
         /// - Parameter bytes: A complete Raw HID input report.
-        ///
         /// - Returns: A validated state report, or `nil` for another protocol or version.
         public static func stateReport(from bytes: [UInt8]) -> KeyboardStateReport? {
             bytes.withUnsafeBufferPointer { report in
-                guard hasValidHeader(in: report, messageType: .state),
-                    let keyboardKind = KeyboardKind(rawValue: report[6])
-                else {
-                    return nil
-                }
+                guard hasValidHeader(in: report, messageType: .state) else { return nil }
 
-                let capabilities = uint32(from: report, at: 20)
+                let capabilities = uint32(from: report, at: 22)
                 let rgbSettings: RGBSettings?
                 if capabilities & rgbSettingsCapability != 0,
-                    let effect = RGBEffect(rawValue: report[24])
+                    let effect = RGBEffect(rawValue: report[26])
                 {
                     rgbSettings = RGBSettings(
-                        isEnabled: report[28] != 0,
+                        isEnabled: report[30] != 0,
                         effect: effect,
-                        hue: report[25],
-                        saturation: report[26],
-                        brightness: min(report[27], RGBSettings.maximumBrightness),
-                        speed: report[29]
+                        hue: report[27],
+                        saturation: report[28],
+                        brightness: min(report[29], RGBSettings.maximumBrightness),
+                        speed: report[31]
                     )
                 } else {
                     rgbSettings = nil
                 }
 
                 return KeyboardStateReport(
-                    keyboardKind: keyboardKind,
-                    layerStateMask: uint32(from: report, at: 8),
-                    defaultLayerStateMask: uint32(from: report, at: 12),
-                    sequence: uint32(from: report, at: 16),
+                    layoutID: LayoutID(rawValue: uint32(from: report, at: 6)),
+                    layerStateMask: uint32(from: report, at: 10),
+                    defaultLayerStateMask: uint32(from: report, at: 14),
+                    sequence: uint32(from: report, at: 18),
                     capabilities: capabilities,
                     rgbSettings: rgbSettings
                 )
@@ -91,32 +84,25 @@
         /// Returns keymap metadata decoded from a Raw HID packet.
         ///
         /// - Parameter bytes: A complete Raw HID input report.
-        ///
         /// - Returns: Validated transfer metadata, or `nil` for another packet type.
         public static func keymapMetadataReport(from bytes: [UInt8]) -> KeymapMetadataReport? {
             bytes.withUnsafeBufferPointer { report in
-                guard hasValidHeader(in: report, messageType: .keymapMetadata),
-                    let keyboardKind = KeyboardKind(rawValue: report[6])
-                else {
-                    return nil
-                }
+                guard hasValidHeader(in: report, messageType: .keymapMetadata) else { return nil }
 
-                let layerCount = Int(report[7])
-                let matrixRowCount = Int(report[8])
-                let matrixColumnCount = Int(report[9])
-                let entrySize = Int(report[10])
-                let chunkEntryCount = Int(report[11])
+                let layerCount = Int(report[10])
+                let matrixRowCount = Int(report[11])
+                let matrixColumnCount = Int(report[12])
+                let entrySize = Int(report[13])
+                let chunkEntryCount = Int(report[14])
+                let encoderCount = Int(report[15])
                 let entryCount = Int(uint16(from: report, at: 16))
-                let encoderCount = Int(report[18])
-                let directionCount = Int(report[19])
+                let directionCount = Int(report[30])
                 let matrixEntryCount = layerCount * matrixRowCount * matrixColumnCount
                 let encoderEntryCount = layerCount * encoderCount * directionCount
                 guard layerCount > 0,
                     layerCount <= 32,
                     matrixRowCount > 0,
                     matrixColumnCount > 0,
-                    encoderCount > 0,
-                    encoderCount <= 8,
                     directionCount == Int(encoderDirectionCount),
                     entrySize == keymapEntrySize,
                     chunkEntryCount > 0,
@@ -127,13 +113,15 @@
                 }
 
                 return KeymapMetadataReport(
-                    keyboardKind: keyboardKind,
+                    layoutID: LayoutID(rawValue: uint32(from: report, at: 6)),
                     layerCount: layerCount,
                     matrixRowCount: matrixRowCount,
                     matrixColumnCount: matrixColumnCount,
                     entryByteCount: entrySize,
                     entriesPerChunk: chunkEntryCount,
-                    fingerprint: uint32(from: report, at: 12),
+                    fingerprint: uint32(from: report, at: 18),
+                    semanticCatalogFingerprint: uint32(from: report, at: 22),
+                    styleCatalogFingerprint: uint32(from: report, at: 26),
                     entryCount: entryCount,
                     encoderCount: encoderCount
                 )
@@ -143,20 +131,16 @@
         /// Returns a keymap chunk decoded from a Raw HID packet.
         ///
         /// - Parameter bytes: A complete Raw HID input report.
-        ///
         /// - Returns: A validated page, or `nil` for another or malformed packet.
         public static func keymapChunkReport(from bytes: [UInt8]) -> KeymapChunkReport? {
             bytes.withUnsafeBufferPointer { report in
-                guard hasValidHeader(in: report, messageType: .keymapChunk),
-                    let keyboardKind = KeyboardKind(rawValue: report[6])
-                else {
-                    return nil
-                }
+                guard hasValidHeader(in: report, messageType: .keymapChunk) else { return nil }
 
-                let count = Int(report[7])
-                let startIndex = Int(uint16(from: report, at: 8))
-                let totalEntryCount = Int(uint16(from: report, at: 10))
+                let count = Int(report[14])
+                let startIndex = Int(uint16(from: report, at: 10))
+                let totalEntryCount = Int(uint16(from: report, at: 12))
                 guard count > 0,
+                    count <= entriesPerChunk,
                     keymapChunkOffset + count * keymapEntrySize <= reportSize,
                     startIndex + count <= totalEntryCount
                 else {
@@ -167,19 +151,16 @@
                 entries.reserveCapacity(count)
                 for entryIndex in 0..<count {
                     let offset = keymapChunkOffset + entryIndex * keymapEntrySize
-                    guard let semantic = KeySemantic(rawValue: report[offset + 2]),
-                        let style = KeyStyle(rawValue: report[offset + 3])
-                    else { return nil }
                     entries.append(
                         FirmwareKeymapEntry(
                             keycode: uint16(from: report, at: offset),
-                            semantic: semantic,
-                            style: style
+                            semanticID: SemanticID(rawValue: uint16(from: report, at: offset + 2)),
+                            styleID: StyleID(rawValue: uint16(from: report, at: offset + 4))
                         )
                     )
                 }
                 return KeymapChunkReport(
-                    keyboardKind: keyboardKind,
+                    layoutID: LayoutID(rawValue: uint32(from: report, at: 6)),
                     startIndex: startIndex,
                     totalEntryCount: totalEntryCount,
                     entries: entries
@@ -190,7 +171,6 @@
         /// Creates a zero-filled request with the shared envelope.
         ///
         /// - Parameter type: The host-to-firmware message type.
-        ///
         /// - Returns: One complete output report.
         private static func makeRequest(type: MessageType) -> [UInt8] {
             var report = [UInt8](repeating: 0, count: reportSize)

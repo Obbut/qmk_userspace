@@ -13,7 +13,7 @@ extension WindowsAppController {
         content.orientation = .vertical
         content.spacing = 16
 
-        let name = WindowsTheme.makeText(text: definition.keyboardKind.displayName, size: 21)
+        let name = WindowsTheme.makeText(text: definition.displayName, size: 21)
         name.fontWeight = FontWeights.semiBold
         content.children.append(name)
         content.children.append(makeLayerStrip(supportedLayers: definition.supportedLayers))
@@ -69,7 +69,8 @@ extension WindowsAppController {
     ///
     /// - Parameter activeLayerMask: The bit mask of active and default layers.
     func synchronizeLayerPills(activeLayerMask: UInt32) {
-        for (index, layer) in KeymapLayer.allCases.enumerated() {
+        guard let layers = model.keymapDefinition?.supportedLayers else { return }
+        for (index, layer) in layers.enumerated() {
             guard index < layerPillBorders.count, index < layerPillLabels.count else { break }
             let isActive = layer.isActive(inLayerMask: activeLayerMask)
             layerPillBorders[index].background =

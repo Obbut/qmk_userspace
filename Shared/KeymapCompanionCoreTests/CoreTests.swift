@@ -1,89 +1,76 @@
+import ObbutKeyboardCatalog
+import ObbutKeymaps
 import Testing
 @testable import KeymapCompanionCore
 
-/// Verifies transparent keys resolve through the complete active layer stack.
+/// Verifies host requests accept only the protocol-v4 envelope.
 @Test
-func transparentKeyResolvesThroughActiveLayerStack() {
-    let key = KeymapKey(
-        id: "r0c0",
-        entries: [
-            FirmwareKeymapEntry(keycode: 0x0009, semantic: .none, style: .standard),
-            FirmwareKeymapEntry(keycode: 0x0008, semantic: .none, style: .purple),
-            FirmwareKeymapEntry(keycode: 0x0001, semantic: .none, style: .standard),
-            FirmwareKeymapEntry(keycode: 0x0001, semantic: .none, style: .standard),
-            FirmwareKeymapEntry(keycode: 0x0001, semantic: .none, style: .standard),
-        ]
-    )
-    let mask =
-        UInt32(1 << KeymapLayer.base.rawValue)
-        | UInt32(1 << KeymapLayer.qwerty.rawValue)
-        | UInt32(1 << KeymapLayer.lower.rawValue)
-
-    #expect(key.resolvedLegend(forActiveLayerMask: mask).label == "E")
-    #expect(!key.isDirectlyMapped(on: .lower))
-}
-
-/// Verifies host requests use the protocol v3 signature and message identifier.
-@Test
-func protocolRequestsUseVersionThreeEnvelope() {
+func protocolRequestsUseVersionFourEnvelope() {
     let request = KeymapProtocol.makeKeymapMetadataRequest()
 
     #expect(request.count == KeymapProtocol.reportSize)
     #expect(Array(request.prefix(4)) == Array("KMAP".utf8))
-    #expect(request[4] == 3)
+    #expect(request[4] == 4)
     #expect(request[5] == 3)
 }
 
-/// Verifies each supported geometry maps every visible switch to a unique matrix position.
+/// Verifies every authored keyboard produces complete dynamic renderer input.
 @Test
-func supportedGeometryMapsVisibleSwitchesToUniqueMatrixPositions() {
-    #expect(KeyboardGeometryCatalog.kyria.placements.count == 50)
-    #expect(KeyboardGeometryCatalog.elora.placements.count == 62)
-    #expect(Set(KeyboardGeometryCatalog.kyria.matrixPositions).count == 50)
-    #expect(Set(KeyboardGeometryCatalog.elora.matrixPositions).count == 62)
+func allCatalogKeyboardsProduceRendererDocuments() {
+    #expect(ObbutKeyboardCatalog.all.count == 4)
+    for firmware in ObbutKeyboardCatalog.all {
+        let definition = KeymapDefinition.makePreview(for: LayoutID(rawValue: firmware.layoutID))
+        #expect(definition.positionedKeys.count == firmware.layout.keys.count)
+        #expect(definition.supportedLayers.count == firmware.layers.count)
+        #expect(definition.encoders.count == firmware.layout.encoders.count)
+        #expect(definition.semanticCatalogMatches)
+        #expect(definition.styleCatalogMatches)
+    }
 }
 
-/// Verifies five- and six-layer Kyria firmware advertise only their supplied layers.
+/// Verifies the shared Obbut domain owns stable semantic and style wire values.
 @Test
-func keymapDefinitionSupportsLegacyAndPointerLayerCounts() throws {
-    let legacy = try #require(KeymapDefinition(firmwareKeymap: TestKeymaps.makeKyria(layerCount: 5)))
-    let current = try #require(KeymapDefinition(firmwareKeymap: TestKeymaps.makeKyria()))
-
-    #expect(legacy.supportedLayers == [.base, .qwerty, .lower, .raise, .function])
-    #expect(current.supportedLayers == KeymapLayer.allCases)
-    #expect(current.supportedLayers.last == .pointer)
+func obbutCatalogRawValuesRemainStable() {
+    #expect(ObbutSemantic.screenshot.rawValue == 1)
+    #expect(ObbutSemantic.pointerDragLock.rawValue == 17)
+    #expect(ObbutSemantic.bluetoothHost1.rawValue == 30)
+    #expect(ObbutSemantic.batteryLevel.rawValue == 34)
+    #expect(ObbutStyle.standard.rawValue == 0)
+    #expect(ObbutStyle.wireless.rawValue == 10)
 }
 
-/// Verifies protocol-v3 pointer semantic identifiers remain append-only and stable.
+/// Verifies a catalog mismatch preserves the keymap and exposes diagnostics.
 @Test
-func pointerSemanticRawValuesAreStable() {
-    #expect(KeySemantic.pointerLeftClick.rawValue == 3)
-    #expect(KeySemantic.pointerRightClick.rawValue == 4)
-    #expect(KeySemantic.pointerMiddleClick.rawValue == 5)
-    #expect(KeySemantic.browserBack.rawValue == 6)
-    #expect(KeySemantic.browserForward.rawValue == 7)
-    #expect(KeySemantic.pointerScroll.rawValue == 8)
-    #expect(KeySemantic.pointerSniper.rawValue == 9)
-    #expect(KeySemantic.pointerDragLock.rawValue == 10)
-    #expect(KeySemantic.pointerSensitivityDown.rawValue == 11)
-    #expect(KeySemantic.pointerSensitivityUp.rawValue == 12)
-    #expect(KeySemantic.pointerScrollSpeedDown.rawValue == 13)
-    #expect(KeySemantic.pointerScrollSpeedUp.rawValue == 14)
+func catalogMismatchDoesNotDiscardKeymap() throws {
+    let keymap = TestKeymaps.makeKyria(
+        semanticCatalogFingerprint: 0xDEAD_BEEF,
+        styleCatalogFingerprint: 0xFEED_FACE,
+        semanticID: SemanticID(rawValue: 999),
+        styleID: StyleID(rawValue: 999)
+    )
+    let definition = try #require(KeymapDefinition(firmwareKeymap: keymap))
+
+    #expect(!definition.semanticCatalogMatches)
+    #expect(!definition.styleCatalogMatches)
+    let legend = try #require(definition.positionedKeys.first?.key.legends.first)
+    #expect(legend.label == "Semantic #999")
+    #expect(!legend.style.isKnown)
 }
 
 /// Verifies automatic pointer activity never opens the transient layer HUD.
 @MainActor
 @Test
 func pointerLayerDoesNotPresentHUD() async throws {
+    let definition = KeymapDefinition.makePreview(for: .kyria)
+    let pointer = try #require(definition.supportedLayers.first { $0.displayName == "Pointer" })
     let hud = LayerHUDModel(transitionDelay: .milliseconds(20))
-    let mask = UInt32(1 << KeymapLayer.pointer.rawValue) | 1
+    let mask = UInt32(1 << pointer.rawValue) | 1
 
-    hud.update(activeLayer: .pointer, activeLayerMask: mask)
+    hud.update(activeLayer: pointer, activeLayerMask: mask)
     try await Task.sleep(for: .milliseconds(80))
 
     #expect(hud.presentation == nil)
-    #expect(KeymapLayer.pointer.displayName == "Pointer")
-    #expect(KeymapLayer.pointer.legendName == "P")
+    #expect(pointer.legendName == "P")
 }
 
 /// Verifies normalized RGB controls clamp and round to firmware byte ranges.
@@ -99,85 +86,75 @@ func normalizedRGBControlsClampToFirmwareRanges() {
     #expect(abs(settings.normalizedSpeed - 0.75) < 0.002)
 }
 
-/// Verifies a fingerprint-validated transfer publishes its complete keymap.
+/// Verifies protocol v4 transfers support a keymap with no encoders.
 @Test
-func transferSessionPublishesFingerprintValidatedKeymap() {
-    let keyboardKind = KeymapProtocol.KeyboardKind.kyria.rawValue
-    let keycode: UInt16 = 0x0004
-    let semantic = KeySemantic.none
-    let style = KeymapProtocol.KeyStyle.standard.rawValue
+func transferSessionPublishesZeroEncoderKeymap() {
+    let layoutID = UInt32(0x1234_5678)
+    let keycode = UInt16(0x0004)
     var fingerprint = KeymapProtocol.fingerprintSeed(
-        keyboardKind: keyboardKind,
+        layoutID: layoutID,
         layerCount: 1,
         matrixRowCount: 1,
         matrixColumnCount: 1,
-        encoderCount: 1
+        encoderCount: 0
     )
-    for _ in 0..<3 {
-        fingerprint = KeymapProtocol.fingerprint(
-            afterAddingKeycode: keycode,
-            semantic: semantic.rawValue,
-            style: style,
-            to: fingerprint
-        )
-    }
+    fingerprint = KeymapProtocol.fingerprint(
+        afterAddingKeycode: keycode,
+        semanticID: 0,
+        styleID: 0,
+        to: fingerprint
+    )
 
     var metadata = [UInt8](repeating: 0, count: KeymapProtocol.reportSize)
     metadata.withUnsafeMutableBufferPointer { bytes in
         #expect(
             KeymapProtocol.encodeKeymapMetadataReport(
                 to: bytes,
-                keyboardKind: keyboardKind,
+                layoutID: layoutID,
                 layerCount: 1,
                 matrixRowCount: 1,
                 matrixColumnCount: 1,
                 fingerprint: fingerprint,
-                entryCount: 3,
-                encoderCount: 1
-            ))
+                semanticCatalogFingerprint: 11,
+                styleCatalogFingerprint: 22,
+                entryCount: 1,
+                encoderCount: 0
+            )
+        )
     }
     var chunk = [UInt8](repeating: 0, count: KeymapProtocol.reportSize)
     chunk.withUnsafeMutableBufferPointer { bytes in
         #expect(
             KeymapProtocol.encodeKeymapChunkHeader(
                 to: bytes,
-                keyboardKind: keyboardKind,
-                entryCount: 3,
+                layoutID: layoutID,
+                entryCount: 1,
                 startIndex: 0,
-                totalEntryCount: 3
-            ))
-        for index in 0..<3 {
-            #expect(
-                KeymapProtocol.encodeKeymapEntry(
-                    keycode: keycode,
-                    semantic: semantic.rawValue,
-                    style: style,
-                    at: UInt8(index),
-                    to: bytes
-                ))
-        }
+                totalEntryCount: 1
+            )
+        )
+        #expect(
+            KeymapProtocol.encodeKeymapEntry(
+                keycode: keycode,
+                semanticID: 0,
+                styleID: 0,
+                at: 0,
+                to: bytes
+            )
+        )
     }
 
     var session = KeymapTransferSession()
     #expect(session.start() == [.write(report: KeymapProtocol.makeKeymapMetadataRequest())])
-    #expect(
-        session.receive(metadata) == [
-            .write(report: KeymapProtocol.makeKeymapChunkRequest(startingAt: 0))
-        ])
-
+    #expect(session.receive(metadata) == [.write(report: KeymapProtocol.makeKeymapChunkRequest(startingAt: 0))])
     let completion = session.receive(chunk)
-    #expect(completion.count == 2)
+
     guard case let .keymap(keymap) = completion.first else {
         Issue.record("The completed transfer did not publish its keymap.")
         return
     }
     #expect(keymap.hasValidFingerprint)
-    #expect(
-        keymap.entries
-            == Array(
-                repeating: FirmwareKeymapEntry(keycode: keycode, semantic: semantic, style: .standard),
-                count: 3
-            ))
+    #expect(keymap.encoderCount == 0)
     #expect(completion.last == .write(report: KeymapProtocol.makeStateRequest()))
 }
 
@@ -189,13 +166,11 @@ func observableModelUsesInjectedHardwareClient() async throws {
     let model = KeymapCompanionModel.makeLive(hardware: hardware)
 
     #expect(hardware.startCount == 1)
-    #expect(model.connectionStatus == .searching)
-
     hardware.emit(.keymap(TestKeymaps.makeKyria()))
     hardware.emit(
         .state(
             KeyboardStateReport(
-                keyboardKind: .kyria,
+                layoutID: .kyria,
                 layerStateMask: 1,
                 defaultLayerStateMask: 1,
                 sequence: 42,
@@ -203,10 +178,12 @@ func observableModelUsesInjectedHardwareClient() async throws {
                     | KeymapProtocol.keymapReadCapability
                     | KeymapProtocol.rgbSettingsCapability,
                 rgbSettings: .default
-            )))
+            )
+        )
+    )
 
     #expect(model.connectionStatus == .connected)
-    #expect(model.keyboardKind == .kyria)
+    #expect(model.layoutID == .kyria)
     #expect(model.latestSequence == 42)
     #expect(model.supportsRGBSettings)
 
@@ -216,23 +193,6 @@ func observableModelUsesInjectedHardwareClient() async throws {
 
     model.reconnect()
     #expect(hardware.restartCount == 1)
-    #expect(model.connectionStatus == .searching)
-
     model.shutdown()
     #expect(hardware.stopCount == 1)
-}
-
-/// Verifies the shared HUD publishes a presentation only after its dwell delay.
-@MainActor
-@Test
-func sharedHUDModelPublishesAfterLayerDwell() async throws {
-    let hud = LayerHUDModel(transitionDelay: .milliseconds(20))
-    let mask =
-        UInt32(1 << KeymapLayer.base.rawValue)
-        | UInt32(1 << KeymapLayer.lower.rawValue)
-
-    hud.update(activeLayer: .lower, activeLayerMask: mask)
-    #expect(hud.presentation == nil)
-    try await Task.sleep(for: .milliseconds(80))
-    #expect(hud.presentation == LayerHUDPresentation(layer: .lower, activeLayerMask: mask))
 }

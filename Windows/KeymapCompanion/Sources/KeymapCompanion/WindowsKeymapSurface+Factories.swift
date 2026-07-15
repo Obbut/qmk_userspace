@@ -17,14 +17,15 @@ extension WindowsKeymapSurface {
         placement: PhysicalKeyPlacement,
         scale: Double
     ) -> RenderedKey {
-        let size = 50 * scale
+        let width = 50 * placement.width * scale
+        let height = 50 * placement.height * scale
         let border = Border()
-        border.width = size
-        border.height = size
+        border.width = width
+        border.height = height
         border.cornerRadius = WindowsTheme.makeCornerRadius(all: 8 * scale)
         border.borderThickness = Thickness(left: 1, top: 1, right: 1, bottom: 1)
         border.rotation = Float(placement.rotationDegrees)
-        border.centerPoint = Vector3(x: Float(size / 2), y: Float(size / 2), z: 0)
+        border.centerPoint = Vector3(x: Float(width / 2), y: Float(height / 2), z: 0)
 
         let label = WindowsTheme.makeText(text: "", size: max(9, 11.5 * scale))
         label.textAlignment = .center
@@ -35,8 +36,8 @@ extension WindowsKeymapSurface {
         label.margin = Thickness(left: 3, top: 1, right: 3, bottom: 1)
         border.child = label
 
-        try? Canvas.setLeft(border, placement.centerX * scale - size / 2)
-        try? Canvas.setTop(border, placement.centerY * scale - size / 2)
+        try? Canvas.setLeft(border, placement.centerX * scale - width / 2)
+        try? Canvas.setTop(border, placement.centerY * scale - height / 2)
         return RenderedKey(key: key, border: border, label: label)
     }
 
@@ -163,6 +164,16 @@ extension WindowsKeymapSurface {
         case .shift: "Shift"
         case .option: "Alt"
         case .command: "Win"
+        case .camera: "Screenshot"
+        case .windowManagement: "Window"
+        case .lockedPointer: "Drag Lock"
+        case .bluetooth: "Bluetooth"
+        case .battery: "Battery"
+        case .pointerButton: "Click"
+        case .pointer: "Pointer"
+        case .scroll: "Scroll"
+        case .browserNavigation: "Browser"
+        case .wireless: "Wireless"
         }
     }
 
@@ -171,17 +182,10 @@ extension WindowsKeymapSurface {
     /// - Parameter style: The firmware-owned key presentation category.
     /// - Returns: The category's Windows background brush.
     static func background(for style: KeyStyle) -> SolidColorBrush {
-        switch style {
-        case .standard: WindowsTheme.makeBrush(red: 43, green: 46, blue: 57)
-        case .purple: WindowsTheme.makeBrush(red: 83, green: 55, blue: 132)
-        case .magenta: WindowsTheme.makeBrush(red: 128, green: 45, blue: 105)
-        case .blue: WindowsTheme.makeBrush(red: 40, green: 78, blue: 139)
-        case .yellow: WindowsTheme.makeBrush(red: 119, green: 91, blue: 31)
-        case .cyan: WindowsTheme.makeBrush(red: 31, green: 103, blue: 116)
-        case .green: WindowsTheme.makeBrush(red: 35, green: 105, blue: 70)
-        case .darkGreen: WindowsTheme.makeBrush(red: 28, green: 76, blue: 56)
-        case .red: WindowsTheme.makeBrush(red: 132, green: 47, blue: 55)
-        case .orange: WindowsTheme.makeBrush(red: 137, green: 70, blue: 34)
-        }
+        WindowsTheme.makeBrush(
+            red: UInt8((UInt16(style.red) + 43) / 2),
+            green: UInt8((UInt16(style.green) + 46) / 2),
+            blue: UInt8((UInt16(style.blue) + 57) / 2)
+        )
     }
 }

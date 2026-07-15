@@ -6,46 +6,26 @@ This repo contains QMK keymaps for four keyboards:
 - **Keychron Q15 Max** - Ortholinear with Bluetooth/2.4GHz wireless
 - **ZSA Planck EZ Glow** - 4x12 ortholinear with per-key RGB
 
-## Code Sharing: Kyria and Elora
+## Swift source of truth
 
-The Kyria and Elora share code via `users/obbut_halcyon/`:
-- **`obbut_halcyon.h`** - Shared definitions, layer enum, row macros
-- **`obbut_halcyon.c`** - Shared logic (RGB indicators, OS detection, split sync)
-- **`config.h`** - Shared config (RGB timeout, split transaction ID)
+Never author a keymap, domain semantic, style, or firmware state machine in C.
+The module hierarchy is:
 
-The Elora is essentially the Kyria with an additional number row. Their typing layers, RGB indicators, and settings are kept in sync through the shared code. The Kyria additionally owns an automatic Pointer layer because it has the Cirque trackpad.
+1. `SwiftKeymaps/Sources/QMKKeymapKit` and `QMKFirmwareRuntime`: reusable,
+   domain-agnostic framework.
+2. `SwiftKeymaps/Sources/ObbutKeymaps`: the only Obbut semantic/style catalog,
+   shared layers, actions, configuration, lighting, OS behavior, split state,
+   companion support, and pointer engine.
+3. The four individual `*Firmware` modules: board composition and
+   hardware-specific choices.
+4. `ObbutKeyboardCatalog`: aggregation for hosts and previews.
 
-**When changing Kyria or Elora keymaps:**
-1. Update the shared code in `users/obbut_halcyon/` for common changes
-2. Update keyboard-specific `keymap.c` only for layout differences
-3. Update both `keymap-kyria.yaml` and `keymap-elora.yaml` for visualization
-4. Run `./draw-keymap.sh` to regenerate SVGs
+`qmk-keymapc` generates ignored `keymap.c`, `config.h`, `rules.mk`, metadata,
+and keymap-drawer YAML. The small C files under `users/` are QMK ABI/platform
+shims only. Edit Swift, then run the existing Docker command; generation is the
+first build step. Run `./draw-keymap.sh` to regenerate SVGs from Swift.
 
-## Keymap Synchronization
-
-Each keyboard has keymap definitions that must stay in sync:
-
-### Kyria
-1. **`keyboards/splitkb/halcyon/kyria/keymaps/obbut/keymap.c`** - QMK firmware keymap
-2. **`keymap-kyria.yaml`** - Manual YAML for keymap-drawer visualization
-
-### Elora
-1. **`keyboards/splitkb/halcyon/elora/keymaps/obbut/keymap.c`** - QMK firmware keymap
-2. **`keymap-elora.yaml`** - Manual YAML for keymap-drawer visualization
-
-### Q15 Max
-1. **`keyboards/keychron/q15_max/ansi_encoder/keymaps/obbut/keymap.c`** - QMK firmware keymap
-2. **`keymap-q15.yaml`** - Manual YAML for keymap-drawer visualization
-
-### Planck EZ Glow
-1. **`keyboards/zsa/planck_ez/glow/keymaps/obbut/keymap.c`** - QMK firmware keymap (self-contained, not shared)
-2. **`keymap-planck.yaml`** - Manual YAML for keymap-drawer visualization
-
-**When changing a keymap:**
-1. Update `keymap.c` with the firmware changes
-2. Update the corresponding `.yaml` file to match
-3. Run `./draw-keymap.sh` to regenerate `images/*.svg`
-4. Commit all files together
+See `SwiftKeymaps/README.md` for API and customization examples.
 
 ## Build Commands
 
@@ -171,10 +151,10 @@ The keyboard has per-layer RGB backlighting (all other keys turn off for visibil
 
 ### Keeping RGB in Sync
 
-RGB indicators are defined in the shared code (`users/obbut_halcyon/obbut_halcyon.c`) and the YAML files for visualization:
-
-1. **`obbut_halcyon.c`** - The actual RGB code in `obbut_rgb_matrix_indicators()`
-2. **`keymap-kyria.yaml`** / **`keymap-elora.yaml`** - Border colors via `type` field on keys
+RGB presentation is defined once by `ObbutStyle` and `ObbutKeymapDomain.styles`.
+Keys select those typed styles in the shared Swift layers. Firmware lighting,
+companion rendering, Xcode previews, and generated SVG YAML all consume the
+same catalog.
 
 The border styles are defined in `keymap-drawer.yaml` under `svg_style`:
 - `rgb-magenta` - Magenta for movement keys
@@ -186,10 +166,8 @@ The border styles are defined in `keymap-drawer.yaml` under `svg_style`:
 - `rgb-red` - Red for Boot keys
 - `rgb-orange` - Orange for Delete/Backspace keys
 
-**When changing RGB indicators:**
-1. Update the logic in `users/obbut_halcyon/obbut_halcyon.c`
-2. Update the `type` fields in both YAML files for affected keys
-3. Run `./docker-build.sh` then `./draw-keymap.sh` to regenerate the SVGs
+**When changing RGB indicators:** update the style catalog or typed key style,
+then run the relevant Docker build and `./draw-keymap.sh`.
 
 ---
 
@@ -391,4 +369,5 @@ Same layout concept as Kyria (reimplemented independently):
 
 ## RGB Layer Indicators
 
-Same keycode-based approach as Kyria (reimplemented in the Planck's own `keymap.c`). Colors match the Kyria/Elora scheme. See Kyria section above for the color mapping.
+The Planck consumes the same Swift style catalog and generated lighting path as
+the other boards. See Kyria above for the color mapping.
