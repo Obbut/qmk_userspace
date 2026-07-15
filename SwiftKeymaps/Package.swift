@@ -1,6 +1,7 @@
 // swift-tools-version: 6.3
 
 import PackageDescription
+import CompilerPluginSupport
 
 let package = Package(
     name: "SwiftQMKKeymaps",
@@ -10,6 +11,7 @@ let package = Package(
     products: [
         .library(name: "QMKKeymapKit", targets: ["QMKKeymapKit"]),
         .library(name: "QMKFirmwareRuntime", targets: ["QMKFirmwareRuntime"]),
+        .library(name: "QMKFirmwareHost", targets: ["QMKFirmwareHost"]),
         .library(name: "ObbutKeymaps", targets: ["ObbutKeymaps"]),
         .library(name: "KyriaFirmware", targets: ["KyriaFirmware"]),
         .library(name: "EloraFirmware", targets: ["EloraFirmware"]),
@@ -17,16 +19,38 @@ let package = Package(
         .library(name: "PlanckFirmware", targets: ["PlanckFirmware"]),
         .library(name: "ObbutKeyboardCatalog", targets: ["ObbutKeyboardCatalog"]),
         .library(name: "QMKKeymapRenderer", targets: ["QMKKeymapRenderer"]),
-        .executable(name: "qmk-keymapc", targets: ["qmk-keymapc"]),
+        .executable(name: "qmk-keymap-docs", targets: ["qmk-keymap-docs"]),
+    ],
+    dependencies: [
+        .package(
+            url: "https://github.com/swiftlang/swift-syntax.git",
+            exact: "603.0.0"
+        ),
     ],
     targets: [
+        .macro(
+            name: "QMKFirmwareMacros",
+            dependencies: [
+                .product(name: "SwiftDiagnostics", package: "swift-syntax"),
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
+                .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
+            ],
+            swiftSettings: strictSwiftSettings
+        ),
         .target(
             name: "QMKKeymapKit",
             swiftSettings: strictSwiftSettings
         ),
         .target(
             name: "QMKFirmwareRuntime",
-            dependencies: ["QMKKeymapKit"],
+            dependencies: ["QMKKeymapKit", "QMKFirmwareMacros"],
+            swiftSettings: strictSwiftSettings
+        ),
+        .target(
+            name: "QMKFirmwareHost",
+            dependencies: ["QMKKeymapKit", "QMKFirmwareRuntime"],
             swiftSettings: strictSwiftSettings
         ),
         .target(
@@ -39,15 +63,30 @@ let package = Package(
         firmwareTarget(name: "Q15Firmware"),
         firmwareTarget(name: "PlanckFirmware"),
         .target(
+            name: "ObbutKeyboardLayouts",
+            dependencies: [
+                "QMKKeymapKit",
+                "QMKFirmwareHost",
+                "ObbutKeymaps",
+            ],
+            path: "Sources/ObbutKeyboardCatalog/Layouts",
+            swiftSettings: strictSwiftSettings
+        ),
+        .target(
             name: "ObbutKeyboardCatalog",
             dependencies: [
                 "QMKKeymapKit",
+                "QMKFirmwareHost",
+                "ObbutKeyboardLayouts",
                 "ObbutKeymaps",
                 "KyriaFirmware",
                 "EloraFirmware",
                 "Q15Firmware",
                 "PlanckFirmware",
             ],
+            path: "Sources/ObbutKeyboardCatalog",
+            exclude: ["Layouts"],
+            sources: ["ObbutKeyboardCatalog.swift"],
             swiftSettings: strictSwiftSettings
         ),
         .target(
@@ -55,26 +94,28 @@ let package = Package(
             dependencies: [
                 "QMKKeymapKit",
                 "QMKFirmwareRuntime",
+                "QMKFirmwareHost",
+                "ObbutKeyboardLayouts",
             ],
             swiftSettings: strictSwiftSettings
         ),
         .executableTarget(
-            name: "qmk-keymapc",
-            dependencies: [
-                "QMKKeymapKit",
-                "QMKFirmwareRuntime",
-                "ObbutKeyboardCatalog",
-            ],
+            name: "qmk-keymap-docs",
+            dependencies: ["ObbutKeyboardCatalog", "QMKFirmwareHost"],
             swiftSettings: strictSwiftSettings
         ),
         .testTarget(
             name: "QMKKeymapKitTests",
-            dependencies: ["QMKKeymapKit"],
+            dependencies: ["QMKKeymapKit", "QMKFirmwareHost"],
             swiftSettings: strictSwiftSettings
         ),
         .testTarget(
             name: "QMKFirmwareRuntimeTests",
-            dependencies: ["QMKFirmwareRuntime"],
+            dependencies: [
+                "QMKFirmwareRuntime",
+                "QMKFirmwareMacros",
+                .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
+            ],
             swiftSettings: strictSwiftSettings
         ),
         .testTarget(
@@ -84,7 +125,7 @@ let package = Package(
         ),
         .testTarget(
             name: "FirmwareParityTests",
-            dependencies: ["ObbutKeyboardCatalog", "QMKFirmwareRuntime"],
+            dependencies: ["ObbutKeyboardCatalog", "QMKFirmwareHost"],
             swiftSettings: strictSwiftSettings
         ),
     ],

@@ -1,17 +1,17 @@
 import QMKKeymapKit
 
-/// Layer identifiers shared by Halcyon and Planck firmware.
-public enum ObbutLayer {
+/// Layer identifiers shared by Halcyon firmware.
+public enum ObbutLayer: UInt8, FirmwareLayerID {
     /// The Colemak-DH typing layer.
-    public static let base = LayerID(rawValue: 0, cIdentifier: "_DEFAULT")
+    case base
     /// The QWERTY gaming layer.
-    public static let qwerty = LayerID(rawValue: 1, cIdentifier: "_QWERTY")
+    case qwerty
     /// The navigation layer.
-    public static let lower = LayerID(rawValue: 2, cIdentifier: "_LOWER")
+    case lower
     /// The number and symbol layer.
-    public static let raise = LayerID(rawValue: 3, cIdentifier: "_RAISE")
+    case raise
     /// The function and firmware-control layer.
-    public static let function = LayerID(rawValue: 4, cIdentifier: "_FUNCTION")
+    case function
     /// The Kyria automatic pointer layer.
-    public static let pointer = LayerID(rawValue: 5, cIdentifier: "_POINTER")
+    case pointer
 }

@@ -1,4 +1,4 @@
-import QMKFirmwareRuntime
+import QMKFirmwareHost
 import QMKKeymapKit
 
 /// Platform-neutral input for keymap renderers.
@@ -117,14 +117,15 @@ fileprivate struct FirmwareLegendResolver {
                     blue: $0.color.blue
                 )
             } ?? .standard,
-            isTransparent: key.hidValue == 1 || key.cExpression == "KC_TRNS"
+            isTransparent: key.keycode == 1
         )
     }
 }
 
 fileprivate enum HostLegend {
     static func label(for key: AnyFirmwareKey, layers: [KeymapRenderLayer]) -> String {
-        if let value = key.hidValue {
+        let value = key.keycode
+        do {
             if value == 0 || value == 1 { return "" }
             if (0x0004...0x001D).contains(value) {
                 return UnicodeScalar(Int(value - 0x0004) + 65).map(String.init) ?? ""
@@ -144,9 +145,7 @@ fileprivate enum HostLegend {
                 return layers.first { $0.id == layerID }?.name ?? "Layer \(layerID)"
             }
         }
-        return key.cExpression
-            .replacingOccurrences(of: "KC_", with: "")
-            .replacingOccurrences(of: "_", with: " ")
+        return String(format: "0x%04X", value)
     }
 }
 

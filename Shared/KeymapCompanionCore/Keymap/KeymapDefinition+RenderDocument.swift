@@ -1,4 +1,4 @@
-import QMKKeymapKit
+import QMKFirmwareHost
 import QMKKeymapRenderer
 
 /// Conversion from live protocol data to the production renderer document.
@@ -35,8 +35,8 @@ public extension KeymapDefinition {
 
 /// Converts companion geometry to renderer geometry.
 fileprivate extension PhysicalKeyPlacement {
-    var renderPlacement: QMKKeymapKit.PhysicalKeyPlacement {
-        QMKKeymapKit.PhysicalKeyPlacement(
+    var renderPlacement: QMKFirmwareHost.PhysicalKeyPlacement {
+        QMKFirmwareHost.PhysicalKeyPlacement(
             centerX: centerX,
             centerY: centerY,
             width: width,

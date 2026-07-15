@@ -1,4 +1,4 @@
-// Halcyon access to the generated-keymap and Embedded Swift boundary.
+// Halcyon access to the direct Embedded Swift boundary.
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #pragma once

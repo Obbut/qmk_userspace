@@ -1,147 +1,25 @@
-# Direct host build for qmk-keymapc.
-#
-# This intentionally does not invoke SwiftPM. Xcode and tests still consume the
-# package manifest, while Docker/QMK builds compile the modules directly so the
-# generated firmware path has no package-manager dependency.
+# Host-only documentation tooling. Firmware builds are owned directly by QMK
+# through users/obbut_keymap/rules.mk and never invoke this Makefile.
 
-SWIFTC ?= swiftc
+SWIFT ?= swift
 ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
-BUILD_DIR ?= $(ROOT)/.build-direct
-BIN_DIR := $(BUILD_DIR)/bin
-LIB_DIR := $(BUILD_DIR)/lib
-MODULE_DIR := $(BUILD_DIR)/modules
+BUILD_DIR ?= $(ROOT)/.build-docs
 
-UNAME_S := $(shell uname -s)
-SHLIB_EXT := $(if $(filter Darwin,$(UNAME_S)),dylib,so)
+.PHONY: all qmk-keymap-docs docs clean
 
-COMPILER := $(BIN_DIR)/qmk-keymapc
+all: qmk-keymap-docs
 
-QMK_KEYMAP_KIT_SOURCES := $(sort $(wildcard $(ROOT)/Sources/QMKKeymapKit/*.swift))
-QMK_FIRMWARE_RUNTIME_SOURCES := $(sort $(wildcard $(ROOT)/Sources/QMKFirmwareRuntime/*.swift))
-OBBUT_KEYMAP_SOURCES := $(sort $(wildcard $(ROOT)/Sources/ObbutKeymaps/*.swift))
-KYRIA_FIRMWARE_SOURCES := $(sort $(wildcard $(ROOT)/Sources/KyriaFirmware/*.swift))
-ELORA_FIRMWARE_SOURCES := $(sort $(wildcard $(ROOT)/Sources/EloraFirmware/*.swift))
-Q15_FIRMWARE_SOURCES := $(sort $(wildcard $(ROOT)/Sources/Q15Firmware/*.swift))
-PLANCK_FIRMWARE_SOURCES := $(sort $(wildcard $(ROOT)/Sources/PlanckFirmware/*.swift))
-OBBUT_CATALOG_SOURCES := $(sort $(wildcard $(ROOT)/Sources/ObbutKeyboardCatalog/*.swift))
-COMPILER_SOURCES := $(sort $(wildcard $(ROOT)/Sources/qmk-keymapc/*.swift))
+qmk-keymap-docs:
+	$(SWIFT) build \
+		--package-path $(ROOT) \
+		--scratch-path $(BUILD_DIR) \
+		--product qmk-keymap-docs
 
-COMMON_SWIFT_FLAGS := \
-	-swift-version 6 \
-	-warnings-as-errors \
-	-enable-experimental-feature StrictConcurrency \
-	-parse-as-library \
-	-D QMK_DIRECT_HOST_BUILD
-
-MODULE_SWIFT_FLAGS := \
-	$(COMMON_SWIFT_FLAGS) \
-	-I $(MODULE_DIR) \
-	-L $(LIB_DIR)
-
-RPATH_FLAGS := -Xlinker -rpath -Xlinker $(LIB_DIR)
-
-QMK_KEYMAP_KIT_LIBRARY := $(LIB_DIR)/libQMKKeymapKit.$(SHLIB_EXT)
-QMK_FIRMWARE_RUNTIME_LIBRARY := $(LIB_DIR)/libQMKFirmwareRuntime.$(SHLIB_EXT)
-OBBUT_KEYMAP_LIBRARY := $(LIB_DIR)/libObbutKeymaps.$(SHLIB_EXT)
-KYRIA_FIRMWARE_LIBRARY := $(LIB_DIR)/libKyriaFirmware.$(SHLIB_EXT)
-ELORA_FIRMWARE_LIBRARY := $(LIB_DIR)/libEloraFirmware.$(SHLIB_EXT)
-Q15_FIRMWARE_LIBRARY := $(LIB_DIR)/libQ15Firmware.$(SHLIB_EXT)
-PLANCK_FIRMWARE_LIBRARY := $(LIB_DIR)/libPlanckFirmware.$(SHLIB_EXT)
-OBBUT_CATALOG_LIBRARY := $(LIB_DIR)/libObbutKeyboardCatalog.$(SHLIB_EXT)
-
-.PHONY: all qmk-keymapc generate clean
-
-all: qmk-keymapc
-
-qmk-keymapc: $(COMPILER)
-
-generate: $(COMPILER)
-	$(COMPILER) $(ARGS)
-
-$(QMK_KEYMAP_KIT_LIBRARY): $(QMK_KEYMAP_KIT_SOURCES) $(ROOT)/Makefile
-	@mkdir -p $(LIB_DIR) $(MODULE_DIR)
-	$(SWIFTC) $(MODULE_SWIFT_FLAGS) \
-		-emit-library -emit-module \
-		-module-name QMKKeymapKit \
-		-emit-module-path $(MODULE_DIR)/QMKKeymapKit.swiftmodule \
-		$(QMK_KEYMAP_KIT_SOURCES) \
-		-o $@
-
-$(QMK_FIRMWARE_RUNTIME_LIBRARY): $(QMK_FIRMWARE_RUNTIME_SOURCES) $(QMK_KEYMAP_KIT_LIBRARY)
-	$(SWIFTC) $(MODULE_SWIFT_FLAGS) \
-		-emit-library -emit-module \
-		-module-name QMKFirmwareRuntime \
-		-emit-module-path $(MODULE_DIR)/QMKFirmwareRuntime.swiftmodule \
-		-lQMKKeymapKit \
-		$(QMK_FIRMWARE_RUNTIME_SOURCES) \
-		-o $@
-
-$(OBBUT_KEYMAP_LIBRARY): $(OBBUT_KEYMAP_SOURCES) $(QMK_FIRMWARE_RUNTIME_LIBRARY)
-	$(SWIFTC) $(MODULE_SWIFT_FLAGS) \
-		-emit-library -emit-module \
-		-module-name ObbutKeymaps \
-		-emit-module-path $(MODULE_DIR)/ObbutKeymaps.swiftmodule \
-		-lQMKFirmwareRuntime -lQMKKeymapKit \
-		$(OBBUT_KEYMAP_SOURCES) \
-		-o $@
-
-$(KYRIA_FIRMWARE_LIBRARY): $(KYRIA_FIRMWARE_SOURCES) $(OBBUT_KEYMAP_LIBRARY)
-	$(SWIFTC) $(MODULE_SWIFT_FLAGS) \
-		-emit-library -emit-module \
-		-module-name KyriaFirmware \
-		-emit-module-path $(MODULE_DIR)/KyriaFirmware.swiftmodule \
-		-lObbutKeymaps -lQMKFirmwareRuntime -lQMKKeymapKit \
-		$(KYRIA_FIRMWARE_SOURCES) \
-		-o $@
-
-$(ELORA_FIRMWARE_LIBRARY): $(ELORA_FIRMWARE_SOURCES) $(OBBUT_KEYMAP_LIBRARY)
-	$(SWIFTC) $(MODULE_SWIFT_FLAGS) \
-		-emit-library -emit-module \
-		-module-name EloraFirmware \
-		-emit-module-path $(MODULE_DIR)/EloraFirmware.swiftmodule \
-		-lObbutKeymaps -lQMKFirmwareRuntime -lQMKKeymapKit \
-		$(ELORA_FIRMWARE_SOURCES) \
-		-o $@
-
-$(Q15_FIRMWARE_LIBRARY): $(Q15_FIRMWARE_SOURCES) $(OBBUT_KEYMAP_LIBRARY)
-	$(SWIFTC) $(MODULE_SWIFT_FLAGS) \
-		-emit-library -emit-module \
-		-module-name Q15Firmware \
-		-emit-module-path $(MODULE_DIR)/Q15Firmware.swiftmodule \
-		-lObbutKeymaps -lQMKFirmwareRuntime -lQMKKeymapKit \
-		$(Q15_FIRMWARE_SOURCES) \
-		-o $@
-
-$(PLANCK_FIRMWARE_LIBRARY): $(PLANCK_FIRMWARE_SOURCES) $(OBBUT_KEYMAP_LIBRARY)
-	$(SWIFTC) $(MODULE_SWIFT_FLAGS) \
-		-emit-library -emit-module \
-		-module-name PlanckFirmware \
-		-emit-module-path $(MODULE_DIR)/PlanckFirmware.swiftmodule \
-		-lObbutKeymaps -lQMKFirmwareRuntime -lQMKKeymapKit \
-		$(PLANCK_FIRMWARE_SOURCES) \
-		-o $@
-
-$(OBBUT_CATALOG_LIBRARY): $(OBBUT_CATALOG_SOURCES) $(KYRIA_FIRMWARE_LIBRARY) $(ELORA_FIRMWARE_LIBRARY) $(Q15_FIRMWARE_LIBRARY) $(PLANCK_FIRMWARE_LIBRARY)
-	$(SWIFTC) $(MODULE_SWIFT_FLAGS) \
-		-emit-library -emit-module \
-		-module-name ObbutKeyboardCatalog \
-		-emit-module-path $(MODULE_DIR)/ObbutKeyboardCatalog.swiftmodule \
-		-lKyriaFirmware -lEloraFirmware -lQ15Firmware -lPlanckFirmware \
-		-lObbutKeymaps -lQMKFirmwareRuntime -lQMKKeymapKit \
-		$(OBBUT_CATALOG_SOURCES) \
-		-o $@
-
-$(COMPILER): $(COMPILER_SOURCES) $(OBBUT_CATALOG_LIBRARY)
-	@mkdir -p $(BIN_DIR)
-	$(SWIFTC) $(MODULE_SWIFT_FLAGS) \
-		-emit-executable \
-		-module-name qmk_keymapc \
-		-lObbutKeyboardCatalog \
-		-lKyriaFirmware -lEloraFirmware -lQ15Firmware -lPlanckFirmware \
-		-lObbutKeymaps -lQMKFirmwareRuntime -lQMKKeymapKit \
-		$(RPATH_FLAGS) \
-		$(COMPILER_SOURCES) \
-		-o $@
+docs:
+	$(SWIFT) run \
+		--package-path $(ROOT) \
+		--scratch-path $(BUILD_DIR) \
+		qmk-keymap-docs $(ARGS)
 
 clean:
 	rm -rf $(BUILD_DIR)

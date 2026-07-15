@@ -1,4 +1,4 @@
-import QMKKeymapKit
+import QMKFirmwareHost
 
 /// A physical encoder with press and rotation legends for every layer.
 public struct KeymapRenderEncoder: Equatable, Identifiable, Sendable {

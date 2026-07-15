@@ -55,9 +55,9 @@ the same metadata-resolved document model.
 
 `Shared/KeymapProtocol` is compiled twice from the same Swift source: once for
 the host apps and once with Embedded Swift for firmware. Swift owns packet
-layout, transfer pagination, fingerprints, and state. Generated C and the small
-QMK platform shim expose ABI facts such as matrix entries, timers, Raw HID, and
-RGB persistence; they contain no authored keymap or protocol semantics.
+layout, transfer pagination, fingerprints, and state. The small QMK C shim
+exposes ABI facts such as matrix entries, timers, Raw HID, and RGB persistence;
+it contains no authored keymap or protocol semantics.
 
 All Raw HID reports are 32 bytes and begin with `KMAP` plus version `4`.
 Metadata reports identify the layout and generated metadata fingerprints; chunk reports
@@ -75,6 +75,6 @@ Build companion-enabled firmware through the existing Docker interface:
 ./docker-build.sh planck
 ```
 
-The build runs `qmk-keymapc` first, then compiles the protocol runtime,
-`ObbutKeymaps`, and the selected board module with Swift 6.3.3 for the QMK MCU
-target before linking the normal firmware artifact.
+QMK compiles the protocol runtime, `ObbutKeymaps`, and the original annotated
+board module with Swift 6.3.3 for the MCU target before linking the normal
+firmware artifact. No host artifact generator runs.

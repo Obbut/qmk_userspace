@@ -11,19 +11,21 @@ This repo contains QMK keymaps for four keyboards:
 Never author a keymap, semantic, style, or firmware state machine in C.
 The module hierarchy is:
 
-1. `SwiftKeymaps/Sources/QMKKeymapKit` and `QMKFirmwareRuntime`: reusable
+1. `SwiftKeymaps/Sources/QMKKeymapKit` and `QMKFirmwareRuntime`: embedded-safe
    framework with no Obbut-specific vocabulary.
 2. `SwiftKeymaps/Sources/ObbutKeymaps`: shared Obbut semantics, styles,
    shared layers, actions, configuration, lighting, OS behavior, split state,
    companion support, and pointer engine.
 3. The four individual `*Firmware` modules: board composition and
    hardware-specific choices.
-4. `ObbutKeyboardCatalog`: aggregation for hosts and previews.
+4. `QMKFirmwareHost` and `ObbutKeyboardCatalog`: host-only traversal,
+   presentation, documentation, and preview aggregation.
 
-`qmk-keymapc` generates ignored `keymap.c`, `config.h`, `rules.mk`, metadata,
-and keymap-drawer YAML. The small C files under `users/` are QMK ABI/platform
-shims only. Edit Swift, then run the existing Docker command; generation is the
-first build step. Run `./draw-keymap.sh` to regenerate SVGs from Swift.
+QMK directly compiles the annotated firmware declaration as Embedded Swift.
+The committed `keymap.c`, `config.h`, and `rules.mk` files are static QMK inputs;
+the small C files under `users/` are ABI/platform shims only. No firmware source
+generator runs. `qmk-keymap-docs` is host-only and emits keymap-drawer YAML for
+`./draw-keymap.sh`.
 
 See `SwiftKeymaps/README.md` for API and customization examples.
 

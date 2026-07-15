@@ -46,6 +46,10 @@ let package = Package(
                     package: "SwiftKeymaps"
                 ),
                 .product(
+                    name: "QMKFirmwareHost",
+                    package: "SwiftKeymaps"
+                ),
+                .product(
                     name: "QMKKeymapKit",
                     package: "SwiftKeymaps"
                 ),

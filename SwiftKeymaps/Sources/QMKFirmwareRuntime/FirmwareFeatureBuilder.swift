@@ -1,15 +1,34 @@
-/// Composes heterogeneous firmware features with a variadic generic parameter pack.
+/// Composes heterogeneous executable features without existential erasure.
 @resultBuilder
 public enum FirmwareFeatureBuilder {
-    /// Collects statically typed features without existential storage at call sites.
-    ///
-    /// - Parameter features: The heterogeneous feature parameter pack.
-    /// - Returns: The ordered feature descriptors.
-    public static func buildBlock<each Feature: FirmwareFeature>(
-        _ features: repeat each Feature
-    ) -> FirmwareFeatures {
-        var descriptors: [FirmwareFeatureDescriptor] = []
-        repeat descriptors.append((each features).firmwareFeatureDescriptor)
-        return FirmwareFeatures(descriptors: descriptors)
+    /// Adapts one feature to a statically traversable feature definition.
+    @_alwaysEmitIntoClient
+    @inline(__always)
+    public static func buildExpression<Feature: FirmwareFeature>(
+        _ feature: Feature
+    ) -> FirmwareFeatureDefinition<Feature> {
+        FirmwareFeatureDefinition(feature)
+    }
+
+    /// Starts a statically typed feature chain.
+    @_alwaysEmitIntoClient
+    @inline(__always)
+    public static func buildPartialBlock<FeatureSet: FirmwareFeatureSet>(
+        first featureSet: FeatureSet
+    ) -> FeatureSet {
+        featureSet
+    }
+
+    /// Appends a feature without variadic-pack witness dispatch.
+    @_alwaysEmitIntoClient
+    @inline(__always)
+    public static func buildPartialBlock<
+        Accumulated: FirmwareFeatureSet,
+        Next: FirmwareFeatureSet
+    >(
+        accumulated: Accumulated,
+        next: Next
+    ) -> FirmwareFeatureGroup<Accumulated, Next> {
+        FirmwareFeatureGroup(accumulated, next)
     }
 }

@@ -3,25 +3,21 @@ import QMKFirmwareRuntime
 import QMKKeymapKit
 
 /// Shared definition for the Kyria Rev4 Cirque-left and encoder-right builds.
-public enum KyriaFirmware: QMKFirmware {
-    public static let id = "com.obbut.kyria-rev4"
-    public static let layout: LayoutDescriptor = .splitKBKyriaRev4
-    public static let outputName = "kyria_rev4_obbut"
+@QMKFirmware
+public enum KyriaFirmware {
+    public typealias LayerID = ObbutLayer
 
-    public static var keymap: Keymap {
+    public static let id: FirmwareID = "com.obbut.kyria-rev4"
+    public static let layout = KyriaRev4Layout()
+    public static let outputName: StaticString = "kyria_rev4_obbut"
+
+    public static var keymap: some KeymapDefinition {
         SharedHalcyonLayers(layout: .kyria)
         KyriaPointerLayer()
         ObbutEncoder.halcyon(includesPointerLayer: true)
     }
 
-    public static var configuration: QMKConfiguration {
-        QMKConfiguration {
-            ObbutHalcyonConfiguration()
-            AutoPointerLayer(ObbutLayer.pointer, timeout: .milliseconds(650))
-        }
-    }
-
-    public static var features: FirmwareFeatures {
+    public static var features: some FirmwareFeatureSet {
         ObbutKeymapCompanion()
         ObbutWindowsOverrides()
         ObbutLayerLighting()
@@ -30,7 +26,7 @@ public enum KyriaFirmware: QMKFirmware {
     }
 }
 
-#if canImport(SwiftUI) && !QMK_DIRECT_HOST_BUILD
+#if canImport(SwiftUI) && !hasFeature(Embedded)
 import QMKKeymapRenderer
 import SwiftUI
 

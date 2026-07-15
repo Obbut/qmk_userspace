@@ -11,7 +11,7 @@ IMAGE_NAME="qmk-keymap-drawer"
 
 mkdir -p "$OUTPUT_DIR"
 
-# The YAML inputs are generated from the same Swift definitions as firmware.
+# Generate host-only YAML documentation from the same Swift declarations.
 ./docker-build.sh generate
 
 # Build Docker image if needed

@@ -1,5 +1,11 @@
-/// A reusable collection of layers and encoders.
+/// A reusable, statically composed keymap fragment.
+///
+/// Components keep their concrete body type so firmware traversal does not need
+/// arrays, existential erasure, reflection, or heap allocation.
 public protocol KeymapComponent: Sendable {
-    /// The declarations contributed by this component.
-    var keymapElements: [KeymapElement] { get }
+    associatedtype Body: KeymapDefinition
+
+    /// The layers and encoders contributed by this component.
+    @Keymap
+    var body: Body { get }
 }

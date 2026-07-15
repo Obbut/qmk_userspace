@@ -25,7 +25,7 @@ jobs:
             -e SKIP_GIT=1 \
             -e SKIP_VERSION=1 \
             qmk-builder \
-            sh -c 'make -C /qmk_userspace/SwiftKeymaps qmk-keymapc && /qmk_userspace/SwiftKeymaps/.build-direct/bin/qmk-keymapc --keyboard all --output-root /qmk_userspace && qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/kyria/rev4 -km obbut -e HLC_CIRQUE_TRACKPAD=1 -e TARGET=kyria_rev4_obbut_left_cirque'
+            sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/kyria/rev4 -km obbut -e HLC_CIRQUE_TRACKPAD=1 -e TARGET=kyria_rev4_obbut_left_cirque'
 
       - name: Build right half (Encoder)
         run: |
@@ -85,7 +85,7 @@ jobs:
             -v "${{ github.workspace }}:/qmk_userspace" \
             -e QMK_USERSPACE=/qmk_userspace \
             qmk-keychron-builder \
-            sh -c 'make -C /qmk_userspace/SwiftKeymaps qmk-keymapc && /qmk_userspace/SwiftKeymaps/.build-direct/bin/qmk-keymapc --keyboard q15 --output-root /qmk_userspace && cd /qmk_firmware && make keychron/q15_max/ansi_encoder:obbut'
+            sh -c 'cd /qmk_firmware && make keychron/q15_max/ansi_encoder:obbut'
 
       - name: Upload Q15 Max firmware
         uses: actions/upload-artifact@v4
@@ -111,7 +111,7 @@ jobs:
             -v "${{ github.workspace }}:/qmk_userspace" \
             -e QMK_USERSPACE=/qmk_userspace \
             qmk-zsa-builder \
-            sh -c 'make -C /qmk_userspace/SwiftKeymaps qmk-keymapc && /qmk_userspace/SwiftKeymaps/.build-direct/bin/qmk-keymapc --keyboard planck --output-root /qmk_userspace && cd /qmk_firmware && make zsa/planck_ez/glow:obbut'
+            sh -c 'cd /qmk_firmware && make zsa/planck_ez/glow:obbut'
 
       - name: Upload Planck EZ Glow firmware
         uses: actions/upload-artifact@v4

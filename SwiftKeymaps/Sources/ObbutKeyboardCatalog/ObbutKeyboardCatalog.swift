@@ -1,9 +1,10 @@
 import EloraFirmware
 import KyriaFirmware
+import ObbutKeyboardLayouts
 import ObbutKeymaps
 import PlanckFirmware
 import Q15Firmware
-import QMKFirmwareRuntime
+import QMKFirmwareHost
 
 /// The cycle-free aggregate catalog consumed by generators, previews, and companion apps.
 public enum ObbutKeyboardCatalog {

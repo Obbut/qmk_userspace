@@ -3,23 +3,20 @@ import QMKFirmwareRuntime
 import QMKKeymapKit
 
 /// Shared definition for the Elora Rev2 left and right-encoder builds.
-public enum EloraFirmware: QMKFirmware {
-    public static let id = "com.obbut.elora-rev2"
-    public static let layout: LayoutDescriptor = .splitKBEloraRev2
-    public static let outputName = "elora_rev2_obbut"
+@QMKFirmware
+public enum EloraFirmware {
+    public typealias LayerID = ObbutLayer
 
-    public static var keymap: Keymap {
+    public static let id: FirmwareID = "com.obbut.elora-rev2"
+    public static let layout = EloraRev2Layout()
+    public static let outputName: StaticString = "elora_rev2_obbut"
+
+    public static var keymap: some KeymapDefinition {
         SharedHalcyonLayers(layout: .elora)
         ObbutEncoder.halcyon(includesPointerLayer: false)
     }
 
-    public static var configuration: QMKConfiguration {
-        QMKConfiguration {
-            ObbutHalcyonConfiguration()
-        }
-    }
-
-    public static var features: FirmwareFeatures {
+    public static var features: some FirmwareFeatureSet {
         ObbutKeymapCompanion()
         ObbutWindowsOverrides()
         ObbutLayerLighting()
@@ -27,7 +24,7 @@ public enum EloraFirmware: QMKFirmware {
     }
 }
 
-#if canImport(SwiftUI) && !QMK_DIRECT_HOST_BUILD
+#if canImport(SwiftUI) && !hasFeature(Embedded)
 import QMKKeymapRenderer
 import SwiftUI
 

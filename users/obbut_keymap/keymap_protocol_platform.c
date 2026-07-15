@@ -130,7 +130,7 @@ static uint8_t obbut_qmk_effect_for_protocol(uint8_t protocol_effect) {
 #endif
 
 static uint16_t matrix_entry_count(void) {
-    return (uint16_t)OBBUT_GENERATED_LAYER_COUNT * MATRIX_ROWS * MATRIX_COLS;
+    return (uint16_t)qmk_swift_layer_count() * MATRIX_ROWS * MATRIX_COLS;
 }
 
 keymap_protocol_platform_snapshot_t keymap_protocol_platform_get_snapshot(void) {
@@ -138,13 +138,13 @@ keymap_protocol_platform_snapshot_t keymap_protocol_platform_get_snapshot(void) 
         .timestamp                    = timer_read32(),
         .layer_state_mask             = (uint32_t)layer_state,
         .default_layer_state_mask     = (uint32_t)default_layer_state,
-        .layout_id                    = OBBUT_GENERATED_LAYOUT_ID,
-        .semantic_fingerprint          = OBBUT_GENERATED_SEMANTIC_FINGERPRINT,
-        .style_fingerprint             = OBBUT_GENERATED_STYLE_FINGERPRINT,
-        .layer_count                  = OBBUT_GENERATED_LAYER_COUNT,
+        .layout_id                    = qmk_swift_layout_id(),
+        .semantic_fingerprint          = qmk_swift_semantic_fingerprint(),
+        .style_fingerprint             = qmk_swift_style_fingerprint(),
+        .layer_count                  = qmk_swift_layer_count(),
         .matrix_row_count             = MATRIX_ROWS,
         .matrix_column_count          = MATRIX_COLS,
-        .encoder_count                = OBBUT_GENERATED_ENCODER_COUNT,
+        .encoder_count                = qmk_swift_encoder_count(),
         .rgb_effect_index             = UINT8_MAX,
     };
 
@@ -170,25 +170,22 @@ keymap_protocol_platform_entry_t keymap_protocol_platform_get_entry(uint16_t ind
         uint16_t position = index % matrix_size;
         uint8_t row = position / MATRIX_COLS;
         uint8_t column = position % MATRIX_COLS;
-        keypos_t key = {.row = row, .col = column};
-        entry.keycode = keymap_key_to_keycode(layer, key);
-        entry.semantic_id = obbut_generated_semantic_at(layer, row, column);
-        entry.style_id = obbut_generated_style_at(layer, row, column);
+        entry.keycode = qmk_swift_keycode_at(layer, row, column);
+        entry.semantic_id = qmk_swift_semantic_id_at(layer, row, column);
+        entry.style_id = qmk_swift_style_id_at(layer, row, column);
         return entry;
     }
 
-#if OBBUT_GENERATED_ENCODER_COUNT == 0
-    return entry;
-#else
+    uint8_t encoder_count = qmk_swift_encoder_count();
+    if (encoder_count == 0) return entry;
     uint16_t encoder_offset = index - matrix_count;
-    uint8_t layer = encoder_offset / (OBBUT_GENERATED_ENCODER_COUNT * 2);
-    uint8_t encoder = (encoder_offset / 2) % OBBUT_GENERATED_ENCODER_COUNT;
+    uint8_t layer = encoder_offset / (encoder_count * 2);
+    uint8_t encoder = (encoder_offset / 2) % encoder_count;
     uint8_t direction = encoder_offset % 2;
-    entry.keycode = obbut_generated_encoder_keycode_at(layer, encoder, direction);
-    entry.semantic_id = obbut_generated_encoder_semantic_at(layer, encoder, direction);
-    entry.style_id = obbut_generated_encoder_style_at(layer, encoder, direction);
+    entry.keycode = qmk_swift_encoder_keycode_at(layer, encoder, direction);
+    entry.semantic_id = qmk_swift_encoder_semantic_id_at(layer, encoder, direction);
+    entry.style_id = qmk_swift_encoder_style_id_at(layer, encoder, direction);
     return entry;
-#endif
 }
 
 void keymap_protocol_platform_send(uint8_t *data, uint8_t length) {

@@ -1,9 +1,12 @@
 #if canImport(SwiftUI)
+import ObbutKeyboardLayouts
+import QMKFirmwareHost
 import QMKFirmwareRuntime
 import SwiftUI
 
 /// Interactive Xcode preview for a firmware definition.
-public struct KeymapPreviewView<Firmware: QMKFirmware>: View {
+public struct KeymapPreviewView<Firmware: QMKFirmware>: View
+where Firmware.Layout: HostFirmwareLayout {
     private let document: KeymapRenderDocument
 
     @State private var selectedLayerID: UInt8

@@ -28,12 +28,18 @@ func allCatalogKeyboardsProduceRendererDocuments() {
     }
 }
 
-/// Verifies source metadata receives compact wire identifiers automatically.
+/// Verifies source metadata receives deterministic, collision-free wire identifiers.
 @Test
-func generatedMetadataUsesCompactWireIdentifiers() {
+func generatedMetadataUsesDeterministicWireIdentifiers() {
     for firmware in ObbutKeyboardCatalog.all {
-        #expect(firmware.semantics.map(\.id) == Array(1...UInt16(firmware.semantics.count)))
-        #expect(firmware.styles.map(\.id) == Array(0..<UInt16(firmware.styles.count)))
+        let semanticIDs = firmware.semantics.map(\.id)
+        let styleIDs = firmware.styles.map(\.id)
+
+        #expect(semanticIDs.allSatisfy { $0 != 0 })
+        #expect(Set(semanticIDs).count == semanticIDs.count)
+        #expect(styleIDs.first == 0)
+        #expect(styleIDs.dropFirst().allSatisfy { $0 != 0 })
+        #expect(Set(styleIDs).count == styleIDs.count)
     }
 }
 

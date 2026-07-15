@@ -3,25 +3,26 @@ import QMKFirmwareRuntime
 import QMKKeymapKit
 
 /// ZSA Planck EZ Glow definition using the two-unit center-space layout.
-public enum PlanckFirmware: QMKFirmware {
-    public static let id = "com.obbut.planck-ez-glow"
-    public static let layout: LayoutDescriptor = .zsaPlanckEZGlow
-    public static let outputName = "zsa_planck_ez_glow_obbut"
+@QMKFirmware
+public enum PlanckFirmware {
+    public static let id: FirmwareID = "com.obbut.planck-ez-glow"
+    public static let layout = PlanckEZGlowLayout()
+    public static let outputName: StaticString = "zsa_planck_ez_glow_obbut"
 
-    public static var keymap: Keymap {
-        Layer(ObbutLayer.base, name: "Default") {
+    public static var keymap: some KeymapDefinition {
+        Layer(name: "Default") {
             Row(.tab, .q, .w, .f, .p, .b, .j, .l, .u, .y, .semicolon, .backspace)
             Row(.escape, .a, .r, .s, .t, .g, .m, .n, .e, .i, .o, .quote)
             Row(.leftShift, .z, .x, .c, .d, .v, .k, .h, .comma, .period, .slash, .return)
             Row(
                 ObbutKey.screenshot, .leftControl, .leftOption, ObbutKey.aerospace,
                 .leftCommand, .space,
-                .qmk("TL_UPPR", legend: "Raise"), .qmk("TL_LOWR", legend: "Lower"),
-                .momentary(ObbutLayer.function), .rightOption, .delete
+                .qmk(.triLayerUpper, legend: "Raise"), .qmk(.triLayerLower, legend: "Lower"),
+                .momentary(LayerID.function), .rightOption, .delete
             )
         }
 
-        Layer(ObbutLayer.qwerty, name: "QWERTY") {
+        Layer(name: "QWERTY") {
             Row(.tab, .q, .w.style(.gaming), .e, .r, .t, .y, .u, .i, .o, .p, .backspace)
             Row(
                 .escape, .a.style(.gaming), .s.style(.gaming), .d.style(.gaming),
@@ -31,25 +32,29 @@ public enum PlanckFirmware: QMKFirmware {
             Row(
                 .leftControl.style(.gaming), .leftOption.style(.gaming),
                 .space.style(.gaming), .space.style(.gaming), .space.style(.gaming),
-                .space.style(.gaming), .qmk("TL_UPPR", legend: "Raise"),
-                .qmk("TL_LOWR", legend: "Lower"), .momentary(ObbutLayer.function),
+                .space.style(.gaming), .qmk(.triLayerUpper, legend: "Raise"),
+                .qmk(.triLayerLower, legend: "Lower"), .momentary(LayerID.function),
                 .transparent, .transparent
             )
         }
 
-        Layer(ObbutLayer.lower, name: "Lower", showsHUD: true) {
-            Row(keys: transparent(count: 10) + [.delete.style(.destructive), .backspace.style(.destructive)])
+        Layer(name: "Lower", showsHUD: true) {
+            Row {
+                Repeat(.transparent, count: 10)
+                Key.delete.style(.destructive)
+                Key.backspace.style(.destructive)
+            }
             Row(
                 .transparent, .transparent, .transparent, .transparent, .transparent, .transparent,
                 .left.style(.navigation), .down.style(.navigation),
                 .up.style(.navigation), .right.style(.navigation),
                 .transparent, .transparent
             )
-            Row(keys: transparent(count: 12))
-            Row(keys: transparent(count: 11))
+            Row { Repeat(.transparent, count: 12) }
+            Row { Repeat(.transparent, count: 11) }
         }
 
-        Layer(ObbutLayer.raise, name: "Raise", showsHUD: true) {
+        Layer(name: "Raise", showsHUD: true) {
             Row(
                 .grave.style(.symbol), .exclamation.style(.symbol), .at.style(.symbol),
                 .leftBracket.style(.symbol), .rightBracket.style(.symbol), .transparent,
@@ -69,44 +74,45 @@ public enum PlanckFirmware: QMKFirmware {
                 .zero.style(.number), .one.style(.number), .two.style(.number),
                 .three.style(.number), .period.style(.symbol), .backslash.style(.symbol)
             )
-            Row(keys: transparent(count: 11))
+            Row { Repeat(.transparent, count: 11) }
         }
 
-        Layer(ObbutLayer.function, name: "Function", showsHUD: true) {
-            Row(keys: [.transparent] + (11...15).map(functionKey) + transparent(count: 6))
+        Layer(name: "Function", showsHUD: true) {
+            Row {
+                Key.transparent
+                FunctionKeys(11...15, style: SolidKeyStyle.function)
+                Repeat(.transparent, count: 6)
+            }
             Row(
                 .bootloader.style(.bootloader),
-                functionKey(6), functionKey(7), functionKey(8), functionKey(9), functionKey(10),
+                PlanckFirmware.functionKey(6), PlanckFirmware.functionKey(7),
+                PlanckFirmware.functionKey(8), PlanckFirmware.functionKey(9),
+                PlanckFirmware.functionKey(10),
                 .rgbToggle.style(.increase), .rgbSaturationUp.style(.increase),
                 .rgbHueUp.style(.increase), .rgbValueUp.style(.increase),
                 .rgbNext.style(.increase), .bootloader.style(.bootloader)
             )
             Row(
                 .transparent,
-                functionKey(1), functionKey(2), functionKey(3), functionKey(4), functionKey(5),
-                .toggle(ObbutLayer.qwerty).style(.gaming),
+                PlanckFirmware.functionKey(1), PlanckFirmware.functionKey(2),
+                PlanckFirmware.functionKey(3), PlanckFirmware.functionKey(4),
+                PlanckFirmware.functionKey(5),
+                .toggle(LayerID.qwerty).style(.gaming),
                 .rgbSaturationDown.style(.decrease), .rgbHueDown.style(.decrease),
                 .rgbValueDown.style(.decrease), .rgbPrevious.style(.decrease), .transparent
             )
-            Row(keys: transparent(count: 11))
+            Row { Repeat(.transparent, count: 11) }
         }
     }
 
-    fileprivate static func transparent(count: Int) -> [Key] {
-        Array(repeating: .transparent, count: count)
-    }
-
-    fileprivate static func functionKey(_ number: Int) -> Key {
+    @usableFromInline
+    @_alwaysEmitIntoClient
+    @inline(__always)
+    internal static func functionKey(_ number: Int) -> Key {
         .function(number).style(.function)
     }
 
-    public static var configuration: QMKConfiguration {
-        QMKConfiguration {
-            ObbutPlanckConfiguration()
-        }
-    }
-
-    public static var features: FirmwareFeatures {
+    public static var features: some FirmwareFeatureSet {
         ObbutKeymapCompanion()
         ObbutWindowsOverrides()
         ObbutLayerLighting()
@@ -114,7 +120,7 @@ public enum PlanckFirmware: QMKFirmware {
     }
 }
 
-#if canImport(SwiftUI) && !QMK_DIRECT_HOST_BUILD
+#if canImport(SwiftUI) && !hasFeature(Embedded)
 import QMKKeymapRenderer
 import SwiftUI
 

@@ -1,19 +1,12 @@
-/// A QMK keycode represented by its C ABI expression and optional HID value.
+/// The exact 16-bit keycode consumed by QMK's key-processing ABI.
 public struct QMKKeycode: Equatable, Hashable, Sendable {
-    /// The C expression emitted at the QMK ABI boundary.
-    public let cExpression: String
+    /// The numeric QMK ABI value.
+    public let rawValue: UInt16
 
-    /// The basic HID value used by host previews when it is known statically.
-    public let hidValue: UInt16?
-
-    /// Creates a QMK keycode expression.
+    /// Creates a keycode from its QMK ABI value.
     ///
-    /// - Parameters:
-    ///   - cExpression: The C expression emitted at the QMK ABI boundary.
-    ///   - hidValue: The basic HID value used by host previews, if known.
-    public init(cExpression: String, hidValue: UInt16? = nil) {
-        precondition(!cExpression.isEmpty, "A QMK keycode expression cannot be empty.")
-        self.cExpression = cExpression
-        self.hidValue = hidValue
+    /// - Parameter rawValue: The exact value QMK consumes.
+    public init(rawValue: UInt16) {
+        self.rawValue = rawValue
     }
 }

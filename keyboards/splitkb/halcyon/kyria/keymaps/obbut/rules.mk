@@ -1,0 +1,7 @@
+ENCODER_MAP_ENABLE = yes
+OS_DETECTION_ENABLE = yes
+RAW_ENABLE = yes
+USER_NAME = halcyon_modules
+OBBUT_SWIFT_FIRMWARE_MODULE = KyriaFirmware
+OBBUT_SWIFT_FIRMWARE_DEFINE = OBBUT_FIRMWARE_KYRIA
+include $(QMK_USERSPACE)/users/obbut_halcyon/rules.mk

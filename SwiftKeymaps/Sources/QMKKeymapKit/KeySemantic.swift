@@ -1,25 +1,29 @@
 /// Stable meaning and fallback presentation attached directly to a key action.
 public struct KeySemantic: Equatable, Hashable, Sendable {
-    /// The globally stable identifier used to recognize this meaning.
-    public let id: String
-
-    /// The fallback text shown when no platform-specific presentation exists.
-    public let legend: String
-
-    /// An optional renderer-neutral symbol.
+    public let id: StaticString
+    public let legend: StaticString
     public let symbol: KeySymbol?
 
-    /// Creates semantic metadata for a key action.
-    ///
-    /// - Parameters:
-    ///   - id: A stable reverse-DNS identifier.
-    ///   - legend: The fallback text shown by renderers.
-    ///   - symbol: An optional renderer-neutral symbol.
-    public init(id: String, legend: String, symbol: KeySymbol? = nil) {
-        precondition(!id.isEmpty, "A key semantic needs a stable identifier.")
-        precondition(!legend.isEmpty, "A key semantic needs a fallback legend.")
+    /// Deterministic nonzero protocol-v4 content identifier.
+    public var contentID: UInt16 { StaticStringContent.identifier(id) }
+
+    public init(id: StaticString, legend: StaticString, symbol: KeySymbol? = nil) {
+        precondition(id.utf8CodeUnitCount > 0, "A key semantic needs a stable identifier.")
+        precondition(legend.utf8CodeUnitCount > 0, "A key semantic needs a fallback legend.")
         self.id = id
         self.legend = legend
         self.symbol = symbol
+    }
+
+    public static func == (lhs: KeySemantic, rhs: KeySemantic) -> Bool {
+        StaticStringContent.equals(lhs.id, rhs.id)
+            && StaticStringContent.equals(lhs.legend, rhs.legend)
+            && lhs.symbol == rhs.symbol
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        StaticStringContent.hash(id, into: &hasher)
+        StaticStringContent.hash(legend, into: &hasher)
+        hasher.combine(symbol)
     }
 }

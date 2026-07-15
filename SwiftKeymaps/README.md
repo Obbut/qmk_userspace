@@ -1,101 +1,34 @@
 # Swift QMK keymaps
 
-This package is the authored source of truth for every keymap in the repository.
-It is both a normal host package for tests, rendering, and code generation and
-the source tree for direct `swiftc` Embedded Swift builds inside QMK.
+The declarations in this package are the firmware source of truth. QMK invokes
+Embedded Swift directly, compiles the selected annotated firmware enum, and
+links that object into the keyboard ELF. There is no generated C keymap and no
+host artifact-generation step in a firmware build.
 
-## The API
+## Firmware API
 
-Shared modules can add semantic values and named styles without registering a
-domain or maintaining parallel catalogs:
-
-```swift
-import QMKKeymapKit
-
-public extension KeySemantic {
-    static let screenshot = KeySemantic(
-        id: "com.obbut.screenshot",
-        legend: "Screenshot",
-        symbol: .camera
-    )
-
-    static let bluetoothHost1 = KeySemantic(
-        id: "com.obbut.bluetooth.host-1",
-        legend: "Bluetooth 1",
-        symbol: .bluetooth
-    )
-}
-
-public extension KeyStyle where Self == SolidKeyStyle {
-    static var navigation: SolidKeyStyle { .magenta }
-    static var wireless: SolidKeyStyle { .rgb(0, 220, 220) }
-}
-```
-
-Custom styles follow the same pattern as SwiftUI styles:
-
-```swift
-public struct WarningKeyStyle: KeyStyle {
-    public func makeAppearance(
-        configuration: KeyStyleConfiguration
-    ) -> KeyAppearance {
-        KeyAppearance(color: .rgb(255, 96, 0))
-    }
-}
-
-public extension KeyStyle where Self == WarningKeyStyle {
-    static var warning: WarningKeyStyle { WarningKeyStyle() }
-}
-```
-
-Shared actions stay readable and reusable:
-
-```swift
-private let keychronBluetoothHost1 = QMKToken("BT_HST1")
-
-public enum ObbutKey {
-    public static var screenshot: Key {
-        .four
-            .withModifiers(.leftCommand, .leftControl, .leftShift)
-            .semantic(.screenshot)
-    }
-
-    public static var bluetoothHost1: Key {
-        Key.qmk(
-            keychronBluetoothHost1,
-            legend: "Bluetooth 1",
-            semantic: .bluetoothHost1
-        ).style(.wireless)
-    }
-}
-```
-
-An individual firmware module is only board composition and hardware policy:
+An individual firmware module contains board composition and hardware policy:
 
 ```swift
 import ObbutKeymaps
 import QMKFirmwareRuntime
 import QMKKeymapKit
 
-public enum KyriaFirmware: QMKFirmware {
-    public static let id = "com.obbut.kyria-rev4"
-    public static let layout: LayoutDescriptor = .splitKBKyriaRev4
-    public static let outputName = "kyria_rev4_obbut"
+@QMKFirmware
+public enum KyriaFirmware {
+    public typealias LayerID = ObbutLayer
 
-    public static var keymap: Keymap {
+    public static let id: FirmwareID = "com.obbut.kyria-rev4"
+    public static let layout = KyriaRev4Layout()
+    public static let outputName: StaticString = "kyria_rev4_obbut"
+
+    public static var keymap: some KeymapDefinition {
         SharedHalcyonLayers(layout: .kyria)
         KyriaPointerLayer()
         ObbutEncoder.halcyon(includesPointerLayer: true)
     }
 
-    public static var configuration: QMKConfiguration {
-        QMKConfiguration {
-            ObbutHalcyonConfiguration()
-            AutoPointerLayer(ObbutLayer.pointer, timeout: .milliseconds(650))
-        }
-    }
-
-    public static var features: FirmwareFeatures {
+    public static var features: some FirmwareFeatureSet {
         ObbutKeymapCompanion()
         ObbutWindowsOverrides()
         ObbutLayerLighting()
@@ -104,7 +37,7 @@ public enum KyriaFirmware: QMKFirmware {
     }
 }
 
-#if canImport(SwiftUI) && !QMK_DIRECT_HOST_BUILD
+#if canImport(SwiftUI) && !hasFeature(Embedded)
 import QMKKeymapRenderer
 import SwiftUI
 
@@ -114,94 +47,154 @@ import SwiftUI
 #endif
 ```
 
-Result builders compose layers, rows, encoders, configuration, and features.
-The keymap compiler collects referenced semantics and resolved appearances,
-assigns compact wire identifiers, and emits the metadata needed by firmware,
-previews, and companion applications.
+`@QMKFirmware` adds the `QMKFirmware` conformance and attaches the `@Keymap`
+result builder to `keymap`. It diagnoses missing policy members, duplicate or
+non-static keymaps, redundant conformance, and a redundant explicit `@Keymap`.
+The macro only emits Swift syntax in compiler memory; it never writes source,
+configuration, lookup tables, or firmware inputs.
 
-## Custom firmware behavior in Swift
-
-The direct QMK build compiles three modules in dependency order:
-
-1. `QMKFirmwareRuntime` and protocol v4.
-2. `ObbutKeymaps`, including shared state machines and behavior.
-3. The selected `KyriaFirmware`, `EloraFirmware`, `Q15Firmware`, or
-   `PlanckFirmware` Embedded Swift source.
-
-Ordinary custom behavior can live directly in the shared or board module. For
-a QMK callback not represented by a higher-level feature, declare host tokens
-and a typed bridge in the firmware module:
+Every firmware has an associated `LayerID` type. A firmware made from direct
+layer declarations can let the macro generate its nested enum:
 
 ```swift
-private let exampleHousekeeping = QMKToken("example_housekeeping")
-private let exampleProcessRecord = QMKToken("example_process_record")
+@QMKFirmware
+public enum PlanckFirmware {
+    public static var keymap: some KeymapDefinition {
+        Layer(name: "Default") {
+            // ...
+            Row(/* ... */, .momentary(LayerID.function), /* ... */)
+        }
 
-public static var features: FirmwareFeatures {
-    ExistingSharedFeatures()
-    QMKBridgeFeature(
-        id: "example.custom-behavior",
-        housekeeping: exampleHousekeeping,
-        processRecord: exampleProcessRecord
-    )
+        Layer(name: "Lower", showsHUD: true) {
+            // ...
+        }
+
+        Layer(name: "Function", showsHUD: true) {
+            // ...
+        }
+    }
 }
 ```
 
-Then implement those symbols in that board's `+Embedded.swift` source:
+The declaration above receives a nested `LayerID: UInt8, FirmwareLayerID` with
+`defaultLayer`, `lower`, and `function` cases in declaration order. Swift
+keywords receive a `Layer` suffix. The generated enum is public, so projects
+can add their own protocol conformances in extensions.
+
+Boards that intentionally share layer numbering provide the associated type
+explicitly, which suppresses generation:
 
 ```swift
-#if hasFeature(Embedded)
-@c @implementation
-func example_housekeeping() {
-    // Update firmware state without allocating.
+public enum SharedLayerID: UInt8, FirmwareLayerID {
+    case base
+    case lower
+    case function
 }
 
-@c @implementation
-func example_process_record(_ keycode: UInt16, _ pressed: UInt8) -> UInt8 {
-    // Return zero to consume the event, one to continue QMK processing.
-    1
+@QMKFirmware
+public enum FirstFirmware {
+    public typealias LayerID = SharedLayerID
+
+    public static var keymap: some KeymapDefinition {
+        Layer(LayerID.base, name: "Default") { /* ... */ }
+        Layer(LayerID.lower, name: "Lower") { /* ... */ }
+        Layer(LayerID.function, name: "Function") { /* ... */ }
+    }
 }
-#endif
 ```
 
-`QMKBridgeFeature` supports post-initialization, housekeeping, record
-processing, layer-state transforms, pointing initialization/report transforms,
-RGB Matrix indicators, and Raw HID receive. Labeled arguments select typed
-callbacks, the framework validates symbol safety, and `qmk-keymapc` generates
-the correctly typed declarations and composition glue. `Key.qmk` accepts either
-a declared `QMKToken` or a trusted expression for fork-only and custom keycodes.
+Rows and reusable static components remain readable:
 
-QMK configuration is authored as `QMKConfigurationComponent` values. Source,
-Make, define, undefine, and include settings remain available for QMK facilities
-that are inherently compile-time, so using the framework does not cap access to
-QMK.
+```swift
+Row(.tab, .q, .w, .e, .r, .t, .y, .u, .i, .o, .p, .backspace)
 
-## Build and previews
+Row {
+    Repeat(.transparent, count: 14)
+    .grave.style(.symbol)
+    .exclamation.style(.symbol)
+    .at.style(.symbol)
+    FunctionKeys(1...12, style: .function)
+}
+```
 
-Host checks:
+The builder produces nested generic nodes. Firmware lookup does not construct
+`[Key]`, allocate, reflect over values, or erase the keymap behind an
+existential. QMK keycodes are their real `UInt16` ABI values:
+
+```swift
+.qmk(.brightnessDown, legend: "Brightness −")
+.qmk(.triLayerUpper, legend: "Raise")
+```
+
+## Executable features
+
+Features own their state and QMK behavior in Swift:
+
+```swift
+public protocol FirmwareFeature: Sendable {
+    associatedtype State: Sendable
+    static var initialState: State { get }
+
+    static func processRecord(
+        _ event: KeyEvent,
+        state: inout State,
+        context: inout FirmwareContext
+    ) -> KeyEventDisposition
+}
+```
+
+The feature builder preserves declaration order. The selected runtime owns the
+concrete feature-state tuple and forwards QMK callbacks directly to it. Raw HID
+protocol v4, RGB policy, Windows overrides, split synchronization, pointing
+state, Planck hardware behavior, and Keychron common behavior all execute from
+the declared Swift features.
+
+## QMK boundary
+
+Each `keyboards/**/keymaps/obbut` directory commits its ordinary `keymap.c`,
+`config.h`, and `rules.mk`. The C keymap contains one `KC_NO` placeholder layer
+because QMK requires that symbol; matrix lookup and callbacks immediately
+forward to Swift. Board selection is a make definition, not a generated Swift
+selector.
+
+The shared make rules compile, in order:
+
+1. `QMKKeymapKit` as Embedded Swift.
+2. `QMKFirmwareRuntime` and protocol v4 as Embedded Swift.
+3. `ObbutKeymaps` as Embedded Swift.
+4. Every ordinary source in the selected firmware module, including the
+   `@QMKFirmware` declaration itself.
+5. The selected concrete Swift runtime and C ABI entry points.
+
+QMK's active fork definitions, include paths, keyboard/keymap configurations,
+target CPU, and ABI flags are forwarded to `swiftc`. The host macro executable
+is cached in QMK's intermediate directory by Swift version and macro-source
+hash. It is a compiler plugin, not a firmware generator.
+
+VIA and dynamic keymaps are intentionally unsupported.
+
+## Build, test, and previews
 
 ```sh
 swift test --package-path SwiftKeymaps
-make -C SwiftKeymaps generate ARGS='--keyboard kyria --output-root ..'
-```
-
-Firmware builds keep the existing commands:
-
-```sh
 ./docker-build.sh kyria-all
 ./docker-build.sh elora-all
 ./docker-build.sh q15
 ./docker-build.sh planck
 ```
 
-The Docker images pin Swift 6.3.3. The host Makefile compiles `qmk-keymapc`
-module-by-module directly with `swiftc`, so firmware generation has no SwiftPM
-dependency. QMK Make derives the ARM target and ABI settings, compiles Embedded
-Swift, and links generated, ignored C artifacts. `draw-keymap.sh` regenerates
-diagram YAML from the same Swift definitions before rendering SVGs.
+These commands invoke QMK directly. The Docker images pin Swift 6.3.3 and the
+package pins SwiftSyntax 603.0.0.
 
-Open `SwiftKeymaps/Package.swift` in Xcode and choose My Mac. Each firmware
-module owns its preview in the firmware source itself; select the matching
-scheme (`KyriaFirmware`, `EloraFirmware`, `Q15Firmware`, or `PlanckFirmware`)
-to use its Canvas. The package is the preview workspace and has no dependency
-on either companion app. The previews and companion apps independently consume
-`QMKKeymapRenderer` and the same metadata-resolved document model.
+Documentation is the only host-side file output:
+
+```sh
+make -C SwiftKeymaps docs ARGS='--keyboard all --output-root ..'
+```
+
+`qmk-keymap-docs` writes keymap-drawer YAML only. Firmware never consumes that
+YAML. `draw-keymap.sh` runs the documentation command before rendering SVGs.
+
+Open `SwiftKeymaps/Package.swift` in Xcode and choose My Mac for previews. Host
+array traversal and erasure live in `QMKFirmwareHost`; embedded firmware targets
+depend only on the allocation-free model and runtime modules.

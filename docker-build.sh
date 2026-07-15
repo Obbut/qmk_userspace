@@ -230,7 +230,7 @@ build_kyria_left() {
         -e SKIP_VERSION=1 \
         -e MAKEFLAGS="-j$BUILD_JOBS" \
         "$IMAGE_NAME" \
-        sh -c 'make -C /qmk_userspace/SwiftKeymaps BUILD_DIR=/swift-build qmk-keymapc && /swift-build/bin/qmk-keymapc --keyboard kyria --output-root /qmk_userspace && qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/kyria/rev4 -km obbut -e HLC_CIRQUE_TRACKPAD=1 -e TARGET=kyria_rev4_obbut_left_cirque'
+        sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/kyria/rev4 -km obbut -e HLC_CIRQUE_TRACKPAD=1 -e TARGET=kyria_rev4_obbut_left_cirque'
     echo "Build complete: kyria_rev4_obbut_left_cirque.uf2"
 }
 
@@ -246,7 +246,7 @@ build_kyria_right() {
         -e SKIP_VERSION=1 \
         -e MAKEFLAGS="-j$BUILD_JOBS" \
         "$IMAGE_NAME" \
-        sh -c 'make -C /qmk_userspace/SwiftKeymaps BUILD_DIR=/swift-build qmk-keymapc && /swift-build/bin/qmk-keymapc --keyboard kyria --output-root /qmk_userspace && qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/kyria/rev4 -km obbut -e HLC_ENCODER=1 -e TARGET=kyria_rev4_obbut_right_encoder'
+        sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/kyria/rev4 -km obbut -e HLC_ENCODER=1 -e TARGET=kyria_rev4_obbut_right_encoder'
     echo "Build complete: kyria_rev4_obbut_right_encoder.uf2"
 }
 
@@ -262,7 +262,7 @@ build_elora_left() {
         -e SKIP_VERSION=1 \
         -e MAKEFLAGS="-j$BUILD_JOBS" \
         "$IMAGE_NAME" \
-        sh -c 'make -C /qmk_userspace/SwiftKeymaps BUILD_DIR=/swift-build qmk-keymapc && /swift-build/bin/qmk-keymapc --keyboard elora --output-root /qmk_userspace && qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/elora/rev2 -km obbut -e HLC_NONE=1 -e TARGET=elora_rev2_obbut_left'
+        sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/elora/rev2 -km obbut -e HLC_NONE=1 -e TARGET=elora_rev2_obbut_left'
     echo "Build complete: elora_rev2_obbut_left.uf2"
 }
 
@@ -278,7 +278,7 @@ build_elora_right() {
         -e SKIP_VERSION=1 \
         -e MAKEFLAGS="-j$BUILD_JOBS" \
         "$IMAGE_NAME" \
-        sh -c 'make -C /qmk_userspace/SwiftKeymaps BUILD_DIR=/swift-build qmk-keymapc && /swift-build/bin/qmk-keymapc --keyboard elora --output-root /qmk_userspace && qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/elora/rev2 -km obbut -e HLC_ENCODER=1 -e TARGET=elora_rev2_obbut_right_encoder'
+        sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/elora/rev2 -km obbut -e HLC_ENCODER=1 -e TARGET=elora_rev2_obbut_right_encoder'
     echo "Build complete: elora_rev2_obbut_right_encoder.uf2"
 }
 
@@ -291,7 +291,7 @@ build_q15() {
         -v "$KEYCHRON_SWIFT_BUILD_CACHE:/swift-build" \
         -e MAKEFLAGS="-j$BUILD_JOBS" \
         "$KEYCHRON_IMAGE_NAME" \
-        sh -c 'make -C /qmk_userspace/SwiftKeymaps BUILD_DIR=/swift-build qmk-keymapc && /swift-build/bin/qmk-keymapc --keyboard q15 --output-root /qmk_userspace && export QMK_USERSPACE=/qmk_userspace && cd /qmk_firmware && make keychron/q15_max/ansi_encoder:obbut'
+        sh -c 'export QMK_USERSPACE=/qmk_userspace && cd /qmk_firmware && make keychron/q15_max/ansi_encoder:obbut'
     echo "Build complete: keychron_q15_max_ansi_encoder_obbut.bin"
 }
 
@@ -304,19 +304,19 @@ build_planck() {
         -v "$ZSA_SWIFT_BUILD_CACHE:/swift-build" \
         -e MAKEFLAGS="-j$BUILD_JOBS" \
         "$ZSA_IMAGE_NAME" \
-        sh -c 'make -C /qmk_userspace/SwiftKeymaps BUILD_DIR=/swift-build qmk-keymapc && /swift-build/bin/qmk-keymapc --keyboard planck --output-root /qmk_userspace && export QMK_USERSPACE=/qmk_userspace && cd /qmk_firmware && make zsa/planck_ez/glow:obbut'
+        sh -c 'export QMK_USERSPACE=/qmk_userspace && cd /qmk_firmware && make zsa/planck_ez/glow:obbut'
     echo "Build complete: zsa_planck_ez_glow_obbut.bin"
 }
 
-# Generate all ignored QMK ABI files and documentation YAML from Swift.
-generate_keymaps() {
+# Generate host-only documentation YAML from Swift.
+generate_docs() {
     build_qmk_image
-    echo "Generating all QMK keymap artifacts from Swift..."
+    echo "Generating keymap-drawer documentation from Swift..."
     docker run --rm \
         -v "$SCRIPT_DIR:/qmk_userspace" \
         -v "$SWIFT_BUILD_CACHE:/swift-build" \
         "$IMAGE_NAME" \
-        sh -c 'make -C /qmk_userspace/SwiftKeymaps BUILD_DIR=/swift-build qmk-keymapc && /swift-build/bin/qmk-keymapc --keyboard all --output-root /qmk_userspace'
+        sh -c "make -C /qmk_userspace/SwiftKeymaps BUILD_DIR=/swift-build docs ARGS='--keyboard all --output-root /qmk_userspace'"
 }
 
 # Flash Planck EZ via DFU (same mechanism as Q15 Max)
@@ -419,7 +419,7 @@ case "${1:-help}" in
         build_planck
         ;;
     generate)
-        generate_keymaps
+        generate_docs
         ;;
     flash-planck)
         build_planck
@@ -470,7 +470,7 @@ case "${1:-help}" in
         echo "  flash-planck       - Build and flash Planck EZ (requires dfu-util)"
         echo ""
         echo "Maintenance:"
-        echo "  generate           - Generate QMK ABI files and documentation YAML from Swift"
+        echo "  generate           - Generate host-only keymap documentation YAML"
         echo "  clean              - Remove build artifacts"
         echo "  rebuild-image      - Force rebuild the QMK Docker image"
         echo "  rebuild-keychron-image - Force rebuild the Keychron Docker image"

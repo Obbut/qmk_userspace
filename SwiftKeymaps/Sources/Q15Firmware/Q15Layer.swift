@@ -1,17 +1,17 @@
 import QMKKeymapKit
 
 /// Q15-specific layer identifiers; semantics remain owned by `ObbutKeymaps`.
-enum Q15Layer {
+public enum Q15Layer: UInt8, FirmwareLayerID {
     /// The macOS typing layer.
-    static let macBase = LayerID(rawValue: 0, cIdentifier: "MAC_BASE")
+    case macBase
     /// The Windows typing layer.
-    static let windowsBase = LayerID(rawValue: 1, cIdentifier: "WIN_BASE")
+    case windowsBase
     /// The macOS system layer.
-    static let macFunction = LayerID(rawValue: 2, cIdentifier: "MAC_FN")
+    case macFunction
     /// The Windows system layer.
-    static let windowsFunction = LayerID(rawValue: 3, cIdentifier: "WIN_FN")
+    case windowsFunction
     /// The common function-key layer.
-    static let commonFunction = LayerID(rawValue: 4, cIdentifier: "COM_FN")
+    case commonFunction
     /// The shared number and symbol layer.
-    static let raise = LayerID(rawValue: 5, cIdentifier: "_RAISE")
+    case raise
 }

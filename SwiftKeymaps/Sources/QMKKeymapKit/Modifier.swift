@@ -1,5 +1,5 @@
 /// A QMK keyboard modifier usable in chords and mod-taps.
-public enum Modifier: String, CaseIterable, Sendable {
+public enum Modifier: Sendable {
     /// The left Control key.
     case leftControl
     /// The left Shift key.
@@ -17,55 +17,31 @@ public enum Modifier: String, CaseIterable, Sendable {
     /// The right Command/GUI key.
     case rightCommand
 
-    /// The QMK wrapper macro for a modified basic keycode.
-    var wrapper: String {
+    /// The basic QMK keycode value.
+    var keycode: UInt16 {
         switch self {
-        case .leftControl: "LCTL"
-        case .leftShift: "LSFT"
-        case .leftOption: "LALT"
-        case .leftCommand: "LGUI"
-        case .rightControl: "RCTL"
-        case .rightShift: "RSFT"
-        case .rightOption: "RALT"
-        case .rightCommand: "RGUI"
+        case .leftControl: 0x00E0
+        case .leftShift: 0x00E1
+        case .leftOption: 0x00E2
+        case .leftCommand: 0x00E3
+        case .rightControl: 0x00E4
+        case .rightShift: 0x00E5
+        case .rightOption: 0x00E6
+        case .rightCommand: 0x00E7
         }
     }
 
-    /// The QMK modifier-mask constant.
-    var mask: String {
+    /// QMK's compact modifier field, including its right-hand flag.
+    var qmkMask: UInt16 {
         switch self {
-        case .leftControl: "MOD_LCTL"
-        case .leftShift: "MOD_LSFT"
-        case .leftOption: "MOD_LALT"
-        case .leftCommand: "MOD_LGUI"
-        case .rightControl: "MOD_RCTL"
-        case .rightShift: "MOD_RSFT"
-        case .rightOption: "MOD_RALT"
-        case .rightCommand: "MOD_RGUI"
-        }
-    }
-
-    /// The basic QMK keycode constant.
-    var keycode: String {
-        switch self {
-        case .leftControl: "KC_LCTL"
-        case .leftShift: "KC_LSFT"
-        case .leftOption: "KC_LALT"
-        case .leftCommand: "KC_LGUI"
-        case .rightControl: "KC_RCTL"
-        case .rightShift: "KC_RSFT"
-        case .rightOption: "KC_RALT"
-        case .rightCommand: "KC_RGUI"
-        }
-    }
-
-    /// The compact host-preview modifier bit.
-    var previewMask: UInt16 {
-        switch self {
-        case .leftControl, .rightControl: 0x01
-        case .leftShift, .rightShift: 0x02
-        case .leftOption, .rightOption: 0x04
-        case .leftCommand, .rightCommand: 0x08
+        case .leftControl: 0x01
+        case .leftShift: 0x02
+        case .leftOption: 0x04
+        case .leftCommand: 0x08
+        case .rightControl: 0x11
+        case .rightShift: 0x12
+        case .rightOption: 0x14
+        case .rightCommand: 0x18
         }
     }
 }

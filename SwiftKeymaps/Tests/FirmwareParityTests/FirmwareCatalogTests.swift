@@ -1,10 +1,10 @@
 import ObbutKeyboardCatalog
-import QMKFirmwareRuntime
-import Testing
+import QMKFirmwareHost
+import XCTest
 
 /// Verifies all build outputs, layers, matrices, and encoders remain catalogued.
-@Test
-func allFirmwareShapesAreStable() {
+final class FirmwareCatalogTests: XCTestCase {
+func testAllFirmwareShapesAreStable() {
     let shapes = ObbutKeyboardCatalog.all.map {
         FirmwareShape(
             outputName: $0.outputName,
@@ -15,8 +15,9 @@ func allFirmwareShapesAreStable() {
             encoderCount: $0.layout.encoders.count
         )
     }
-    #expect(
-        shapes == [
+    XCTAssertEqual(
+        shapes,
+        [
             FirmwareShape(
                 outputName: "kyria_rev4_obbut",
                 layerCount: 6,
@@ -53,14 +54,16 @@ func allFirmwareShapesAreStable() {
     )
 }
 
-/// Verifies every layer and encoder is dimensionally complete before generation.
-@Test
-func allFirmwareDefinitionsAreGeneratorReady() {
+/// Verifies every layer and encoder is dimensionally complete for host traversal.
+func testAllFirmwareDefinitionsAreComplete() {
     for firmware in ObbutKeyboardCatalog.all {
-        #expect(firmware.layout.matrixMapping.count == firmware.layout.keyCount)
-        #expect(firmware.layers.allSatisfy { $0.keys.count == firmware.layout.keyCount })
-        #expect(firmware.encoders.map(\.index).sorted() == firmware.layout.encoders.map(\.index).sorted())
-        #expect(
+        XCTAssertEqual(firmware.layout.matrixMapping.count, firmware.layout.keyCount)
+        XCTAssertTrue(firmware.layers.allSatisfy { $0.keys.count == firmware.layout.keyCount })
+        XCTAssertEqual(
+            firmware.encoders.map(\.index).sorted(),
+            firmware.layout.encoders.map(\.index).sorted()
+        )
+        XCTAssertTrue(
             firmware.encoders.allSatisfy { encoder in
                 encoder.mappings.count == firmware.layers.count
             }
@@ -69,9 +72,8 @@ func allFirmwareDefinitionsAreGeneratorReady() {
 }
 
 /// Pins the two-unit Planck spacebar between its adjacent bottom-row keys.
-@Test
-func planckSpacebarGeometryIsContiguous() throws {
-    let planck = try #require(
+func testPlanckSpacebarGeometryIsContiguous() throws {
+    let planck = try XCTUnwrap(
         ObbutKeyboardCatalog.all.first { $0.outputName == "zsa_planck_ez_glow_obbut" }
     )
     let bottomRow = planck.layout.keys.suffix(11)
@@ -80,28 +82,35 @@ func planckSpacebarGeometryIsContiguous() throws {
     let rightKey = bottomRow[bottomRow.index(bottomRow.startIndex, offsetBy: 6)].geometry
     let halfUnit = 28.0
 
-    #expect(spacebar.width == 2)
-    #expect(leftKey.centerX + leftKey.width * halfUnit == spacebar.centerX - spacebar.width * halfUnit)
-    #expect(spacebar.centerX + spacebar.width * halfUnit == rightKey.centerX - rightKey.width * halfUnit)
+    XCTAssertEqual(spacebar.width, 2)
+    XCTAssertEqual(
+        leftKey.centerX + leftKey.width * halfUnit,
+        spacebar.centerX - spacebar.width * halfUnit
+    )
+    XCTAssertEqual(
+        spacebar.centerX + spacebar.width * halfUnit,
+        rightKey.centerX - rightKey.width * halfUnit
+    )
 }
 
 /// Pins every matrix action, semantic, style, and encoder mapping.
-@Test
-func allKeymapsMatchGoldenFingerprints() {
+func testAllKeymapsMatchGoldenFingerprints() {
     let fingerprints = Dictionary(
         uniqueKeysWithValues: ObbutKeyboardCatalog.all.map {
             ($0.outputName, keymapFingerprint($0))
         }
     )
 
-    #expect(
-        fingerprints == [
-            "kyria_rev4_obbut": 2_339_521_355,
-            "elora_rev2_obbut": 3_157_976_327,
-            "keychron_q15_max_ansi_encoder_obbut": 915_067_431,
-            "zsa_planck_ez_glow_obbut": 1_300_927_986,
+    XCTAssertEqual(
+        fingerprints,
+        [
+            "kyria_rev4_obbut": 2_686_837_719,
+            "elora_rev2_obbut": 469_198_795,
+            "keychron_q15_max_ansi_encoder_obbut": 318_052_838,
+            "zsa_planck_ez_glow_obbut": 2_308_720_423,
         ]
     )
+}
 }
 
 /// Computes a deterministic FNV-1a fixture for a firmware definition.
@@ -124,19 +133,19 @@ private func keymapFingerprint(_ firmware: AnyFirmware) -> UInt32 {
     for layer in firmware.layers {
         append("layer:\(layer.id.rawValue):\(layer.name)")
         for key in layer.keys {
-            append("\(key.cExpression):\(key.semanticID ?? 0):\(key.styleID)")
+            append("\(key.keycode):\(key.semanticID ?? 0):\(key.styleID)")
         }
     }
     for encoder in firmware.encoders {
         append("encoder:\(encoder.index):\(encoder.id)")
         for mapping in encoder.mappings {
             append(
-                "\(mapping.layer.rawValue):\(mapping.counterclockwise.cExpression):"
+                "\(mapping.layer.rawValue):\(mapping.counterclockwise.keycode):"
                     + "\(mapping.counterclockwise.semanticID ?? 0):"
                     + "\(mapping.counterclockwise.styleID)"
             )
             append(
-                "\(mapping.clockwise.cExpression):\(mapping.clockwise.semanticID ?? 0):"
+                "\(mapping.clockwise.keycode):\(mapping.clockwise.semanticID ?? 0):"
                     + "\(mapping.clockwise.styleID)"
             )
         }

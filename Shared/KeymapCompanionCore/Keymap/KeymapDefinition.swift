@@ -1,4 +1,5 @@
 import ObbutKeyboardCatalog
+import QMKFirmwareHost
 import QMKFirmwareRuntime
 import QMKKeymapKit
 
@@ -268,7 +269,7 @@ public struct KeymapDefinition: Equatable, Sendable {
 
     /// Converts framework geometry to the stable companion rendering model.
     private static func placement(
-        from placement: QMKKeymapKit.PhysicalKeyPlacement
+        from placement: QMKFirmwareHost.PhysicalKeyPlacement
     ) -> PhysicalKeyPlacement {
         PhysicalKeyPlacement(
             centerX: placement.centerX,
@@ -339,7 +340,7 @@ fileprivate extension FirmwareKeymapEntry {
 fileprivate extension AnyFirmwareKey {
     var previewEntry: FirmwareKeymapEntry {
         FirmwareKeymapEntry(
-            keycode: hidValue ?? 0,
+            keycode: keycode,
             semanticID: SemanticID(rawValue: semanticID ?? 0),
             styleID: StyleID(rawValue: styleID)
         )

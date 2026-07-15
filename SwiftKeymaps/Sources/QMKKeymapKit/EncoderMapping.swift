@@ -15,12 +15,12 @@ public struct On: Sendable {
     ///   - layer: The layer selecting this mapping.
     ///   - counterclockwise: The counterclockwise action.
     ///   - clockwise: The clockwise action.
-    public init(
-        _ layer: LayerID,
+    public init<ID: FirmwareLayerID>(
+        _ layer: ID,
         counterclockwise: Key,
         clockwise: Key
     ) {
-        self.layer = layer
+        self.layer = layer.qmkLayerID
         self.counterclockwise = counterclockwise
         self.clockwise = clockwise
     }

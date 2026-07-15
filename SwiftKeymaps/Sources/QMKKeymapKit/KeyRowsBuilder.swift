@@ -1,51 +1,56 @@
-/// Flattens readable rows into the argument order required by a QMK layout macro.
+/// Composes rows into layout-macro argument order without arrays.
 @resultBuilder
 public enum KeyRowsBuilder {
-    /// Converts one row into its key sequence.
-    ///
-    /// - Parameter row: The row to flatten.
-    /// - Returns: The row's key sequence.
-    public static func buildExpression(_ row: Row) -> [Key] {
-        row.keys
+    /// Includes one row or static key sequence.
+    @_alwaysEmitIntoClient
+    @inline(__always)
+    public static func buildExpression<Content: KeySequence>(_ content: Content) -> Content {
+        content
     }
 
-    /// Converts an already composed sequence into a builder component.
-    ///
-    /// - Parameter keys: The keys to include.
-    /// - Returns: The unchanged key sequence.
-    public static func buildExpression(_ keys: [Key]) -> [Key] {
-        keys
+    /// Starts a statically typed row chain.
+    @_alwaysEmitIntoClient
+    @inline(__always)
+    public static func buildPartialBlock<Content: KeySequence>(
+        first content: Content
+    ) -> Content {
+        content
     }
 
-    /// Flattens all row components.
-    ///
-    /// - Parameter rows: The row components in declaration order.
-    /// - Returns: Keys in QMK layout-macro argument order.
-    public static func buildBlock(_ rows: [Key]...) -> [Key] {
-        rows.flatMap { $0 }
+    /// Appends a row without variadic-pack witness dispatch.
+    @_alwaysEmitIntoClient
+    @inline(__always)
+    public static func buildPartialBlock<Accumulated: KeySequence, Next: KeySequence>(
+        accumulated: Accumulated,
+        next: Next
+    ) -> KeySequenceGroup<Accumulated, Next> {
+        KeySequenceGroup(accumulated, next)
     }
 
-    /// Includes an optional row component.
-    ///
-    /// - Parameter component: The optional component.
-    /// - Returns: The component or an empty sequence.
-    public static func buildOptional(_ component: [Key]?) -> [Key] {
-        component ?? []
+    /// Includes an optional row.
+    @_alwaysEmitIntoClient
+    @inline(__always)
+    public static func buildOptional<Content: KeySequence>(
+        _ content: Content?
+    ) -> OptionalKeySequence<Content> {
+        OptionalKeySequence(content)
     }
 
-    /// Selects the first conditional branch.
-    ///
-    /// - Parameter component: The selected component.
-    /// - Returns: The selected keys.
-    public static func buildEither(first component: [Key]) -> [Key] {
-        component
+    /// Selects the first conditional row branch.
+    @_alwaysEmitIntoClient
+    @inline(__always)
+    public static func buildEither<First: KeySequence, Second: KeySequence>(
+        first content: First
+    ) -> ConditionalKeySequence<First, Second> {
+        ConditionalKeySequence.first(content)
     }
 
-    /// Selects the second conditional branch.
-    ///
-    /// - Parameter component: The selected component.
-    /// - Returns: The selected keys.
-    public static func buildEither(second component: [Key]) -> [Key] {
-        component
+    /// Selects the second conditional row branch.
+    @_alwaysEmitIntoClient
+    @inline(__always)
+    public static func buildEither<First: KeySequence, Second: KeySequence>(
+        second content: Second
+    ) -> ConditionalKeySequence<First, Second> {
+        ConditionalKeySequence.second(content)
     }
 }

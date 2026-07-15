@@ -1,4 +1,4 @@
-import QMKKeymapKit
+import QMKFirmwareHost
 
 /// A positioned physical key with a legend for every layer.
 public struct KeymapRenderKey: Equatable, Identifiable, Sendable {
