@@ -103,18 +103,21 @@ Pointer mode uses a dim cyan RGB underlay. Drag lock changes the underlay to red
 
 ![Pointer layer](images/kyria-pointer.svg)
 
-### Headless emulator
+### Headless emulators
 
-The Kyria emulator boots the same two production UF2 files used for flashing:
-the left Cirque image and the right encoder image. It runs both virtual RP2040s
-on one deterministic timeline, connects their real PIO split transport, and
-models the matrix, encoder, Cirque SPI device, USB host, and logical RGB output.
-No emulator-only firmware flags or replacement firmware are used.
+The Halcyon emulator boots the same production UF2 files used for flashing the
+Kyria and Elora. It runs both virtual RP2040s on one deterministic timeline,
+connects their real PIO split transport, and models the matrix, encoder, USB
+host, logical RGB output, and the Kyria's Cirque SPI device. No emulator-only
+firmware flags or replacement firmware are used.
 
 Run the complete suite in Docker:
 
 ```sh
 ./docker-build.sh test-kyria-emulator
+./docker-build.sh test-elora-emulator
+./docker-build.sh test-q15-emulator
+./docker-build.sh test-planck-emulator
 ```
 
 Run one versioned JSON scenario:
@@ -123,10 +126,14 @@ Run one versioned JSON scenario:
 ./docker-build.sh emulate-kyria Emulator/scenarios/02-right-key.json
 ```
 
-Both commands rebuild the production UF2s and print their paths and SHA-256
+These commands rebuild the production firmware and print its paths and SHA-256
 hashes. Scenarios can drive logical keys, the encoder, Cirque input, waits, and
 raw HID, then assert USB reports, layers, and logical RGB state. See
-[`Emulator/scenarios`](Emulator/scenarios) for examples.
+[`Emulator/scenarios`](Emulator/scenarios) and
+[`Emulator/elora-scenarios`](Emulator/elora-scenarios) for examples. Q15 Max
+and Planck execute their production STM32 ELFs in Renode; see
+[`STM32Emulator/README.md`](STM32Emulator/README.md) for the modeled hardware
+boundaries and exhaustive lookup checks.
 
 The emulator validates firmware logic and digital peripheral interactions. It
 does not validate electrical behavior, analog characteristics, or physical USB

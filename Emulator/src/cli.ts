@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { KyriaBoard, type KyriaPaths } from './kyria/board.js';
-import { readScenario } from './scenario.js';
+import { readScenario, type BoardKind } from './scenario.js';
 import { ScenarioRunner } from './scenario-runner.js';
 
 interface Arguments extends KyriaPaths {
@@ -16,6 +16,7 @@ function argumentValue(name: string): string | undefined {
 }
 
 function argumentsFromCommandLine(): Arguments {
+  const board = argumentValue('--board') ?? 'kyria-rev4';
   const leftUF2 = argumentValue('--left');
   const rightUF2 = argumentValue('--right');
   const bootROM = argumentValue('--boot-rom') ?? '/opt/bootrom/bootrom.bin';
@@ -24,7 +25,10 @@ function argumentsFromCommandLine(): Arguments {
   const suite = argumentValue('--suite');
   const repeat = Number(argumentValue('--repeat') ?? 1);
   if (!leftUF2 || !rightUF2 || (!scenario && !suite)) {
-    throw new Error('Usage: --left LEFT.uf2 --right RIGHT.uf2 (--scenario FILE | --suite DIRECTORY) [--repeat COUNT] [--boot-rom FILE] [--layout FILE]');
+    throw new Error('Usage: --board BOARD --left LEFT.uf2 --right RIGHT.uf2 (--scenario FILE | --suite DIRECTORY) [--repeat COUNT] [--boot-rom FILE] [--layout FILE]');
+  }
+  if (board !== 'kyria-rev4' && board !== 'elora-rev2') {
+    throw new Error('--board must be kyria-rev4 or elora-rev2');
   }
   if (!Number.isInteger(repeat) || repeat < 1 || repeat > 10) throw new Error('--repeat must be an integer from 1 through 10');
   const scenarios = scenario
@@ -33,7 +37,7 @@ function argumentsFromCommandLine(): Arguments {
   for (const path of [leftUF2, rightUF2, bootROM, layout, ...scenarios]) {
     if (!existsSync(path)) throw new Error(`Required emulator input does not exist: ${path}`);
   }
-  return { leftUF2, rightUF2, bootROM, layout, scenarios, repeat };
+  return { board: board as BoardKind, leftUF2, rightUF2, bootROM, layout, scenarios, repeat };
 }
 
 function sha256(path: string): string {
@@ -47,6 +51,9 @@ try {
 
   for (const scenarioPath of args.scenarios) {
     const scenario = readScenario(scenarioPath);
+    if (scenario.board !== args.board) {
+      throw new Error(`${scenarioPath} targets ${scenario.board}, but --board is ${args.board}`);
+    }
     let result: ReturnType<ScenarioRunner['run']> | undefined;
     let canonical: string | undefined;
     for (let repetition = 1; repetition <= args.repeat; repetition++) {

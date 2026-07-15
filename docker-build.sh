@@ -66,7 +66,7 @@ build_zsa_image() {
 # The image build compiles the official B2 boot ROM ephemerally. Docker's
 # cache retains it locally; no ROM source or binary is copied into the repo.
 build_emulator_image() {
-    echo "Building Kyria emulator image..."
+    echo "Building Halcyon emulator image..."
     docker build -t "$EMULATOR_IMAGE_NAME" -f "$SCRIPT_DIR/Dockerfile.emulator" "$SCRIPT_DIR"
 }
 
@@ -296,6 +296,21 @@ test_kyria_emulator() {
         --repeat "${KYRIA_EMULATOR_REPEAT:-2}"
 }
 
+test_elora_emulator() {
+    build_elora_left
+    build_elora_right
+    build_emulator_image
+    docker run --rm --entrypoint npm "$EMULATOR_IMAGE_NAME" test
+    docker run --rm \
+        -v "$SCRIPT_DIR:/workspace:ro" \
+        "$EMULATOR_IMAGE_NAME" \
+        --board elora-rev2 \
+        --left /workspace/elora_rev2_obbut_left.uf2 \
+        --right /workspace/elora_rev2_obbut_right_encoder.uf2 \
+        --suite /opt/emulator/elora-scenarios \
+        --repeat "${ELORA_EMULATOR_REPEAT:-2}"
+}
+
 emulate_kyria_scenario() {
     local scenario_input="$1"
     local scenario_directory
@@ -377,20 +392,38 @@ build_planck() {
     echo "Build complete: zsa_planck_ez_glow_obbut.bin"
 }
 
-test_stm32_emulators() {
-    build_q15
-    build_planck
-    build_stm32_emulator_image
-
+run_q15_emulator() {
     docker run --rm --platform linux/amd64 \
         -v "$KEYCHRON_BUILD_CACHE/keychron_q15_max_ansi_encoder_obbut.elf:/firmware.elf:ro" \
         "$STM32_EMULATOR_IMAGE_NAME" \
         --board q15 --firmware /firmware.elf
+}
 
+run_planck_emulator() {
     docker run --rm --platform linux/amd64 \
         -v "$ZSA_BUILD_CACHE/zsa_planck_ez_glow_obbut.elf:/firmware.elf:ro" \
         "$STM32_EMULATOR_IMAGE_NAME" \
         --board planck --firmware /firmware.elf
+}
+
+test_q15_emulator() {
+    build_q15
+    build_stm32_emulator_image
+    run_q15_emulator
+}
+
+test_planck_emulator() {
+    build_planck
+    build_stm32_emulator_image
+    run_planck_emulator
+}
+
+test_stm32_emulators() {
+    build_q15
+    build_planck
+    build_stm32_emulator_image
+    run_q15_emulator
+    run_planck_emulator
 }
 
 # Generate host-only documentation YAML from Swift.
@@ -477,6 +510,9 @@ case "${1:-help}" in
     test-kyria-emulator)
         test_kyria_emulator
         ;;
+    test-elora-emulator)
+        test_elora_emulator
+        ;;
     emulate-kyria)
         if [[ -z "${2:-}" ]]; then
             echo "Error: emulate-kyria requires a scenario JSON path" >&2
@@ -513,12 +549,18 @@ case "${1:-help}" in
     q15)
         build_q15
         ;;
+    test-q15-emulator)
+        test_q15_emulator
+        ;;
     flash-q15)
         build_q15
         flash_q15_dfu "keychron_q15_max_ansi_encoder_obbut.bin"
         ;;
     planck)
         build_planck
+        ;;
+    test-planck-emulator)
+        test_planck_emulator
         ;;
     test-stm32-emulators)
         test_stm32_emulators
@@ -565,16 +607,19 @@ case "${1:-help}" in
         echo "  elora-left         - Build left half (no module)"
         echo "  elora-right        - Build right half (encoder)"
         echo "  elora-all          - Build both Elora halves"
+        echo "  test-elora-emulator - Build both exact UF2s and run the deterministic emulator suite"
         echo "  flash-elora-left   - Build and flash left half"
         echo "  flash-elora-right  - Build and flash right half"
         echo ""
         echo "Keychron Q15 Max commands:"
         echo "  q15                - Build Q15 Max firmware"
+        echo "  test-q15-emulator  - Build and boot the production Q15 ELF in Renode"
         echo "  flash-q15          - Build and flash Q15 Max (requires dfu-util)"
         echo "  test-stm32-emulators - Build Q15 and Planck and boot both production ELFs in Renode"
         echo ""
         echo "ZSA Planck EZ Glow commands:"
         echo "  planck             - Build Planck EZ Glow firmware"
+        echo "  test-planck-emulator - Build and boot the production Planck ELF in Renode"
         echo "  flash-planck       - Build and flash Planck EZ (requires dfu-util)"
         echo ""
         echo "Maintenance:"

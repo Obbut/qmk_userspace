@@ -11,6 +11,15 @@ describe('scenario validation', () => {
     }).name).toBe('tap');
   });
 
+  it('accepts an Elora scenario', () => {
+    expect(validateScenario({
+      version: 1,
+      board: 'elora-rev2',
+      name: 'Elora smoke test',
+      steps: [{ action: 'tap', key: 'left:r1c5' }],
+    }).board).toBe('elora-rev2');
+  });
+
   it('rejects unknown steps and unbounded waits', () => {
     expect(() => validateScenario({
       version: 1,

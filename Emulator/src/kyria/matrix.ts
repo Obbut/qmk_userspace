@@ -1,15 +1,23 @@
 import type { FirmwareMachine } from '../machine.js';
+import type { BoardKind } from '../scenario.js';
 
-const ROW_PINS = [8, 11, 7, 6] as const;
-const LEFT_COLUMN_PINS = [19, 20, 25, 4, 9, 10, 5] as const;
-const RIGHT_COLUMN_PINS = [5, 10, 9, 4, 25, 20, 19] as const;
+const KYRIA_ROW_PINS = [8, 11, 7, 6] as const;
+const KYRIA_LEFT_COLUMN_PINS = [19, 20, 25, 4, 9, 10, 5] as const;
+const KYRIA_RIGHT_COLUMN_PINS = [5, 10, 9, 4, 25, 20, 19] as const;
+const ELORA_ROW_PINS = [8, 11, 7, 6, 5] as const;
+const ELORA_LEFT_COLUMN_PINS = [24, 19, 20, 25, 4, 9, 10] as const;
+const ELORA_RIGHT_COLUMN_PINS = [10, 9, 4, 25, 20, 19, 24] as const;
 
 export class MatrixAdapter {
   private readonly pressed = new Set<string>();
+  private readonly rows: readonly number[];
   private readonly columns: readonly number[];
 
-  constructor(readonly machine: FirmwareMachine) {
-    this.columns = machine.half === 'left' ? LEFT_COLUMN_PINS : RIGHT_COLUMN_PINS;
+  constructor(readonly machine: FirmwareMachine, board: BoardKind = 'kyria-rev4') {
+    this.rows = board === 'elora-rev2' ? ELORA_ROW_PINS : KYRIA_ROW_PINS;
+    this.columns = board === 'elora-rev2'
+      ? (machine.half === 'left' ? ELORA_LEFT_COLUMN_PINS : ELORA_RIGHT_COLUMN_PINS)
+      : (machine.half === 'left' ? KYRIA_LEFT_COLUMN_PINS : KYRIA_RIGHT_COLUMN_PINS);
     for (const [column, pinNumber] of this.columns.entries()) {
       const pin = machine.rp2040.gpio[pinNumber]!;
       pin.setInputValue(true);
@@ -39,8 +47,12 @@ export class MatrixAdapter {
     this.pressed.clear();
   }
 
+  get isReady(): boolean {
+    return this.rows.every((pin) => this.machine.rp2040.gpio[pin]!.functionSelect === 5);
+  }
+
   private columnInputValue(column: number, inputEnable: boolean, inputOverride: number): boolean {
-    const connectedToLowRow = ROW_PINS.some((rowPin, row) => {
+    const connectedToLowRow = this.rows.some((rowPin, row) => {
       const gpio = this.machine.rp2040.gpio[rowPin]!;
       return gpio.outputEnable
         && !gpio.outputValue
@@ -57,7 +69,7 @@ export class MatrixAdapter {
   }
 
   private validate(row: number, column: number): void {
-    if (!Number.isInteger(row) || row < 0 || row >= ROW_PINS.length) {
+    if (!Number.isInteger(row) || row < 0 || row >= this.rows.length) {
       throw new Error(`Invalid ${this.machine.half} matrix row ${row}`);
     }
     if (!Number.isInteger(column) || column < 0 || column >= this.columns.length) {

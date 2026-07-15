@@ -37,11 +37,25 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-      - name: Build Elora left half
-        run: ./docker-build.sh elora-left
+      - name: Build and emulate both Elora halves
+        shell: bash
+        run: |
+          mkdir -p .emulator-cache
+          set +e
+          ./docker-build.sh test-elora-emulator 2>&1 | tee /tmp/elora-emulator.log
+          status=${PIPESTATUS[0]}
+          grep -E '^(left|right) (UF2|SHA):|^\{"status":' /tmp/elora-emulator.log \
+            > .emulator-cache/elora-trace.jsonl || true
+          exit "$status"
 
-      - name: Build Elora right half
-        run: ./docker-build.sh elora-right
+      - name: Upload sanitized Elora emulator trace on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: elora-emulator-failure-trace
+          path: .emulator-cache/elora-trace.jsonl
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Upload Halcyon firmware
         uses: actions/upload-artifact@v4
@@ -65,13 +79,8 @@ jobs:
       - name: Build Docker image
         run: docker build -t qmk-keychron-builder -f Dockerfile.keychron .
 
-      - name: Build Q15 Max firmware
-        run: |
-          docker run --rm \
-            -v "${{ github.workspace }}:/qmk_userspace" \
-            -e QMK_USERSPACE=/qmk_userspace \
-            qmk-keychron-builder \
-            sh -c 'cd /qmk_firmware && make keychron/q15_max/ansi_encoder:obbut'
+      - name: Build and emulate Q15 Max firmware
+        run: ./docker-build.sh test-q15-emulator
 
       - name: Upload Q15 Max firmware
         uses: actions/upload-artifact@v4
@@ -91,13 +100,8 @@ jobs:
       - name: Build Docker image
         run: docker build -t qmk-zsa-builder -f Dockerfile.zsa .
 
-      - name: Build Planck EZ Glow firmware
-        run: |
-          docker run --rm \
-            -v "${{ github.workspace }}:/qmk_userspace" \
-            -e QMK_USERSPACE=/qmk_userspace \
-            qmk-zsa-builder \
-            sh -c 'cd /qmk_firmware && make zsa/planck_ez/glow:obbut'
+      - name: Build and emulate Planck EZ Glow firmware
+        run: ./docker-build.sh test-planck-emulator
 
       - name: Upload Planck EZ Glow firmware
         uses: actions/upload-artifact@v4

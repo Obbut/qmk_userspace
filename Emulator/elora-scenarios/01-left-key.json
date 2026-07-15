@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "board": "elora-rev2",
+  "name": "Elora left-half Q press and release",
+  "steps": [
+    { "action": "press", "key": "left:r1c5" },
+    { "assert": "keyboard", "usages": [20] },
+    { "action": "release", "key": "left:r1c5" },
+    { "assert": "keyboard", "usages": [] },
+    { "assert": "diagnostics-clean" }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "board": "elora-rev2",
+  "name": "Elora right encoder and module button",
+  "steps": [
+    { "action": "rotate", "direction": "clockwise" },
+    { "assert": "keyboard", "usages": [129] },
+    { "assert": "keyboard", "usages": [] },
+    { "action": "wait", "milliseconds": 100 },
+    { "action": "encoder-button", "pressed": true, "settleMs": 60 },
+    { "assert": "consumer", "usage": 226 },
+    { "action": "encoder-button", "pressed": false, "settleMs": 60 },
+    { "assert": "consumer", "usage": 0 },
+    { "action": "wait", "milliseconds": 100 },
+    { "assert": "diagnostics-clean" }
+  ]
+}

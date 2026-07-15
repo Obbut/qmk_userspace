@@ -16,6 +16,9 @@ export class ScenarioRunner {
   constructor(readonly board: KyriaBoard) {}
 
   run(scenario: Scenario): ScenarioResult {
+    if (scenario.board !== this.board.paths.board) {
+      throw new Error(`Scenario targets ${scenario.board}, but the emulated board is ${this.board.paths.board}`);
+    }
     this.board.boot(scenario.host ?? 'default', scenario.bootTimeoutMs ?? 2_000);
     this.reportCursor = this.board.usb.reports.length;
     for (const [index, step] of scenario.steps.entries()) {

@@ -1,6 +1,7 @@
 import { RP2040, type Logger } from 'rp2040js';
 import { applyQMKCompatibility, type CompatibilityStats } from './compatibility.js';
 import type { DeterministicClock } from './clock.js';
+import type { BoardKind } from './scenario.js';
 import { loadUF2, readBootROM } from './uf2.js';
 
 const FLASH_START_ADDRESS = 0x1000_0000;
@@ -23,6 +24,7 @@ export class FirmwareMachine {
     readonly clock: DeterministicClock,
     uf2Path: string,
     bootROMPath: string,
+    board: BoardKind = 'kyria-rev4',
   ) {
     this.rp2040 = new RP2040(clock);
     this.rp2040.logger = this.logger();
@@ -32,7 +34,7 @@ export class FirmwareMachine {
 
     for (const pin of this.rp2040.gpio) pin.setInputValue(true);
     this.rp2040.gpio[1]!.setInputValue(half === 'left');
-    this.rp2040.gpio[24]!.setInputValue(half === 'left');
+    this.rp2040.gpio[board === 'elora-rev2' ? 23 : 24]!.setInputValue(half === 'left');
 
     // rp2040js does not yet model enough of the ROM's clock/XIP setup to run
     // it. Start at the production UF2's boot2 entry, as Wokwi/rp2040js demos

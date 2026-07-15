@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs';
 import type { HostProfile } from './kyria/usb-host.js';
 
+export type BoardKind = 'kyria-rev4' | 'elora-rev2';
+
 export type ScenarioStep =
   | { action: 'press' | 'release'; key: string; settleMs?: number }
   | { action: 'tap'; key: string; holdMs?: number; settleMs?: number }
@@ -21,7 +23,7 @@ export type ScenarioStep =
 
 export interface Scenario {
   readonly version: 1;
-  readonly board: 'kyria-rev4';
+  readonly board: BoardKind;
   readonly name: string;
   readonly host?: HostProfile;
   readonly bootTimeoutMs?: number;
@@ -45,7 +47,9 @@ export function validateScenario(value: unknown, path = '<scenario>'): Scenario 
   }
   const scenario = value as Partial<Scenario>;
   if (scenario.version !== 1) throw new Error(`${path}: scenario version must be 1`);
-  if (scenario.board !== 'kyria-rev4') throw new Error(`${path}: board must be kyria-rev4`);
+  if (scenario.board !== 'kyria-rev4' && scenario.board !== 'elora-rev2') {
+    throw new Error(`${path}: board must be kyria-rev4 or elora-rev2`);
+  }
   if (!scenario.name || !Array.isArray(scenario.steps)) throw new Error(`${path}: name and steps are required`);
   if (scenario.host && !['default', 'macos', 'windows'].includes(scenario.host)) {
     throw new Error(`${path}: invalid host profile ${scenario.host}`);

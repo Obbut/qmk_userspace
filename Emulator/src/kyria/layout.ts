@@ -46,9 +46,18 @@ export class KyriaLayout {
   }
 
   resolve(identifier: string): MatrixLocation {
+    const direct = /^(left|right):r([0-4])c([0-6])$/i.exec(identifier);
+    if (direct) {
+      return {
+        half: direct[1]!.toLowerCase() as Half,
+        row: Number(direct[2]),
+        column: Number(direct[3]),
+        label: identifier,
+      };
+    }
     const label = aliases[identifier.toLowerCase()] ?? identifier;
     const location = this.locations.get(label.toUpperCase());
-    if (!location) throw new Error(`Unknown Kyria key identifier: ${identifier}`);
+    if (!location) throw new Error(`Unknown Halcyon key identifier: ${identifier}`);
     if (location.row >= 4) {
       throw new Error(`${identifier} is a module position, not a GPIO matrix key`);
     }

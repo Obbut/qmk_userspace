@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "board": "elora-rev2",
+  "name": "Elora right-half J traverses split transport",
+  "steps": [
+    { "action": "press", "key": "right:r1c1", "settleMs": 60 },
+    { "assert": "keyboard", "usages": [13], "timeoutMs": 250 },
+    { "action": "release", "key": "right:r1c1", "settleMs": 60 },
+    { "assert": "keyboard", "usages": [], "timeoutMs": 250 },
+    { "assert": "diagnostics-clean" }
+  ]
+}

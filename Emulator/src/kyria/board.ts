@@ -8,8 +8,10 @@ import { MatrixAdapter } from './matrix.js';
 import { WS2812Sink } from './rgb.js';
 import { QMKUSBHost, type HostProfile } from './usb-host.js';
 import { connectSplitTransport } from './wire.js';
+import type { BoardKind } from '../scenario.js';
 
 export interface KyriaPaths {
+  readonly board: BoardKind;
   readonly leftUF2: string;
   readonly rightUF2: string;
   readonly bootROM: string;
@@ -31,11 +33,11 @@ export class KyriaBoard {
   usb!: QMKUSBHost;
 
   constructor(readonly paths: KyriaPaths) {
-    this.left = new FirmwareMachine('left', this.clock, paths.leftUF2, paths.bootROM);
-    this.right = new FirmwareMachine('right', this.clock, paths.rightUF2, paths.bootROM);
+    this.left = new FirmwareMachine('left', this.clock, paths.leftUF2, paths.bootROM, paths.board);
+    this.right = new FirmwareMachine('right', this.clock, paths.rightUF2, paths.bootROM, paths.board);
     this.layout = new KyriaLayout(paths.layout);
-    this.leftMatrix = new MatrixAdapter(this.left);
-    this.rightMatrix = new MatrixAdapter(this.right);
+    this.leftMatrix = new MatrixAdapter(this.left, paths.board);
+    this.rightMatrix = new MatrixAdapter(this.right, paths.board);
     this.encoder = new EncoderAdapter(this.right);
     this.cirque = new CirqueAdapter(this.left);
     this.leftRGB = new WS2812Sink(this.left, this.clock);
@@ -68,15 +70,15 @@ export class KyriaBoard {
     // the same scan and be evaluated before its held layer key.
     try {
       this.scheduler.runUntil(
-        () => [this.left, this.right].every((machine) =>
-          [8, 11, 7, 6].every((pin) => machine.rp2040.gpio[pin]!.functionSelect === 5),
-        ) && this.cirque.ready,
+        () => this.leftMatrix.isReady
+          && this.rightMatrix.isReady
+          && (this.paths.board !== 'kyria-rev4' || this.cirque.ready),
         this.clock.nanos + 500_000_000,
         3_000_000,
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      throw new Error(`${message}; Kyria matrix scanners and Cirque did not become ready`);
+      throw new Error(`${message}; ${this.paths.board} peripherals did not become ready`);
     }
     this.scheduler.runFor(profile === 'default' ? 20 : 300);
   }
