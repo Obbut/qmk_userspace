@@ -20,6 +20,17 @@ struct KeymapDocsCommand {
             throw KeymapDocsError.unknownFirmware(requestedFirmware)
         }
 
+        if arguments.contains("--emulator-fixture") {
+            guard firmwares.count == 1, let firmware = firmwares.first else {
+                throw KeymapDocsError.fixtureRequiresOneFirmware
+            }
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+            FileHandle.standardOutput.write(try encoder.encode(EmulatorFixture(firmware: firmware)))
+            FileHandle.standardOutput.write(Data("\n".utf8))
+            return
+        }
+
         let root = URL(filePath: outputRoot, directoryHint: .isDirectory)
         for firmware in firmwares {
             let output = root.appending(path: "keymap-\(shortName(for: firmware)).yaml")
@@ -51,11 +62,14 @@ struct KeymapDocsCommand {
 
 private enum KeymapDocsError: Error, CustomStringConvertible {
     case unknownFirmware(String)
+    case fixtureRequiresOneFirmware
 
     var description: String {
         switch self {
         case let .unknownFirmware(identifier):
             "Unknown firmware '\(identifier)'. Use kyria, elora, q15, planck, or all."
+        case .fixtureRequiresOneFirmware:
+            "--emulator-fixture requires one explicit --keyboard value."
         }
     }
 }
