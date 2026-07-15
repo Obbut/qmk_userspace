@@ -40,45 +40,45 @@ struct ContentView: View {
 }
 
 #if DEBUG
-#Preview("Connected Elora") {
-    ContentView(
-        model: .preview(
-            keyboardKind: .elora,
-            activeLayers: [.raise]
+    #Preview("Connected Elora") {
+        ContentView(
+            model: .makePreview(
+                keyboardKind: .elora,
+                activeLayers: [.raise]
+            )
         )
-    )
-    .frame(width: 1_180, height: 720)
-}
-
-#Preview("Waiting for Keyboard") {
-    ContentView(
-        model: .preview(
-            connectionStatus: .searching,
-            keyboardKind: nil
-        )
-    )
-    .frame(width: 1_180, height: 720)
-}
-
-#Preview("Layer Strip") {
-    LayerStrip(
-        activeLayer: .lower,
-        activeLayerMask: 0b0_0111
-    )
-    .padding()
-    .frame(width: 520, height: 70)
-}
-
-#Preview("Layer Chips") {
-    HStack(spacing: 12) {
-        LayerChip(layer: .base, isHighest: false, isActive: true)
-        LayerChip(layer: .qwerty, isHighest: false, isActive: true)
-        LayerChip(layer: .lower, isHighest: true, isActive: true)
-        LayerChip(layer: .raise, isHighest: false, isActive: false)
+        .frame(width: 1_180, height: 720)
     }
-    .padding()
-    .frame(width: 480, height: 70)
-}
+
+    #Preview("Waiting for Keyboard") {
+        ContentView(
+            model: .makePreview(
+                connectionStatus: .searching,
+                keyboardKind: nil
+            )
+        )
+        .frame(width: 1_180, height: 720)
+    }
+
+    #Preview("Layer Strip") {
+        LayerStrip(
+            activeLayer: .lower,
+            activeLayerMask: 0b0_0111
+        )
+        .padding()
+        .frame(width: 520, height: 70)
+    }
+
+    #Preview("Layer Chips") {
+        HStack(spacing: 12) {
+            LayerChip(layer: .base, isHighest: false, isActive: true)
+            LayerChip(layer: .qwerty, isHighest: false, isActive: true)
+            LayerChip(layer: .lower, isHighest: true, isActive: true)
+            LayerChip(layer: .raise, isHighest: false, isActive: false)
+        }
+        .padding()
+        .frame(width: 480, height: 70)
+    }
 #endif
 
 /// The stable list of supported layers and their active bits.
@@ -96,7 +96,7 @@ private struct LayerStrip: View {
                 LayerChip(
                     layer: layer,
                     isHighest: layer == activeLayer,
-                    isActive: layer.isActive(in: activeLayerMask)
+                    isActive: layer.isActive(inLayerMask: activeLayerMask)
                 )
             }
         }
@@ -117,7 +117,7 @@ private struct LayerChip: View {
 
     /// The chip content.
     var body: some View {
-        Text(layer.displayName)
+        Text(layer.localizedDisplayName)
             .font(.callout.weight(isHighest ? .semibold : .regular))
             .foregroundStyle(isHighest ? Color.white : Color.primary)
             .padding(.horizontal, 14)

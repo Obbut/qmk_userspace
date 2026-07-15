@@ -1,3 +1,4 @@
+import KeymapCompanionCore
 import SwiftUI
 
 /// The windowed and menu-bar lifecycle for Keymap Companion.
@@ -11,7 +12,8 @@ struct KeymapCompanionApp: App {
 
     /// Creates shared state and its process-lifetime overlay controller together.
     init() {
-        let model = AppModel()
+        let hardware = KeyboardHIDMonitor()
+        let model = AppModel.makeLive(hardware: hardware)
         _model = State(initialValue: model)
         layerHUDController = LayerHUDController(model: model)
     }
@@ -41,7 +43,7 @@ struct KeymapCompanionApp: App {
         .windowToolbarStyle(.unified)
         .windowToolbarLabelStyle(fixed: .iconOnly)
         .commands {
-            CommandGroup(replacing: .newItem) { }
+            CommandGroup(replacing: .newItem) {}
             CommandGroup(after: .appInfo) {
                 Button("Reconnect Keyboard") {
                     model.reconnect()

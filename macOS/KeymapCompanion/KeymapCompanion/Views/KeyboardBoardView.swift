@@ -92,7 +92,7 @@ fileprivate struct KeyboardDiagramView: View {
 
     /// Every physical key and the right encoder.
     var body: some View {
-        let activeLayer = KeymapLayer.highestActiveLayer(in: activeLayerMask)
+        let activeLayer = KeymapLayer.highestActiveLayer(inLayerMask: activeLayerMask)
 
         ZStack(alignment: .topLeading) {
             ForEach(definition.positionedKeys) { positionedKey in
@@ -124,23 +124,23 @@ fileprivate struct KeyboardDiagramView: View {
 }
 
 #if DEBUG
-#Preview("Elora Physical Raise Board") {
-    KeyboardBoardView(
-        definition: .preview(for: .elora),
-        activeLayerMask: 0b0_1001
-    )
-    .padding()
-    .frame(width: 1_180, height: 460)
-}
+    #Preview("Elora Physical Raise Board") {
+        KeyboardBoardView(
+            definition: .makePreview(for: .elora),
+            activeLayerMask: 0b0_1001
+        )
+        .padding()
+        .frame(width: 1_180, height: 460)
+    }
 
-#Preview("Kyria Physical Lower over QWERTY Board") {
-    KeyboardBoardView(
-        definition: .preview(for: .kyria),
-        activeLayerMask: 0b0_0111
-    )
-    .padding()
-    .frame(width: 1_180, height: 405)
-}
+    #Preview("Kyria Physical Lower over QWERTY Board") {
+        KeyboardBoardView(
+            definition: .makePreview(for: .kyria),
+            activeLayerMask: 0b0_0111
+        )
+        .padding()
+        .frame(width: 1_180, height: 405)
+    }
 
 #endif
 
@@ -157,7 +157,7 @@ private struct KeyCap: View {
 
     /// The key-cap content.
     var body: some View {
-        let legend = key.resolvedLegend(activeLayerMask: activeLayerMask)
+        let legend = key.resolvedLegend(forActiveLayerMask: activeLayerMask)
         let isDirectMapping = key.isDirectlyMapped(on: activeLayer)
         let accent = isDirectMapping ? legend.style.color : Color.secondary
         let font = Font.callout.weight(isDirectMapping ? .semibold : .regular)
@@ -209,47 +209,47 @@ private struct KeyCap: View {
 }
 
 #if DEBUG
-#Preview("Native Apple Key Glyphs") {
-    let keycodes: [UInt16] = [
-        0x00E0, 0x00E2, 0x00E3, 0x00E1, 0x0029, 0x002B, 0x0004,
-        0x002A, 0x0028, 0x002C, 0x0039, 0x004C, 0x0080, 0x003A
-    ]
-    let keys = keycodes.map { keycode in
-        let entry = FirmwareKeymapEntry(
-            keycode: keycode,
-            semantic: 0,
-            style: .standard
-        )
-        return KeymapKey(
-            id: "\(keycode)",
-            entries: Array(
-                repeating: entry,
-                count: KeymapLayer.allCases.count
+    #Preview("Native Apple Key Glyphs") {
+        let keycodes: [UInt16] = [
+            0x00E0, 0x00E2, 0x00E3, 0x00E1, 0x0029, 0x002B, 0x0004,
+            0x002A, 0x0028, 0x002C, 0x0039, 0x004C, 0x0080, 0x003A,
+        ]
+        let keys = keycodes.map { keycode in
+            let entry = FirmwareKeymapEntry(
+                keycode: keycode,
+                semantic: .none,
+                style: .standard
             )
-        )
-    }
-
-    Grid(horizontalSpacing: 8, verticalSpacing: 8) {
-        GridRow {
-            ForEach(keys.prefix(7)) { key in
-                KeyCap(
-                    key: key,
-                    activeLayer: .base,
-                    activeLayerMask: 1
+            return KeymapKey(
+                id: "\(keycode)",
+                entries: Array(
+                    repeating: entry,
+                    count: KeymapLayer.allCases.count
                 )
-            }
+            )
         }
 
-        GridRow {
-            ForEach(keys.suffix(7)) { key in
-                KeyCap(
-                    key: key,
-                    activeLayer: .base,
-                    activeLayerMask: 1
-                )
+        Grid(horizontalSpacing: 8, verticalSpacing: 8) {
+            GridRow {
+                ForEach(keys.prefix(7)) { key in
+                    KeyCap(
+                        key: key,
+                        activeLayer: .base,
+                        activeLayerMask: 1
+                    )
+                }
+            }
+
+            GridRow {
+                ForEach(keys.suffix(7)) { key in
+                    KeyCap(
+                        key: key,
+                        activeLayer: .base,
+                        activeLayerMask: 1
+                    )
+                }
             }
         }
+        .padding()
     }
-    .padding()
-}
 #endif

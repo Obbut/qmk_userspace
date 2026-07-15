@@ -1,26 +1,42 @@
-/// A key label and its layer-specific RGB category.
-struct KeyLegend: Equatable, Sendable {
-    /// The readable key name used for text legends and accessibility.
-    let label: String
+import KeymapCompanionCore
 
-    /// The native Apple glyph used instead of text when available.
-    let systemImageName: String?
+/// A key label and its layer-specific presentation category.
+typealias KeyLegend = KeymapCompanionCore.KeyLegend
 
-    /// The visual category for the key.
-    let style: KeyStyle
+/// SF Symbol presentation for shared key legends.
+extension KeymapCompanionCore.KeyLegend {
+    /// The SF Symbol used by the existing SwiftUI renderer.
+    var systemImageName: String? {
+        symbol?.systemImageName
+    }
+}
 
-    /// Creates a key legend.
-    /// - Parameters:
-    ///   - label: The readable key name.
-    ///   - systemImageName: An optional SF Symbol representing the key.
-    ///   - style: The RGB-inspired visual category.
-    init(
-        label: String,
-        systemImageName: String? = nil,
-        style: KeyStyle = .standard
-    ) {
-        self.label = label
-        self.systemImageName = systemImageName
-        self.style = style
+/// SF Symbol names for platform-neutral key symbols.
+fileprivate extension KeymapCompanionCore.KeySymbol {
+    /// The SF Symbol name for this semantic symbol.
+    var systemImageName: String {
+        switch self {
+        case .returnKey: "return"
+        case .escape: "escape"
+        case .deleteBackward: "delete.left"
+        case .tab: "arrow.right.to.line"
+        case .space: "space"
+        case .capsLock: "capslock"
+        case .deleteForward: "delete.right"
+        case .arrowRight: "arrow.right"
+        case .arrowLeft: "arrow.left"
+        case .arrowDown: "arrow.down"
+        case .arrowUp: "arrow.up"
+        case .mute: "speaker.slash.fill"
+        case .volumeUp: "speaker.wave.3.fill"
+        case .volumeDown: "speaker.wave.1.fill"
+        case .nextTrack: "forward.end.fill"
+        case .previousTrack: "backward.end.fill"
+        case .playPause: "playpause.fill"
+        case .control: "control"
+        case .shift: "shift"
+        case .option: "option"
+        case .command: "command"
+        }
     }
 }

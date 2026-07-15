@@ -40,7 +40,7 @@ fileprivate struct LayerHUDHeader: View {
     /// A centered layer label that stays visually subordinate to the keymap.
     var body: some View {
         Label {
-            Text(layer.displayName)
+            Text(layer.localizedDisplayName)
         } icon: {
             Image(systemName: "square.3.layers.3d.top.filled")
         }
@@ -57,15 +57,15 @@ fileprivate struct LayerHUDHeader: View {
 }
 
 #if DEBUG
-#Preview("Lower Layer HUD") {
-    LayerHUDView(
-        definition: .preview(for: .elora),
-        presentation: LayerHUDPresentation(
-            layer: .lower,
-            activeLayerMask: 0b0_0101
+    #Preview("Lower Layer HUD") {
+        LayerHUDView(
+            definition: .makePreview(for: .elora),
+            presentation: LayerHUDPresentation(
+                layer: .lower,
+                activeLayerMask: 0b0_0101
+            )
         )
-    )
-    .frame(width: 900, height: 420)
-    .background(Color.gray.opacity(0.25))
-}
+        .frame(width: 900, height: 420)
+        .background(Color.gray.opacity(0.25))
+    }
 #endif

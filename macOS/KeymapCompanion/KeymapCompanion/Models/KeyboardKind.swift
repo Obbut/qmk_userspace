@@ -1,16 +1,16 @@
+import KeymapCompanionCore
 import Foundation
 
-/// The shared wire-level keyboard identifier.
-typealias KeyboardKind = KeymapProtocol.KeyboardKind
+/// A keyboard model represented on the wire.
+typealias KeyboardKind = KeymapCompanionCore.KeyboardKind
 
-extension KeymapProtocol.KeyboardKind {
-    /// The localized product name shown by the app.
-    var displayName: LocalizedStringResource {
+/// macOS-localized presentation for shared keyboard identifiers.
+extension KeymapCompanionCore.KeyboardKind {
+    /// The localized product name shown by the macOS app.
+    var localizedDisplayName: LocalizedStringResource {
         switch self {
-        case .kyria:
-            "Kyria Rev4"
-        case .elora:
-            "Elora Rev2"
+        case .kyria: "Kyria Rev4"
+        case .elora: "Elora Rev2"
         }
     }
 }

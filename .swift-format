@@ -1,0 +1,18 @@
+{
+  "fileScopedDeclarationPrivacy" : {
+    "accessLevel" : "fileprivate"
+  },
+  "indentation" : {
+    "spaces" : 4
+  },
+  "lineLength" : 120,
+  "rules" : {
+    "AllPublicDeclarationsHaveDocumentation" : true,
+    "BeginDocumentationCommentWithOneLineSummary" : true,
+    "NeverForceUnwrap" : true,
+    "NeverUseImplicitlyUnwrappedOptionals" : true,
+    "UseTripleSlashForDocumentationComments" : true,
+    "ValidateDocumentationComments" : true
+  },
+  "version" : 1
+}

@@ -1,0 +1,126 @@
+import Observation
+
+/// A layer-HUD state machine that delays presentation changes without AppKit or WinUI.
+@MainActor
+@Observable
+public final class LayerHUDModel {
+    /// The layer snapshot currently rendered by the overlay, or `nil` while hidden.
+    public private(set) var presentation: LayerHUDPresentation?
+
+    /// The dwell time required to show or hide the overlay.
+    @ObservationIgnored private let transitionDelay: Duration
+
+    /// The currently scheduled show or hide operation.
+    @ObservationIgnored private var transitionTask: Task<Void, Never>?
+
+    /// The latest eligible layer snapshot waiting for its show delay.
+    @ObservationIgnored private var pendingPresentation: LayerHUDPresentation?
+
+    /// Whether the visible HUD is waiting for its hide delay.
+    @ObservationIgnored private var isHidePending = false
+
+    /// Creates a layer HUD state machine.
+    ///
+    /// - Parameter transitionDelay: The dwell time required to show or hide the overlay.
+    public init(transitionDelay: Duration = .seconds(3)) {
+        self.transitionDelay = transitionDelay
+    }
+
+    /// Responds to one validated firmware layer-state change.
+    ///
+    /// - Parameters:
+    ///   - activeLayer: The highest currently active layer.
+    ///   - activeLayerMask: The bit mask of active and default firmware layers.
+    public func update(activeLayer: KeymapLayer, activeLayerMask: UInt32) {
+        let nextPresentation = LayerHUDPresentation(
+            layer: activeLayer,
+            activeLayerMask: activeLayerMask
+        )
+
+        guard activeLayer.isHUDLayer else {
+            scheduleHideIfNeeded(showing: nextPresentation)
+            return
+        }
+
+        if presentation != nil {
+            cancelPendingTransition()
+            presentation = nextPresentation
+            return
+        }
+
+        if pendingPresentation?.layer == activeLayer {
+            pendingPresentation = nextPresentation
+            return
+        }
+
+        cancelPendingTransition()
+        pendingPresentation = nextPresentation
+        scheduleShow(for: activeLayer)
+    }
+
+    /// Removes the overlay immediately when its keyboard state is no longer valid.
+    public func hideImmediately() {
+        cancelPendingTransition()
+        presentation = nil
+    }
+
+    /// Schedules the HUD to show the pending presentation for a layer.
+    ///
+    /// - Parameter layer: The layer that must remain pending until the delay ends.
+    private func scheduleShow(for layer: KeymapLayer) {
+        let delay = transitionDelay
+        transitionTask = Task { @MainActor [weak self] in
+            do {
+                try await Task.sleep(for: delay)
+            } catch {
+                return
+            }
+
+            guard let self,
+                let pendingPresentation = self.pendingPresentation,
+                pendingPresentation.layer == layer
+            else { return }
+            self.transitionTask = nil
+            self.pendingPresentation = nil
+            self.presentation = pendingPresentation
+        }
+    }
+
+    /// Schedules the visible HUD to hide after showing a base-layer snapshot.
+    ///
+    /// - Parameter currentPresentation: The latest base-layer snapshot.
+    private func scheduleHideIfNeeded(showing currentPresentation: LayerHUDPresentation) {
+        pendingPresentation = nil
+
+        guard presentation != nil else {
+            cancelPendingTransition()
+            return
+        }
+        presentation = currentPresentation
+        guard !isHidePending else { return }
+
+        cancelPendingTransition()
+        isHidePending = true
+        let delay = transitionDelay
+        transitionTask = Task { @MainActor [weak self] in
+            do {
+                try await Task.sleep(for: delay)
+            } catch {
+                return
+            }
+
+            guard let self, self.isHidePending else { return }
+            self.transitionTask = nil
+            self.isHidePending = false
+            self.presentation = nil
+        }
+    }
+
+    /// Cancels the scheduled show or hide operation.
+    private func cancelPendingTransition() {
+        transitionTask?.cancel()
+        transitionTask = nil
+        pendingPresentation = nil
+        isHidePending = false
+    }
+}

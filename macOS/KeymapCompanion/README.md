@@ -59,6 +59,15 @@ Once a flashed board enumerates, the app finds QMK's vendor usage page `0xFF60` 
 
 ## Shared Swift implementation
 
+Both desktop apps use `KeymapCompanionModel`, the `@MainActor @Observable`
+source of truth in the local `Shared` Swift package. The model owns connection,
+keymap, layer, lighting, and delayed-HUD state. It accesses the shared
+`KeyboardHardwareClient` protocol with Point-Free's `@Dependency`; the macOS
+app injects its IOHID implementation and the Windows app injects its native
+SetupAPI implementation. This keeps platform frameworks and final UI code out
+of the shared package while giving both apps the same state transitions and
+hardware-facing behavior.
+
 Protocol v3 has one source of truth: `Shared/KeymapProtocol`. The same files are included directly in the Keymap Companion target and compiled as Embedded Swift for the RP2040. Swift owns message dispatch, connection state, report encoding and decoding, transfer pagination, and fingerprinting. QMK's C code provides the narrow platform adapter in `users/obbut_halcyon/keymap_protocol_bridge.h`: it exposes keyboard state and compiled keymap entries, sends completed reports, applies RGB settings, and forwards receive and housekeeping callbacks into Swift. The C side contains no protocol version, message identifiers, packet offsets, capability bits, wire semantic/style identifiers, RGB identifiers, or fingerprint algorithm.
 
 The firmware compiler stays inside Docker. `Dockerfile.qmk` combines the official Swift 6.3.3 toolchain with QMK's image, and `users/obbut_halcyon/rules.mk` compiles the shared sources for `armv6m-none-none-eabi` with Embedded Swift enabled. QMK archives that object as `embedded_keymap_protocol.a` and links it into each Kyria and Elora firmware image.

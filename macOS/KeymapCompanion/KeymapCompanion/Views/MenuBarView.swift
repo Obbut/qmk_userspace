@@ -18,7 +18,7 @@ struct MenuBarView: View {
                     Text("Searching for Keyboard")
                 case .connected:
                     if let keyboardKind = model.keyboardKind {
-                        Text(keyboardKind.displayName)
+                        Text(keyboardKind.localizedDisplayName)
                     } else {
                         Text("Keyboard Connected")
                     }
@@ -40,7 +40,7 @@ struct MenuBarView: View {
         if model.connectionStatus.isConnected {
             Button(action: {}) {
                 Label {
-                    Text(model.activeLayer.displayName)
+                    Text(model.activeLayer.localizedDisplayName)
                 } icon: {
                     Image(systemName: "square.3.layers.3d")
                 }
@@ -71,27 +71,27 @@ struct MenuBarView: View {
 }
 
 #if DEBUG
-#Preview("Connected Menu Items") {
-    Menu("Keymap Companion", systemImage: "keyboard.fill") {
-        MenuBarView(
-            model: .preview(
-                keyboardKind: .kyria,
-                activeLayers: [.qwerty, .lower]
+    #Preview("Connected Menu Items") {
+        Menu("Keymap Companion", systemImage: "keyboard.fill") {
+            MenuBarView(
+                model: .makePreview(
+                    keyboardKind: .kyria,
+                    activeLayers: [.qwerty, .lower]
+                )
             )
-        )
+        }
+        .padding()
     }
-    .padding()
-}
 
-#Preview("Searching Menu Items") {
-    Menu("Keymap Companion", systemImage: "keyboard") {
-        MenuBarView(
-            model: .preview(
-                connectionStatus: .searching,
-                keyboardKind: nil
+    #Preview("Searching Menu Items") {
+        Menu("Keymap Companion", systemImage: "keyboard") {
+            MenuBarView(
+                model: .makePreview(
+                    connectionStatus: .searching,
+                    keyboardKind: nil
+                )
             )
-        )
+        }
+        .padding()
     }
-    .padding()
-}
 #endif

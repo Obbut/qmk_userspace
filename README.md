@@ -6,9 +6,12 @@ Personal QMK firmware for four keyboards:
 - **Keychron Q15 Max** - Ortholinear with Bluetooth/2.4GHz wireless
 - **ZSA Planck EZ Glow** - 4x12 ortholinear with Colemak-DH
 
-## Keymap Companion for macOS
+## Keymap Companion
 
-The repository includes a native macOS 27 menu-bar app that visualizes the connected Kyria or Elora and follows QMK layer changes in realtime. See [macOS/KeymapCompanion/README.md](macOS/KeymapCompanion/README.md) for build, flashing, and protocol details.
+The repository includes native companion apps that visualize a connected Kyria or Elora, follow QMK layer changes in realtime, and control supported keyboard lighting. Platform UI remains native while an `@Observable` view model, hardware dependency interface, protocol, state, keymap-decoding, legend, and geometry code are shared through the local Swift package in [`Shared`](Shared). macOS and Windows inject their own Raw HID implementations through Point-Free's `swift-dependencies`.
+
+- [Keymap Companion for macOS](macOS/KeymapCompanion/README.md) uses SwiftUI and its Canvas renderer.
+- [Keymap Companion for Windows](Windows/KeymapCompanion/README.md) uses native WinUI 3 and Swift 6.3.3.
 
 ## Kyria Rev4 (Halcyon)
 

@@ -12,6 +12,9 @@
 # macOS
 .DS_Store
 
+# Windows companion bootstrap dependencies
+Windows/KeymapCompanion/Dependencies/
+
 # IDE
 .vscode/
 .idea/

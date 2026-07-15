@@ -2,18 +2,18 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 /// The single wire definition for communication between QMK and Keymap Companion.
-enum KeymapProtocol {
+public enum KeymapProtocol {
     /// QMK's default Raw HID usage page.
-    static let usagePage = 0xFF60
+    public static let usagePage = 0xFF60
 
     /// QMK's default Raw HID usage identifier.
-    static let usage = 0x61
+    public static let usage = 0x61
 
     /// The byte count of every Raw HID report.
-    static let reportSize = 32
+    public static let reportSize = 32
 
     /// The current wire-format version.
-    static let version: UInt8 = 3
+    public static let version: UInt8 = 3
 
     /// The byte count of one keycode, semantic, and style tuple.
     static let keymapEntrySize = 4
@@ -30,134 +30,52 @@ enum KeymapProtocol {
     }
 
     /// The capability bit for realtime layer state.
-    static let layerStateCapability: UInt32 = 1 << 0
+    public static let layerStateCapability: UInt32 = 1 << 0
 
     /// The capability bit for reading the compiled keymap.
-    static let keymapReadCapability: UInt32 = 1 << 1
+    public static let keymapReadCapability: UInt32 = 1 << 1
 
     /// The capability bit for explicit RGB Matrix settings.
-    static let rgbSettingsCapability: UInt32 = 1 << 2
+    public static let rgbSettingsCapability: UInt32 = 1 << 2
 
     /// The number of stable RGB effect identifiers.
     static var rgbEffectCount: UInt8 {
         RGBEffect.pixelFractal.rawValue
     }
 
-    /// Message identifiers carried in byte five of a report.
-    enum MessageType: UInt8 {
-        /// Host request for an immediate state packet.
-        case getState = 1
-
-        /// Keyboard state response or unsolicited state-change event.
-        case state = 2
-
-        /// Host request for keymap metadata.
-        case getKeymapInfo = 3
-
-        /// Firmware keymap dimensions and fingerprint.
-        case keymapInfo = 4
-
-        /// Host request for a page of keymap entries.
-        case getKeymapChunk = 5
-
-        /// Firmware page of keymap entries.
-        case keymapChunk = 6
-
-        /// Host request to persist a complete RGB Matrix configuration.
-        case setRGBSettings = 7
-    }
-
-    /// A keyboard model represented on the wire.
-    enum KeyboardKind: UInt8, CaseIterable, Equatable, Sendable {
-        /// The splitkb Kyria Rev4.
-        case kyria = 1
-
-        /// The splitkb Elora Rev2.
-        case elora = 2
-    }
-
-    /// A semantic override for a compiled QMK keycode.
-    enum KeySemantic: UInt8, Equatable, Sendable {
-        /// No semantic override.
-        case none = 0
-
-        /// The macOS or Windows screenshot action.
-        case screenshot = 1
-
-        /// The Aerospace window-manager modifier chord.
-        case aerospace = 2
-    }
-
-    /// A visual category assigned to a key by the firmware.
-    enum KeyStyle: UInt8, Equatable, Sendable {
-        /// A key without a layer-specific RGB category.
-        case standard = 0
-
-        /// A QWERTY gaming key.
-        case purple = 1
-
-        /// A navigation key.
-        case magenta = 2
-
-        /// A numeric key.
-        case blue = 3
-
-        /// A symbol key.
-        case yellow = 4
-
-        /// A function key.
-        case cyan = 5
-
-        /// An RGB increase or mode key.
-        case green = 6
-
-        /// An RGB decrease key.
-        case darkGreen = 7
-
-        /// A bootloader key.
-        case red = 8
-
-        /// A destructive editing key.
-        case orange = 9
-    }
-
-    /// One rotary direction in the firmware encoder map.
-    enum EncoderDirection: Int, CaseIterable, Equatable, Sendable {
-        /// Counter-clockwise rotation.
-        case counterClockwise = 0
-
-        /// Clockwise rotation.
-        case clockwise = 1
-    }
-
-    /// Identifies a complete report after validating its signature and version.
+    /// Returns a report's message type after validating its signature and version.
+    ///
     /// - Parameter bytes: The bytes to validate.
+    ///
     /// - Returns: The encoded message type, or `nil` for unrelated or malformed traffic.
     static func messageType(in bytes: UnsafeBufferPointer<UInt8>) -> MessageType? {
         guard bytes.count == reportSize,
-              bytes[0] == 0x4B,
-              bytes[1] == 0x4D,
-              bytes[2] == 0x41,
-              bytes[3] == 0x50,
-              bytes[4] == version else {
+            bytes[0] == 0x4B,
+            bytes[1] == 0x4D,
+            bytes[2] == 0x41,
+            bytes[3] == 0x50,
+            bytes[4] == version
+        else {
             return nil
         }
         return MessageType(rawValue: bytes[5])
     }
 
-    /// Checks a complete report's signature, version, and message identifier.
+    /// Returns whether a complete report has the expected protocol header.
+    ///
     /// - Parameters:
     ///   - bytes: The bytes to validate.
-    ///   - type: The expected message identifier.
+    ///   - messageType: The expected message identifier.
     /// - Returns: Whether the report matches this protocol and message type.
     static func hasValidHeader(
-        _ bytes: UnsafeBufferPointer<UInt8>,
-        type: MessageType
+        in bytes: UnsafeBufferPointer<UInt8>,
+        messageType: MessageType
     ) -> Bool {
-        messageType(in: bytes) == type
+        self.messageType(in: bytes) == messageType
     }
 
     /// Clears a report and writes its common envelope.
+    ///
     /// - Parameters:
     ///   - bytes: Storage for exactly one report.
     ///   - type: The message identifier to encode.
@@ -182,21 +100,23 @@ enum KeymapProtocol {
         return true
     }
 
-    /// Reads a little-endian 16-bit integer from validated report storage.
+    /// Returns a little-endian 16-bit integer from validated report storage.
+    ///
     /// - Parameters:
     ///   - bytes: The report bytes.
     ///   - offset: The first byte of the integer.
     /// - Returns: The decoded integer.
-    static func readUInt16(from bytes: UnsafeBufferPointer<UInt8>, at offset: Int) -> UInt16 {
+    static func uint16(from bytes: UnsafeBufferPointer<UInt8>, at offset: Int) -> UInt16 {
         UInt16(bytes[offset]) | (UInt16(bytes[offset + 1]) << 8)
     }
 
-    /// Reads a little-endian 32-bit integer from validated report storage.
+    /// Returns a little-endian 32-bit integer from validated report storage.
+    ///
     /// - Parameters:
     ///   - bytes: The report bytes.
     ///   - offset: The first byte of the integer.
     /// - Returns: The decoded integer.
-    static func readUInt32(from bytes: UnsafeBufferPointer<UInt8>, at offset: Int) -> UInt32 {
+    static func uint32(from bytes: UnsafeBufferPointer<UInt8>, at offset: Int) -> UInt32 {
         UInt32(bytes[offset])
             | (UInt32(bytes[offset + 1]) << 8)
             | (UInt32(bytes[offset + 2]) << 16)
@@ -204,6 +124,7 @@ enum KeymapProtocol {
     }
 
     /// Writes a little-endian 16-bit integer into report storage.
+    ///
     /// - Parameters:
     ///   - value: The integer to encode.
     ///   - bytes: The report bytes to modify.
@@ -218,6 +139,7 @@ enum KeymapProtocol {
     }
 
     /// Writes a little-endian 32-bit integer into report storage.
+    ///
     /// - Parameters:
     ///   - value: The integer to encode.
     ///   - bytes: The report bytes to modify.
@@ -233,7 +155,8 @@ enum KeymapProtocol {
         bytes[offset + 3] = UInt8(truncatingIfNeeded: value >> 24)
     }
 
-    /// Creates the FNV-1a seed after incorporating keymap dimensions.
+    /// Returns the FNV-1a seed after incorporating keymap dimensions.
+    ///
     /// - Parameters:
     ///   - keyboardKind: The keyboard identifier byte.
     ///   - layerCount: The number of compiled layers.
@@ -257,7 +180,8 @@ enum KeymapProtocol {
         return fingerprint(afterAdding: encoderDirectionCount, to: hash)
     }
 
-    /// Adds one encoded keymap entry to an FNV-1a fingerprint.
+    /// Returns an FNV-1a fingerprint containing one additional keymap entry.
+    ///
     /// - Parameters:
     ///   - keycode: The compiled QMK keycode.
     ///   - semantic: The semantic override byte.
@@ -276,7 +200,8 @@ enum KeymapProtocol {
         return self.fingerprint(afterAdding: style, to: hash)
     }
 
-    /// Adds one byte to an FNV-1a fingerprint.
+    /// Returns an FNV-1a fingerprint containing one additional byte.
+    ///
     /// - Parameters:
     ///   - byte: The byte to incorporate.
     ///   - fingerprint: The fingerprint accumulated so far.

@@ -100,7 +100,7 @@ private struct RGBSettingsControls: View {
 
                 Picker(selection: $model.rgbSettings.effect) {
                     ForEach(RGBEffect.allCases) { effect in
-                        Text(effect.displayName)
+                        Text(effect.localizedDisplayName)
                             .tag(effect)
                     }
                 } label: {
@@ -169,79 +169,79 @@ private struct RGBPercentageSlider: View {
 }
 
 #if DEBUG
-#Preview("RGB Toolbar Item") {
-    let model = AppModel.preview(
-        keyboardKind: .kyria,
-        rgbSettings: RGBSettings(
-            isEnabled: true,
-            effect: .rainbowBeacon,
-            hue: 210,
-            saturation: 220,
-            brightness: 112,
-            speed: 127
-        )
-    )
-
-    RGBSettingsPopoverButton(model: model)
-        .padding()
-}
-
-#Preview("RGB Settings Popover") {
-    RGBSettingsView(
-        model: .preview(
-            keyboardKind: .elora,
-            rgbSettings: RGBSettings(
-                isEnabled: true,
-                effect: .rainbowLeftToRight,
-                hue: 196,
-                saturation: 230,
-                brightness: 104,
-                speed: 127
-            )
-        )
-    )
-}
-
-#Preview("RGB Settings Popover Dark") {
-    RGBSettingsView(
-        model: .preview(
+    #Preview("RGB Toolbar Item") {
+        let model = AppModel.makePreview(
             keyboardKind: .kyria,
             rgbSettings: RGBSettings(
                 isEnabled: true,
-                effect: .breathing,
-                hue: 142,
-                saturation: 238,
-                brightness: 92,
+                effect: .rainbowBeacon,
+                hue: 210,
+                saturation: 220,
+                brightness: 112,
                 speed: 127
             )
         )
-    )
-    .preferredColorScheme(.dark)
-}
 
-#Preview("RGB Settings Header") {
-    RGBSettingsHeader(
-        isEnabled: .constant(true),
-        color: RGBSettings.default.color
-    )
-    .padding()
-    .frame(width: 340)
-}
+        RGBSettingsPopoverButton(model: model)
+            .padding()
+    }
 
-#Preview("RGB Settings Controls") {
-    RGBSettingsControls(model: .preview())
+    #Preview("RGB Settings Popover") {
+        RGBSettingsView(
+            model: .makePreview(
+                keyboardKind: .elora,
+                rgbSettings: RGBSettings(
+                    isEnabled: true,
+                    effect: .rainbowLeftToRight,
+                    hue: 196,
+                    saturation: 230,
+                    brightness: 104,
+                    speed: 127
+                )
+            )
+        )
+    }
+
+    #Preview("RGB Settings Popover Dark") {
+        RGBSettingsView(
+            model: .makePreview(
+                keyboardKind: .kyria,
+                rgbSettings: RGBSettings(
+                    isEnabled: true,
+                    effect: .breathing,
+                    hue: 142,
+                    saturation: 238,
+                    brightness: 92,
+                    speed: 127
+                )
+            )
+        )
+        .preferredColorScheme(.dark)
+    }
+
+    #Preview("RGB Settings Header") {
+        RGBSettingsHeader(
+            isEnabled: .constant(true),
+            color: RGBSettings.default.color
+        )
         .padding()
-        .frame(width: 390)
-}
+        .frame(width: 340)
+    }
 
-#Preview("RGB Percentage Slider") {
-    @Previewable @State var value = 0.68
+    #Preview("RGB Settings Controls") {
+        RGBSettingsControls(model: .makePreview())
+            .padding()
+            .frame(width: 390)
+    }
 
-    RGBPercentageSlider(
-        value: $value,
-        accessibilityLabel: "Brightness"
-    )
-    .padding()
-    .frame(width: 280)
-}
+    #Preview("RGB Percentage Slider") {
+        @Previewable @State var value = 0.68
+
+        RGBPercentageSlider(
+            value: $value,
+            accessibilityLabel: "Brightness"
+        )
+        .padding()
+        .frame(width: 280)
+    }
 #endif

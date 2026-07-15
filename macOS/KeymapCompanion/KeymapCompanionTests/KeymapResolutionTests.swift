@@ -10,11 +10,12 @@ func transparentKeyResolvesThroughActiveLayerStack() throws {
     }
     let definition = try #require(KeymapDefinition(firmwareKeymap: firmwareKeymap))
     let key = try #require(definition.positionedKeys.first { $0.id == "r0c3" }?.key)
-    let qwertyAndLowerMask = UInt32(1 << KeymapLayer.base.rawValue)
+    let qwertyAndLowerMask =
+        UInt32(1 << KeymapLayer.base.rawValue)
         | UInt32(1 << KeymapLayer.qwerty.rawValue)
         | UInt32(1 << KeymapLayer.lower.rawValue)
 
-    #expect(key.resolvedLegend(activeLayerMask: qwertyAndLowerMask).label == "E")
+    #expect(key.resolvedLegend(forActiveLayerMask: qwertyAndLowerMask).label == "E")
     #expect(!key.isDirectlyMapped(on: .lower))
 }
 
@@ -35,11 +36,12 @@ func directRaiseMappingWins() throws {
     }
     let definition = try #require(KeymapDefinition(firmwareKeymap: firmwareKeymap))
     let key = try #require(definition.positionedKeys.first { $0.id == "r8c2" }?.key)
-    let activeMask = UInt32(1 << KeymapLayer.base.rawValue)
+    let activeMask =
+        UInt32(1 << KeymapLayer.base.rawValue)
         | UInt32(1 << KeymapLayer.qwerty.rawValue)
         | UInt32(1 << KeymapLayer.raise.rawValue)
 
-    let legend = key.resolvedLegend(activeLayerMask: activeMask)
+    let legend = key.resolvedLegend(forActiveLayerMask: activeMask)
     #expect(legend.label == "4")
     #expect(legend.style == .blue)
     #expect(key.isDirectlyMapped(on: .raise))
@@ -51,7 +53,7 @@ func firmwareSemanticOverridesNumericKeycodeLabel() throws {
     let firmwareKeymap = makeFirmwareKeymap(for: .kyria) { entries, rows, columns in
         setEntry(
             keycode: 0x0B21,
-            semantic: 1,
+            semantic: .screenshot,
             layer: .base,
             row: 3,
             column: 4,
@@ -63,15 +65,13 @@ func firmwareSemanticOverridesNumericKeycodeLabel() throws {
     let definition = try #require(KeymapDefinition(firmwareKeymap: firmwareKeymap))
     let key = try #require(definition.positionedKeys.first { $0.id == "r3c4" }?.key)
 
-    #expect(key.resolvedLegend(activeLayerMask: 1).label == "Screenshot")
+    #expect(key.resolvedLegend(forActiveLayerMask: 1).label == "Screenshot")
 }
 
 /// Verifies standard macOS keys use native Apple glyphs instead of abbreviations.
 @Test
 func standardMacKeysUseNativeAppleGlyphs() {
-    let expectedLegends: [
-        (keycode: UInt16, label: String, systemImageName: String)
-    ] = [
+    let expectedLegends: [(keycode: UInt16, label: String, systemImageName: String)] = [
         (0x00E0, "Control", "control"),
         (0x00E2, "Option", "option"),
         (0x00E3, "Command", "command"),
@@ -79,17 +79,21 @@ func standardMacKeysUseNativeAppleGlyphs() {
         (0x0029, "Escape", "escape"),
         (0x002B, "Tab", "arrow.right.to.line"),
         (0x002A, "Delete", "delete.left"),
-        (0x0028, "Return", "return")
+        (0x0028, "Return", "return"),
     ]
 
     for expected in expectedLegends {
-        let legend = QMKKeycodeLegend.legend(
-            for: FirmwareKeymapEntry(
-                keycode: expected.keycode,
-                semantic: 0,
-                style: .standard
-            )
+        let key = KeymapKey(
+            id: "test-key",
+            entries: [
+                FirmwareKeymapEntry(
+                    keycode: expected.keycode,
+                    semantic: .none,
+                    style: .standard
+                )
+            ]
         )
+        let legend = key.resolvedLegend(forActiveLayerMask: 1)
 
         #expect(legend.label == expected.label)
         #expect(legend.systemImageName == expected.systemImageName)
@@ -113,12 +117,14 @@ func everyVisibleKeyHasAUniquePhysicalPosition() throws {
 func physicalGeometryMatchesReadmeRenders() throws {
     let kyria = try #require(KeymapDefinition(firmwareKeymap: makeFirmwareKeymap(for: .kyria)))
     let elora = try #require(KeymapDefinition(firmwareKeymap: makeFirmwareKeymap(for: .elora)))
-    let kyriaIndex = Dictionary(uniqueKeysWithValues: kyria.positionedKeys.map {
-        ($0.id, $0.placement)
-    })
-    let eloraIndex = Dictionary(uniqueKeysWithValues: elora.positionedKeys.map {
-        ($0.id, $0.placement)
-    })
+    let kyriaIndex = Dictionary(
+        uniqueKeysWithValues: kyria.positionedKeys.map {
+            ($0.id, $0.placement)
+        })
+    let eloraIndex = Dictionary(
+        uniqueKeysWithValues: elora.positionedKeys.map {
+            ($0.id, $0.placement)
+        })
 
     let outerTop = try #require(kyriaIndex["r0c6"])
     let middleTop = try #require(kyriaIndex["r0c3"])
@@ -150,25 +156,26 @@ func rightEncoderMatchesFirmwareAndPhysicalGeometry() throws {
     let elora = try #require(
         KeymapDefinition(firmwareKeymap: makeFirmwareKeymap(for: .elora))
     )
-    let lowerMask = UInt32(1 << KeymapLayer.base.rawValue)
+    let lowerMask =
+        UInt32(1 << KeymapLayer.base.rawValue)
         | UInt32(1 << KeymapLayer.lower.rawValue)
 
     #expect(kyria.rightEncoder.placement.centerX == 583)
     #expect(kyria.rightEncoder.placement.centerY == 105)
     #expect(kyria.rightEncoder.pressKey.id == "r9c0")
     #expect(
-        kyria.rightEncoder.counterClockwiseKey
-            .resolvedLegend(activeLayerMask: lowerMask)
+        kyria.rightEncoder.counterclockwiseKey
+            .resolvedLegend(forActiveLayerMask: lowerMask)
             .label == "Previous Track"
     )
     #expect(
         kyria.rightEncoder.pressKey
-            .resolvedLegend(activeLayerMask: lowerMask)
+            .resolvedLegend(forActiveLayerMask: lowerMask)
             .label == "Play or Pause"
     )
     #expect(
         kyria.rightEncoder.clockwiseKey
-            .resolvedLegend(activeLayerMask: lowerMask)
+            .resolvedLegend(forActiveLayerMask: lowerMask)
             .label == "Next Track"
     )
 
@@ -192,12 +199,12 @@ private func makeFirmwareKeymap(
     let matrixEntryCount = layerCount * rows * columns
     let transparent = FirmwareKeymapEntry(
         keycode: 0x0001,
-        semantic: 0,
+        semantic: .none,
         style: .standard
     )
     let unassigned = FirmwareKeymapEntry(
         keycode: 0x0000,
-        semantic: 0,
+        semantic: .none,
         style: .standard
     )
     var entries = Array(
@@ -227,26 +234,25 @@ private func makeFirmwareKeymap(
         columns: columns
     )
 
-    let encoderKeycodes: [
-        (counterClockwise: UInt16, clockwise: UInt16)
-    ] = [
+    let encoderKeycodes: [(counterclockwise: UInt16, clockwise: UInt16)] = [
         (0x00AA, 0x00A9),
         (0x00AA, 0x00A9),
         (0x00AC, 0x00AB),
         (0x00AA, 0x00A9),
-        (0x7844, 0x7843)
+        (0x7844, 0x7843),
     ]
     for (layerIndex, keycodes) in encoderKeycodes.enumerated() {
-        let encoderOffset = matrixEntryCount
+        let encoderOffset =
+            matrixEntryCount
             + layerIndex * EncoderDirection.allCases.count
         entries[encoderOffset] = FirmwareKeymapEntry(
-            keycode: keycodes.counterClockwise,
-            semantic: 0,
+            keycode: keycodes.counterclockwise,
+            semantic: .none,
             style: .standard
         )
         entries[encoderOffset + 1] = FirmwareKeymapEntry(
             keycode: keycodes.clockwise,
-            semantic: 0,
+            semantic: .none,
             style: .standard
         )
     }
@@ -297,7 +303,7 @@ private func setEntry(
 ///   - columns: The matrix column count.
 private func setEntry(
     keycode: UInt16,
-    semantic: UInt8 = 0,
+    semantic: KeySemantic = .none,
     style: KeyStyle = .standard,
     layer: KeymapLayer,
     row: Int,
