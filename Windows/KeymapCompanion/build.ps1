@@ -45,6 +45,13 @@ $env:Path = @(
     (Join-Path $swiftRoot 'Toolchains\6.3.3+Asserts\usr\bin'),
     $env:Path
 ) -join ';'
+$windowsSDK = Join-Path `
+    $swiftRoot `
+    'Platforms\6.3.3\Windows.platform\Developer\SDKs\Windows.sdk'
+if (-not (Test-Path $windowsSDK)) {
+    throw "The Swift 6.3.3 Windows SDK was not found at $windowsSDK."
+}
+$env:SDKROOT = $windowsSDK
 
 $version = swift --version | Select-Object -First 1
 if ($version -notmatch 'Swift version 6\.3\.3') {
