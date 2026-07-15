@@ -8,10 +8,23 @@ Renode does not model STM32 USB device controllers, the Keychron wireless
 coprocessor, or either keyboard's external RGB controller. The platform scripts
 therefore terminate those hardware boundaries while retaining the real QMK
 loop, matrix scanning, Embedded Swift runtime, firmware hooks, layer logic,
-metadata, encoder lookup, and RGB policy in the executed ARM binary.
+metadata, encoder lookup, and RGB policy in the executed ARM binary. After
+boot, it calls every exported matrix and encoder lookup in that same ELF and
+compares the result with a committed snapshot independently resolved by the
+host model.
 
 Run both production builds and boot checks with:
 
 ```sh
 ./docker-build.sh test-stm32-emulators
 ```
+
+Refresh a snapshot after an intentional keymap change with:
+
+```sh
+swift run --package-path SwiftKeymaps qmk-keymap-docs \
+    --keyboard planck --emulator-fixture
+```
+
+The snapshot is test data only. Firmware builds never execute the exporter and
+Renode always loads the ordinary production ELF.

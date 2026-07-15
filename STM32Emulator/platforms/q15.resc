@@ -62,4 +62,3 @@ cpu AddHook `sysbus GetSymbolAddress "matrix_scan"` $steady_loop
 
 logLevel 3
 emulation RunFor "0.25"
-quit
