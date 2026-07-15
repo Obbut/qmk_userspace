@@ -133,6 +133,7 @@ let package = Package(
                 "Q15Firmware",
                 "QMKFirmwareHost",
                 "QMKFirmwareRuntime",
+                "QMKKeymapRenderer",
             ],
             swiftSettings: strictSwiftSettings
         ),

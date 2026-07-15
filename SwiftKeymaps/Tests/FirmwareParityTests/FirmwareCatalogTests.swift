@@ -5,6 +5,7 @@ import PlanckFirmware
 import Q15Firmware
 import QMKFirmwareHost
 import QMKFirmwareRuntime
+import QMKKeymapRenderer
 import XCTest
 
 /// Verifies all build outputs, layers, matrices, and encoders remain catalogued.
@@ -104,6 +105,36 @@ func testPlanckSpacebarGeometryIsContiguous() throws {
         spacebar.centerX + spacebar.width * halfUnit,
         rightKey.centerX - rightKey.width * halfUnit
     )
+}
+
+/// Verifies previews use readable legends for every authored firmware action.
+func testAllFirmwareRendererLegendsAreHumanReadable() {
+    for firmware in ObbutKeyboardCatalog.all {
+        let document = KeymapRenderDocument(firmware: firmware)
+        let keyLegends = document.keys.flatMap(\.legends)
+        let encoderLegends = document.encoders.flatMap {
+            $0.counterclockwiseLegends + $0.pressLegends + $0.clockwiseLegends
+        }
+        let hexadecimalLabels = (keyLegends + encoderLegends)
+            .map(\.label)
+            .filter { $0.hasPrefix("0x") }
+
+        XCTAssertTrue(
+            hexadecimalLabels.isEmpty,
+            "\(firmware.outputName) contains unresolved renderer legends: \(hexadecimalLabels)"
+        )
+    }
+}
+
+/// Pins the keyboard glyphs shown on the Planck default layer.
+func testPlanckDefaultLayerUsesKeyboardGlyphs() throws {
+    let planck = try XCTUnwrap(
+        ObbutKeyboardCatalog.all.first { $0.outputName == "zsa_planck_ez_glow_obbut" }
+    )
+    let document = KeymapRenderDocument(firmware: planck)
+    let labels = Set(document.keys.map { $0.legends[0].label })
+
+    XCTAssertTrue(Set([";", "'", "⇧", ",", ".", "/", "⌃", "⌥", "⌘"]).isSubset(of: labels))
 }
 
 /// Pins every matrix action, semantic, style, and encoder mapping.
