@@ -3,6 +3,16 @@
 
 /// Firmware-side protocol-v4 report encoders.
 extension KeymapProtocol {
+    /// Encodes acknowledgement of an accepted bootloader request.
+    @discardableResult
+    public static func encodeBootloaderAcknowledgement(
+        to bytes: UnsafeMutableBufferPointer<UInt8>
+    ) -> Bool {
+        guard initializeReport(bytes, as: .bootloaderAcknowledgement) else { return false }
+        writeUInt32(bootloaderConfirmation, to: bytes, at: 6)
+        return true
+    }
+
     /// Encodes one complete keyboard-state report.
     @discardableResult
     public static func encodeStateReport(

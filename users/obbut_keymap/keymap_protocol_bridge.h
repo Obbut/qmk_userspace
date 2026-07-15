@@ -113,6 +113,7 @@ keymap_protocol_platform_snapshot_t keymap_protocol_platform_get_snapshot(void);
 keymap_protocol_platform_entry_t keymap_protocol_platform_get_entry(uint16_t index);
 void keymap_protocol_platform_send(uint8_t *KEYMAP_PROTOCOL_NONNULL data, uint8_t length);
 uint8_t keymap_protocol_platform_apply_rgb(uint8_t, uint8_t, uint8_t, uint8_t, uint8_t, uint8_t);
+void keymap_protocol_platform_enter_bootloader(void);
 
 void qmk_swift_post_init(void);
 void qmk_swift_housekeeping(void);

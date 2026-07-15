@@ -22,5 +22,11 @@ extension KeymapProtocol {
 
         /// A host request to persist a complete RGB Matrix configuration.
         case setRGBSettings = 7
+
+        /// A confirmed host request to restart into the hardware bootloader.
+        case enterBootloader = 8
+
+        /// Firmware acknowledgement before a deferred bootloader restart.
+        case bootloaderAcknowledgement = 9
     }
 }

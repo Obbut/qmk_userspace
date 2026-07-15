@@ -45,6 +45,27 @@
             return report
         }
 
+        /// Creates a deliberately confirmed request to restart into the hardware bootloader.
+        ///
+        /// - Returns: One complete Raw HID output report.
+        public static func makeBootloaderRequest() -> [UInt8] {
+            var report = makeRequest(type: .enterBootloader)
+            report.withUnsafeMutableBufferPointer {
+                writeUInt32(bootloaderConfirmation, to: $0, at: 6)
+            }
+            return report
+        }
+
+        /// Returns whether a packet acknowledges an accepted bootloader request.
+        ///
+        /// - Parameter bytes: One complete Raw HID input report.
+        public static func isBootloaderAcknowledgement(_ bytes: [UInt8]) -> Bool {
+            bytes.withUnsafeBufferPointer {
+                hasValidHeader(in: $0, messageType: .bootloaderAcknowledgement)
+                    && uint32(from: $0, at: 6) == bootloaderConfirmation
+            }
+        }
+
         /// Returns state decoded from a Raw HID packet.
         ///
         /// - Parameter bytes: A complete Raw HID input report.

@@ -14,6 +14,23 @@ func protocolRequestsUseVersionFourEnvelope() {
     #expect(request[5] == 3)
 }
 
+/// Verifies bootloader entry requires the protocol's complete confirmation token.
+@Test
+func bootloaderRequestIsDeliberateAndAcknowledged() {
+    let request = KeymapProtocol.makeBootloaderRequest()
+    #expect(request.count == KeymapProtocol.reportSize)
+    #expect(Array(request.prefix(6)) == [0x4B, 0x4D, 0x41, 0x50, 4, 8])
+    #expect(Array(request[6..<10]) == Array("DFU!".utf8))
+
+    var acknowledgement = [UInt8](repeating: 0, count: KeymapProtocol.reportSize)
+    acknowledgement.withUnsafeMutableBufferPointer {
+        #expect(KeymapProtocol.encodeBootloaderAcknowledgement(to: $0))
+    }
+    #expect(KeymapProtocol.isBootloaderAcknowledgement(acknowledgement))
+    acknowledgement[6] = 0
+    #expect(!KeymapProtocol.isBootloaderAcknowledgement(acknowledgement))
+}
+
 /// Verifies every catalogued keyboard produces valid renderer input.
 @Test
 func allCatalogKeyboardsProduceRendererDocuments() {

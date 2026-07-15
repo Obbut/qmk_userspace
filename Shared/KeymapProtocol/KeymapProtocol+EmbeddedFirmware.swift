@@ -16,6 +16,12 @@
         /// The timestamp of the most recently sent state.
         nonisolated(unsafe) fileprivate static var lastSendTimestamp: UInt32 = 0
 
+        /// Whether an acknowledged bootloader reset is waiting for USB to flush.
+        nonisolated(unsafe) fileprivate static var isBootloaderResetPending = false
+
+        /// The timestamp at which the bootloader acknowledgement was queued.
+        nonisolated(unsafe) fileprivate static var bootloaderRequestTimestamp: UInt32 = 0
+
         /// The last reported momentary layer mask.
         nonisolated(unsafe) fileprivate static var lastLayerState = UInt32.max
 
@@ -62,19 +68,48 @@
                 )
             case .setRGBSettings:
                 applyRGBSettings(from: bytes)
-            case .state, .keymapMetadata, .keymapChunk:
+            case .enterBootloader:
+                acceptBootloaderRequest(from: bytes)
+            case .state, .keymapMetadata, .keymapChunk, .bootloaderAcknowledgement:
                 break
             }
         }
 
         /// Sends state when observable QMK state changes.
         static func performHousekeeping() {
-            guard isConnected else { return }
             let snapshot = keymap_protocol_platform_get_snapshot()
+            if isBootloaderResetPending,
+                snapshot.timestamp &- bootloaderRequestTimestamp >= KeymapProtocol.bootloaderResetDelay
+            {
+                isBootloaderResetPending = false
+                keymap_protocol_platform_enter_bootloader()
+                return
+            }
+            guard isConnected else { return }
             guard hasStateChanged(snapshot),
                 snapshot.timestamp &- lastSendTimestamp >= minimumSendInterval
             else { return }
             sendState(using: snapshot)
+        }
+
+        /// Acknowledges an exact confirmation token and defers reset to housekeeping.
+        fileprivate static func acceptBootloaderRequest(
+            from bytes: UnsafeBufferPointer<UInt8>
+        ) {
+            guard KeymapProtocol.uint32(from: bytes, at: 6)
+                == KeymapProtocol.bootloaderConfirmation
+            else { return }
+
+            var report: [32 of UInt8] = .init(repeating: 0)
+            let encoded = withUnsafeMutableBytes(of: &report) { rawBytes in
+                KeymapProtocol.encodeBootloaderAcknowledgement(
+                    to: rawBytes.bindMemory(to: UInt8.self)
+                )
+            }
+            guard encoded else { return }
+            send(&report)
+            bootloaderRequestTimestamp = keymap_protocol_platform_get_snapshot().timestamp
+            isBootloaderResetPending = true
         }
 
         /// Applies a validated host RGB request through QMK.

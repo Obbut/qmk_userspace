@@ -401,6 +401,11 @@ flash_planck_dfu() {
     local native_path
     native_path="$(to_native_path "$SCRIPT_DIR/$bin_file")"
 
+    if ! check_dfu_device && [[ "$(uname -s)" == "Darwin" ]] && command -v xcrun &>/dev/null; then
+        echo "Requesting DFU mode from the running Planck firmware..."
+        xcrun swift "$SCRIPT_DIR/Tools/qmk-enter-bootloader.swift" 0x3297 0xC6CF || true
+    fi
+
     while [[ $elapsed -lt $timeout ]]; do
         if check_dfu_device; then
             echo "Found STM32 DFU device!"

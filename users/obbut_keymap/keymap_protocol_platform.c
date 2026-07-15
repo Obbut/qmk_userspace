@@ -192,6 +192,10 @@ void keymap_protocol_platform_send(uint8_t *data, uint8_t length) {
     raw_hid_send(data, length);
 }
 
+void keymap_protocol_platform_enter_bootloader(void) {
+    reset_keyboard();
+}
+
 uint8_t keymap_protocol_platform_apply_rgb(
     uint8_t effect_index,
     uint8_t hue,

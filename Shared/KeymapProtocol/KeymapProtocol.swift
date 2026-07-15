@@ -27,6 +27,12 @@ public enum KeymapProtocol {
     /// The number of rotation directions encoded for each encoder.
     static let encoderDirectionCount: UInt8 = 2
 
+    /// Deliberate confirmation required before firmware enters its bootloader.
+    static let bootloaderConfirmation: UInt32 = 0x2155_4644
+
+    /// Time allowed for the bootloader acknowledgement to leave the USB endpoint.
+    static let bootloaderResetDelay: UInt32 = 50
+
     /// The capability bit for realtime layer state.
     public static let layerStateCapability: UInt32 = 1 << 0
 
