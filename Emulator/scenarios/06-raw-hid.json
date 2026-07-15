@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "board": "kyria-rev4",
+  "name": "protocol-v4 metadata",
+  "steps": [
+    { "action": "raw-hid", "hex": "4b4d415004030000000000000000000000000000000000000000000000000000", "settleMs": 100 },
+    { "assert": "raw-hid", "messageType": 4, "layoutID": 3308001859 },
+    { "assert": "layer", "active": [], "defaults": [0] },
+    { "assert": "diagnostics-clean" }
+  ]
+}

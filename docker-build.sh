@@ -11,6 +11,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 IMAGE_NAME="qmk-userspace-swift-builder"
 KEYCHRON_IMAGE_NAME="qmk-keychron-builder"
 ZSA_IMAGE_NAME="qmk-zsa-builder"
+EMULATOR_IMAGE_NAME="qmk-userspace-emulator"
 BUILD_CACHE="$SCRIPT_DIR/.docker-build-cache"
 KEYCHRON_BUILD_CACHE="$SCRIPT_DIR/.docker-build-cache-keychron"
 ZSA_BUILD_CACHE="$SCRIPT_DIR/.docker-build-cache-zsa"
@@ -59,6 +60,13 @@ build_zsa_image() {
         echo "Building ZSA QMK Docker image (this takes a few minutes on first run)..."
         docker build -t "$ZSA_IMAGE_NAME" -f "$SCRIPT_DIR/Dockerfile.zsa" "$SCRIPT_DIR"
     fi
+}
+
+# The image build compiles the official B2 boot ROM ephemerally. Docker's
+# cache retains it locally; no ROM source or binary is copied into the repo.
+build_emulator_image() {
+    echo "Building Kyria emulator image..."
+    docker build -t "$EMULATOR_IMAGE_NAME" -f "$SCRIPT_DIR/Dockerfile.emulator" "$SCRIPT_DIR"
 }
 
 # Find the RPI-RP2 bootloader drive (cross-platform)
@@ -250,6 +258,43 @@ build_kyria_right() {
     echo "Build complete: kyria_rev4_obbut_right_encoder.uf2"
 }
 
+test_kyria_emulator() {
+    build_kyria_left
+    build_kyria_right
+    build_emulator_image
+    docker run --rm --entrypoint npm "$EMULATOR_IMAGE_NAME" test
+    docker run --rm \
+        -v "$SCRIPT_DIR:/workspace:ro" \
+        "$EMULATOR_IMAGE_NAME" \
+        --left /workspace/kyria_rev4_obbut_left_cirque.uf2 \
+        --right /workspace/kyria_rev4_obbut_right_encoder.uf2 \
+        --suite /opt/emulator/scenarios \
+        --repeat "${KYRIA_EMULATOR_REPEAT:-2}"
+}
+
+emulate_kyria_scenario() {
+    local scenario_input="$1"
+    local scenario_directory
+    local scenario_path
+    scenario_directory="$(cd "$(dirname "$scenario_input")" && pwd -P)"
+    scenario_path="$scenario_directory/$(basename "$scenario_input")"
+    if [[ ! -f "$scenario_path" ]]; then
+        echo "Error: Scenario file not found: $scenario_input" >&2
+        exit 1
+    fi
+
+    build_kyria_left
+    build_kyria_right
+    build_emulator_image
+    docker run --rm \
+        -v "$SCRIPT_DIR:/workspace:ro" \
+        -v "$scenario_path:/scenario.json:ro" \
+        "$EMULATOR_IMAGE_NAME" \
+        --left /workspace/kyria_rev4_obbut_left_cirque.uf2 \
+        --right /workspace/kyria_rev4_obbut_right_encoder.uf2 \
+        --scenario /scenario.json
+}
+
 build_elora_left() {
     build_qmk_image
     echo "Building Elora left half (no module)..."
@@ -382,6 +427,16 @@ case "${1:-help}" in
         build_kyria_left
         build_kyria_right
         ;;
+    test-kyria-emulator)
+        test_kyria_emulator
+        ;;
+    emulate-kyria)
+        if [[ -z "${2:-}" ]]; then
+            echo "Error: emulate-kyria requires a scenario JSON path" >&2
+            exit 1
+        fi
+        emulate_kyria_scenario "$2"
+        ;;
     flash-kyria-left)
         build_kyria_left
         flash_firmware "kyria_rev4_obbut_left_cirque.uf2" "left"
@@ -451,6 +506,8 @@ case "${1:-help}" in
         echo "  kyria-left         - Build left half (Cirque trackpad)"
         echo "  kyria-right        - Build right half (encoder)"
         echo "  kyria-all          - Build both Kyria halves"
+        echo "  test-kyria-emulator - Build both exact UF2s and run the deterministic emulator suite"
+        echo "  emulate-kyria FILE - Build both exact UF2s and run one scenario JSON file"
         echo "  flash-kyria-left   - Build and flash left half"
         echo "  flash-kyria-right  - Build and flash right half"
         echo ""

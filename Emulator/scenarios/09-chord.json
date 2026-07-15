@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "board": "kyria-rev4",
+  "name": "modifier and cross-half chord",
+  "steps": [
+    { "action": "press", "key": "shift" },
+    { "action": "press", "key": "Q" },
+    { "assert": "keyboard", "usages": [20], "modifiers": 2 },
+    { "action": "press", "key": "J", "settleMs": 60 },
+    { "assert": "keyboard", "usages": [13, 20], "modifiers": 2 },
+    { "action": "release", "key": "J", "settleMs": 60 },
+    { "action": "release", "key": "Q" },
+    { "action": "release", "key": "shift" },
+    { "assert": "keyboard", "usages": [], "modifiers": 0 },
+    { "assert": "diagnostics-clean" }
+  ]
+}

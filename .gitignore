@@ -12,6 +12,9 @@
 .docker-swift-build-cache-keychron/
 .docker-swift-build-cache-zsa/
 SwiftKeymaps/.build-direct/
+Emulator/node_modules/
+Emulator/coverage/
+.emulator-cache/
 
 # Documentation output generated on demand.
 keymap-kyria.yaml

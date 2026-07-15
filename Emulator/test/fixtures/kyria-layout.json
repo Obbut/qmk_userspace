@@ -1,0 +1,11 @@
+{
+  "layouts": {
+    "LAYOUT_split_3x6_5_hlc": {
+      "layout": [
+        { "label": "L05", "matrix": [0, 5] },
+        { "label": "R01", "matrix": [5, 1] },
+        { "label": "RM1", "matrix": [9, 0] }
+      ]
+    }
+  }
+}

@@ -1,0 +1,10 @@
+.git
+.github
+.emulator-cache
+Emulator/build
+Emulator/coverage
+Emulator/node_modules
+*.bin
+*.elf
+*.hex
+*.uf2

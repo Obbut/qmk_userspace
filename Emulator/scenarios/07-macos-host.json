@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "board": "kyria-rev4",
+  "name": "macOS host keeps the physical Control mapping",
+  "host": "macos",
+  "steps": [
+    { "action": "press", "key": "L24" },
+    { "assert": "keyboard", "usages": [], "modifiers": 1 },
+    { "action": "release", "key": "L24" },
+    { "assert": "keyboard", "usages": [], "modifiers": 0 },
+    { "assert": "diagnostics-clean" }
+  ]
+}

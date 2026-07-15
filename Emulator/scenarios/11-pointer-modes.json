@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "board": "kyria-rev4",
+  "name": "pointer sensitivity sniper scrolling and drag lock",
+  "steps": [
+    { "action": "pointer", "x": 1000, "y": 700, "pressure": 32, "settleMs": 100 },
+    { "action": "raw-hid", "hex": "4b4d415004010000000000000000000000000000000000000000000000000000" },
+    { "assert": "layer", "active": [5] },
+    { "action": "tap", "key": "R02" },
+    { "action": "pointer", "x": 1100, "y": 650, "pressure": 32, "settleMs": 100 },
+    { "assert": "mouse", "buttons": 0, "x": -31, "y": 20, "horizontal": 0, "vertical": 0 },
+    { "action": "press", "key": "R17" },
+    { "action": "pointer", "x": 1200, "y": 600, "pressure": 32, "settleMs": 100 },
+    { "assert": "mouse", "buttons": 0, "x": -10, "y": 6, "horizontal": 0, "vertical": 0 },
+    { "action": "release", "key": "R17" },
+    { "action": "press", "key": "R16" },
+    { "action": "pointer", "x": 1300, "y": 550, "pressure": 32, "settleMs": 100 },
+    { "assert": "mouse", "buttons": 0, "x": 0, "y": 0, "horizontal": -1, "vertical": 0 },
+    { "action": "release", "key": "R16" },
+    { "action": "tap", "key": "R18" },
+    { "action": "pointer", "x": 1300, "y": 550, "pressure": 32, "settleMs": 100 },
+    { "assert": "mouse", "buttons": 1 },
+    { "action": "tap", "key": "Q" },
+    { "assert": "mouse", "buttons": 0 },
+    { "assert": "diagnostics-clean" }
+  ]
+}

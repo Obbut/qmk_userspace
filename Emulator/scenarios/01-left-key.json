@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "board": "kyria-rev4",
+  "name": "left-half Q press and release",
+  "host": "default",
+  "steps": [
+    { "action": "press", "key": "Q" },
+    { "assert": "keyboard", "usages": [20] },
+    { "action": "release", "key": "Q" },
+    { "assert": "keyboard", "usages": [] },
+    { "assert": "diagnostics-clean" }
+  ]
+}

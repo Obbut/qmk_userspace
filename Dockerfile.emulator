@@ -1,0 +1,54 @@
+# The boot ROM is compiled locally and remains inside this unpublished image.
+# Nothing in this stage is copied back into the repository or CI artifacts.
+FROM debian:bookworm-slim AS bootrom-builder
+
+ARG TARGETARCH
+ARG BOOTROM_COMMIT=ef22cd8ede5bc007f81d7f2416b48db90f313434
+ARG BOOTROM_GIT_REV=ef22cd8e
+
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        ca-certificates cmake curl git make gcc g++ python3 bzip2 \
+    && rm -rf /var/lib/apt/lists/*
+
+# The B2 ROM was built with Arm GNU Toolchain 9.3.1. Use the matching compiler
+# on both architectures so the image remains exactly 16 KiB.
+RUN case "$TARGETARCH" in \
+        amd64) \
+            archive=gcc-arm-none-eabi-9-2020-q2-update-x86_64-linux.tar.bz2; \
+            checksum=2b9eeccc33470f9d3cda26983b9d2dc6 ;; \
+        arm64) \
+            archive=gcc-arm-none-eabi-9-2020-q2-update-aarch64-linux.tar.bz2; \
+            checksum=000b0888cbe7b171e2225b29be1c327c ;; \
+        *) echo "Unsupported Docker architecture: $TARGETARCH" >&2; exit 1 ;; \
+    esac \
+    && curl --fail --location --silent --show-error \
+        "https://developer.arm.com/-/media/Files/downloads/gnu-rm/9-2020q2/$archive" \
+        --output /tmp/gcc-arm.tar.bz2 \
+    && echo "$checksum  /tmp/gcc-arm.tar.bz2" | md5sum --check - \
+    && mkdir /opt/gcc-arm \
+    && tar -xjf /tmp/gcc-arm.tar.bz2 -C /opt/gcc-arm --strip-components=1 \
+    && rm /tmp/gcc-arm.tar.bz2
+
+RUN git init /src/pico-bootrom \
+    && git -C /src/pico-bootrom remote add origin https://github.com/raspberrypi/pico-bootrom-rp2040.git \
+    && git -C /src/pico-bootrom fetch --depth 1 origin "$BOOTROM_COMMIT" \
+    && git -C /src/pico-bootrom checkout --detach FETCH_HEAD \
+    && git -C /src/pico-bootrom submodule update --init --depth 1
+
+RUN PATH=/opt/gcc-arm/bin:$PATH cmake -S /src/pico-bootrom -B /build/bootrom \
+        -DPICO_SDK_PATH=/src/pico-bootrom/pico_sdk \
+    && printf '#define GIT_REV 0x%s\n' "$BOOTROM_GIT_REV" > /build/bootrom/git_info.h \
+    && touch /build/bootrom/git_info.h \
+    && PATH=/opt/gcc-arm/bin:$PATH cmake --build /build/bootrom --target bootrom --parallel 2 \
+    && test "$(wc -c < /build/bootrom/bootrom.bin)" -eq 16384
+
+FROM node:22-bookworm-slim AS emulator
+
+WORKDIR /opt/emulator
+COPY Emulator/package.json Emulator/package-lock.json ./
+RUN npm ci --ignore-scripts
+COPY Emulator/ ./
+COPY --from=bootrom-builder /build/bootrom/bootrom.bin /opt/bootrom/bootrom.bin
+
+ENTRYPOINT ["npm", "run", "emulate", "--"]

@@ -6,7 +6,7 @@ FROM swift:6.3.3-noble AS swift-toolchain
 # official Swift driver is linked against the regular ncurses soname.
 RUN cp -L /usr/lib/*/libncurses.so.6 /tmp/libncurses.so.6
 
-FROM ghcr.io/qmk/qmk_cli
+FROM ghcr.io/qmk/qmk_cli@sha256:b7d7fa8fb4432b569931de5ad59098cb788f440ed61a62c5126746b71aee0f4a
 
 # The official Swift toolchain contains the ARMv6-M Embedded Swift standard
 # library. Only compiler executables and their runtime resources are needed.
@@ -23,8 +23,13 @@ RUN ldconfig \
     && ln -s swift-frontend /usr/bin/swift-autolink-extract \
     && swift --version
 
-# Clone QMK firmware (shallow clone to save space)
-RUN git clone --depth 1 https://github.com/qmk/qmk_firmware.git /qmk_firmware
+# Pin the QMK tree used for production and emulator builds. This makes the UF2
+# under test reproducible instead of silently following QMK's default branch.
+ARG QMK_FIRMWARE_COMMIT=a738fad372c1e72e10c47f560c8d167d233416ad
+RUN git init /qmk_firmware \
+    && git -C /qmk_firmware remote add origin https://github.com/qmk/qmk_firmware.git \
+    && git -C /qmk_firmware fetch --depth 1 origin "$QMK_FIRMWARE_COMMIT" \
+    && git -C /qmk_firmware checkout --detach FETCH_HEAD
 
 # Initialize submodules needed for the build
 WORKDIR /qmk_firmware

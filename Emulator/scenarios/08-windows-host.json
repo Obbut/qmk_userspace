@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "board": "kyria-rev4",
+  "name": "Windows host swaps Control to the GUI key",
+  "host": "windows",
+  "steps": [
+    { "action": "press", "key": "L24" },
+    { "assert": "keyboard", "usages": [], "modifiers": 8 },
+    { "action": "release", "key": "L24" },
+    { "assert": "keyboard", "usages": [], "modifiers": 0 },
+    { "assert": "diagnostics-clean" }
+  ]
+}

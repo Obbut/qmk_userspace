@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "board": "kyria-rev4",
+  "name": "right-half J traverses split transport",
+  "host": "default",
+  "steps": [
+    { "action": "press", "key": "J", "settleMs": 30 },
+    { "assert": "keyboard", "usages": [13], "timeoutMs": 250 },
+    { "action": "release", "key": "J", "settleMs": 30 },
+    { "assert": "keyboard", "usages": [], "timeoutMs": 250 },
+    { "assert": "diagnostics-clean" }
+  ]
+}

@@ -15,27 +15,27 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build Docker image
-        run: docker build -t qmk-builder -f Dockerfile.qmk .
+        run: docker build -t qmk-userspace-swift-builder -f Dockerfile.qmk .
 
-      - name: Build left half (Cirque trackpad)
+      - name: Build and emulate both Kyria halves
+        shell: bash
         run: |
-          docker run --rm \
-            -v "${{ github.workspace }}:/qmk_userspace" \
-            -e QMK_USERSPACE=/qmk_userspace \
-            -e SKIP_GIT=1 \
-            -e SKIP_VERSION=1 \
-            qmk-builder \
-            sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/kyria/rev4 -km obbut -e HLC_CIRQUE_TRACKPAD=1 -e TARGET=kyria_rev4_obbut_left_cirque'
+          mkdir -p .emulator-cache
+          set +e
+          ./docker-build.sh test-kyria-emulator 2>&1 | tee /tmp/kyria-emulator.log
+          status=${PIPESTATUS[0]}
+          grep -E '^(left|right) (UF2|SHA):|^\{"status":' /tmp/kyria-emulator.log \
+            > .emulator-cache/kyria-trace.jsonl || true
+          exit "$status"
 
-      - name: Build right half (Encoder)
-        run: |
-          docker run --rm \
-            -v "${{ github.workspace }}:/qmk_userspace" \
-            -e QMK_USERSPACE=/qmk_userspace \
-            -e SKIP_GIT=1 \
-            -e SKIP_VERSION=1 \
-            qmk-builder \
-            sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/kyria/rev4 -km obbut -e HLC_ENCODER=1 -e TARGET=kyria_rev4_obbut_right_encoder'
+      - name: Upload sanitized Kyria emulator trace on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kyria-emulator-failure-trace
+          path: .emulator-cache/kyria-trace.jsonl
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Build Elora left half
         run: |
@@ -44,8 +44,8 @@ jobs:
             -e QMK_USERSPACE=/qmk_userspace \
             -e SKIP_GIT=1 \
             -e SKIP_VERSION=1 \
-            qmk-builder \
-            sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/elora/rev2 -km obbut -e HLC_NONE=1 -e TARGET=elora_rev2_obbut_left'
+            qmk-userspace-swift-builder \
+            sh -c 'make -C /qmk_userspace/SwiftKeymaps qmk-keymapc && /qmk_userspace/SwiftKeymaps/.build-direct/bin/qmk-keymapc --keyboard elora --output-root /qmk_userspace && qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/elora/rev2 -km obbut -e HLC_NONE=1 -e TARGET=elora_rev2_obbut_left'
 
       - name: Build Elora right half
         run: |
@@ -54,10 +54,10 @@ jobs:
             -e QMK_USERSPACE=/qmk_userspace \
             -e SKIP_GIT=1 \
             -e SKIP_VERSION=1 \
-            qmk-builder \
+            qmk-userspace-swift-builder \
             sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/elora/rev2 -km obbut -e HLC_ENCODER=1 -e TARGET=elora_rev2_obbut_right_encoder'
 
-      - name: Upload Kyria firmware
+      - name: Upload Halcyon firmware
         uses: actions/upload-artifact@v4
         with:
           name: halcyon-firmware

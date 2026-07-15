@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "board": "kyria-rev4",
+  "name": "representative Function layer RGB indicator",
+  "steps": [
+    { "action": "press", "key": "R13", "settleMs": 100 },
+    { "assert": "rgb", "half": "left", "index": 17, "red": 0, "green": 220, "blue": 220 },
+    { "action": "release", "key": "R13" },
+    { "assert": "diagnostics-clean" }
+  ]
+}

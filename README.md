@@ -103,6 +103,42 @@ Pointer mode uses a dim cyan RGB underlay. Drag lock changes the underlay to red
 
 ![Pointer layer](images/kyria-pointer.svg)
 
+### Headless emulator
+
+The Kyria emulator boots the same two production UF2 files used for flashing:
+the left Cirque image and the right encoder image. It runs both virtual RP2040s
+on one deterministic timeline, connects their real PIO split transport, and
+models the matrix, encoder, Cirque SPI device, USB host, and logical RGB output.
+No emulator-only firmware flags or replacement firmware are used.
+
+Run the complete suite in Docker:
+
+```sh
+./docker-build.sh test-kyria-emulator
+```
+
+Run one versioned JSON scenario:
+
+```sh
+./docker-build.sh emulate-kyria Emulator/scenarios/02-right-key.json
+```
+
+Both commands rebuild the production UF2s and print their paths and SHA-256
+hashes. Scenarios can drive logical keys, the encoder, Cirque input, waits, and
+raw HID, then assert USB reports, layers, and logical RGB state. See
+[`Emulator/scenarios`](Emulator/scenarios) for examples.
+
+The emulator validates firmware logic and digital peripheral interactions. It
+does not validate electrical behavior, analog characteristics, or physical USB
+and WS2812 timing.
+
+`rp2040js` is pinned and installed from npm rather than vendored. Docker builds
+the official RP2040 B2 boot ROM locally and keeps both its checkout and binary
+inside ignored Docker layers: CI never uploads them, release artifacts remain
+the normal UF2/BIN files, and the emulator image must not be pushed to a
+registry. License details and the compatibility-patch attribution are in
+[`Emulator/THIRD_PARTY_NOTICES.md`](Emulator/THIRD_PARTY_NOTICES.md).
+
 ---
 
 ## Elora Rev2 (Halcyon)
