@@ -145,7 +145,8 @@ fileprivate enum HostLegend {
                 return layers.first { $0.id == layerID }?.name ?? "Layer \(layerID)"
             }
         }
-        return String(format: "0x%04X", value)
+        let hexadecimal = String(value, radix: 16, uppercase: true)
+        return "0x\(String(repeating: "0", count: 4 - hexadecimal.count))\(hexadecimal)"
     }
 }
 
