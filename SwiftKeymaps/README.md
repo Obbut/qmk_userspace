@@ -72,17 +72,18 @@ An individual firmware module is only board composition and hardware policy:
 ```swift
 import ObbutKeymaps
 import QMKFirmwareRuntime
+import QMKKeymapKit
 
 public enum KyriaFirmware: QMKFirmware {
     public typealias Domain = ObbutKeymapDomain
+    public static let id = "com.obbut.kyria-rev4"
+    public static let layout: LayoutDescriptor = .splitKBKyriaRev4
     public static let outputName = "kyria_rev4_obbut"
 
-    public static var keymap: KeymapSpec<Domain> {
-        KeymapSpec(id: "com.obbut.kyria-rev4", layout: .splitKBKyriaRev4) {
-            SharedHalcyonLayers(layout: .kyria)
-            KyriaPointerLayer()
-            ObbutEncoder.halcyon(includesPointerLayer: true)
-        }
+    public static var keymap: Keymap<Domain> {
+        SharedHalcyonLayers(layout: .kyria)
+        KyriaPointerLayer()
+        ObbutEncoder.halcyon(includesPointerLayer: true)
     }
 
     public static var configuration: QMKConfiguration {
@@ -92,7 +93,6 @@ public enum KyriaFirmware: QMKFirmware {
         }
     }
 
-    @FirmwareFeatureBuilder
     public static var features: FirmwareFeatures {
         ObbutKeymapCompanion()
         ObbutWindowsOverrides()
@@ -114,7 +114,7 @@ import SwiftUI
 
 Result builders compose heterogeneous layers, rows, encoders, configuration,
 and features. Variadic generics keep feature and row composition statically
-typed. The domain generic on `Key`, `KeymapSpec`, and catalogs makes mixing
+typed. The domain generic on `Key`, `Keymap`, and catalogs makes mixing
 unrelated semantic vocabularies a compile-time error.
 
 ## Custom firmware behavior in Swift
@@ -134,7 +134,6 @@ and a typed bridge in the firmware module:
 private let exampleHousekeeping = QMKToken("example_housekeeping")
 private let exampleProcessRecord = QMKToken("example_process_record")
 
-@FirmwareFeatureBuilder
 public static var features: FirmwareFeatures {
     ExistingSharedFeatures()
     QMKBridgeFeature(
@@ -151,7 +150,7 @@ Then implement those symbols in that board's `+Embedded.swift` source:
 #if hasFeature(Embedded)
 @c @implementation
 func example_housekeeping() {
-    // Allocation-free custom Swift behavior.
+    // Update firmware state without allocating.
 }
 
 @c @implementation

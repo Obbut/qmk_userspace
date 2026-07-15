@@ -1,4 +1,4 @@
-/// The validated keymap value produced by ``KeymapBuilder``.
+/// A keymap validated against its identity and physical layout.
 public struct KeymapSpec<Domain: KeymapDomain>: KeymapSpecification, Sendable {
     /// The stable keymap identifier.
     public let id: String
@@ -12,7 +12,7 @@ public struct KeymapSpec<Domain: KeymapDomain>: KeymapSpecification, Sendable {
     /// The physical encoders in QMK index order.
     public let encoders: [Encoder<Domain>]
 
-    /// Creates and validates a typed keymap.
+    /// Validates declarations produced by ``KeymapBuilder``.
     ///
     /// - Parameters:
     ///   - id: The stable keymap identifier.
@@ -21,9 +21,19 @@ public struct KeymapSpec<Domain: KeymapDomain>: KeymapSpecification, Sendable {
     public init(
         id: String,
         layout: LayoutDescriptor,
-        @KeymapBuilder<Domain> content: () -> [KeymapElement<Domain>]
+        @KeymapBuilder<Domain> content: () -> Keymap<Domain>
     ) {
-        let elements = content()
+        self.init(id: id, layout: layout, keymap: content())
+    }
+
+    /// Validates a keymap builder result against its physical layout.
+    ///
+    /// - Parameters:
+    ///   - id: The stable keymap identifier.
+    ///   - layout: The keyboard layout and physical geometry.
+    ///   - keymap: Layer and encoder declarations in source order.
+    public init(id: String, layout: LayoutDescriptor, keymap: Keymap<Domain>) {
+        let elements = keymap.elements
         let layers = elements.compactMap { element -> Layer<Domain>? in
             guard case let .layer(layer) = element else { return nil }
             return layer

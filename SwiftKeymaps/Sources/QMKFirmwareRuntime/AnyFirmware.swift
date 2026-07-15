@@ -42,7 +42,11 @@ public struct AnyFirmware: Sendable {
     ///
     /// - Parameter firmware: The firmware type to erase.
     public init<Firmware: QMKFirmware>(_ firmware: Firmware.Type) {
-        let keymap = firmware.keymap
+        let keymap = KeymapSpec(
+            id: firmware.id,
+            layout: firmware.layout,
+            keymap: firmware.keymap
+        )
         let selectedFeatures = firmware.features
         id = keymap.id
         outputName = firmware.outputName

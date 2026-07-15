@@ -6,17 +6,14 @@ import QMKKeymapKit
 public enum KyriaFirmware: QMKFirmware {
     public typealias Domain = ObbutKeymapDomain
 
+    public static let id = "com.obbut.kyria-rev4"
+    public static let layout: LayoutDescriptor = .splitKBKyriaRev4
     public static let outputName = "kyria_rev4_obbut"
 
-    public static var keymap: KeymapSpec<Domain> {
-        KeymapSpec(
-            id: "com.obbut.kyria-rev4",
-            layout: .splitKBKyriaRev4
-        ) {
-            SharedHalcyonLayers(layout: .kyria)
-            KyriaPointerLayer()
-            ObbutEncoder.halcyon(includesPointerLayer: true)
-        }
+    public static var keymap: Keymap<Domain> {
+        SharedHalcyonLayers(layout: .kyria)
+        KyriaPointerLayer()
+        ObbutEncoder.halcyon(includesPointerLayer: true)
     }
 
     public static var configuration: QMKConfiguration {
