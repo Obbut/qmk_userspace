@@ -1,0 +1,45 @@
+name: Windows companion
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-companion-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Swift 6.3.3 build and tests
+    runs-on: windows-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Install Swift 6.3.3
+        shell: pwsh
+        run: >-
+          winget install --id Swift.Toolchain --exact --version 6.3.3
+          --silent --disable-interactivity --accept-package-agreements
+          --accept-source-agreements --source winget
+
+      - name: Cache Swift dependencies
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: |
+            Windows/KeymapCompanion/Dependencies
+            Windows/KeymapCompanion/.build/repositories
+          key: windows-swift-6.3.3-${{ hashFiles('Windows/KeymapCompanion/Package.resolved', 'Windows/KeymapCompanion/bootstrap.ps1') }}
+
+      - name: Build and test debug app
+        shell: pwsh
+        run: .\Windows\KeymapCompanion\build.ps1 -Configuration debug -RunTests
+
+      - name: Build release app
+        shell: pwsh
+        run: .\Windows\KeymapCompanion\build.ps1 -Configuration release

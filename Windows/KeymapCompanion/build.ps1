@@ -1,7 +1,9 @@
 [CmdletBinding()]
 param(
     [ValidateSet('debug', 'release')]
-    [string] $Configuration = 'debug'
+    [string] $Configuration = 'debug',
+
+    [switch] $RunTests
 )
 
 $ErrorActionPreference = 'Stop'
@@ -63,6 +65,13 @@ if ($LASTEXITCODE -ne 0) {
 swift build --package-path $PSScriptRoot --configuration $Configuration
 if ($LASTEXITCODE -ne 0) {
     throw "Swift build failed with exit code $LASTEXITCODE."
+}
+
+if ($RunTests) {
+    swift test --package-path $PSScriptRoot --configuration $Configuration
+    if ($LASTEXITCODE -ne 0) {
+        throw "Swift tests failed with exit code $LASTEXITCODE."
+    }
 }
 
 # Stage the exact Swift runtime beside the executable. Windows searches the
