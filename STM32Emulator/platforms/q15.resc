@@ -1,0 +1,65 @@
+using sysbus
+
+$firmware?=@/firmware.elf
+
+set return_one
+"""
+from Antmicro.Renode.Peripherals.CPU import RegisterValue
+cpu.SetRegister(0, RegisterValue.Create(1, 32))
+cpu.PC = cpu.LR
+"""
+
+set steady_loop
+"""
+if 'scan_count' not in globals():
+    scan_count = 0
+scan_count += 1
+if scan_count == 250:
+    print('OBBUT_STM32_BOOT_OK board=q15 scans=250')
+"""
+
+set fault
+"""
+print('OBBUT_STM32_FAULT board=q15')
+"""
+
+mach create "q15"
+machine LoadPlatformDescription @platforms/cpus/stm32f4.repl
+sysbus LoadELF $firmware
+
+# STM32F401 factory flash-size word, omitted by Renode's generic F4 model.
+sysbus WriteWord 0x1FFF7A22 0x0200
+
+# Unpressed rows are pulled high on the physical board.
+gpioPortD OnGPIO 2 true
+gpioPortB OnGPIO 3 true
+gpioPortB OnGPIO 4 true
+gpioPortB OnGPIO 5 true
+gpioPortB OnGPIO 6 true
+
+# Renode has no STM32 USB-device model or Keychron LKBT51 coprocessor. Keep
+# those transport boundaries inert while the production QMK and Swift logic
+# execute unchanged.
+cpu AddHook `sysbus GetSymbolAddress "protocol_pre_init"` "cpu.PC = cpu.LR"
+cpu AddHook `sysbus GetSymbolAddress "protocol_post_task"` "cpu.PC = cpu.LR"
+cpu AddHook `sysbus GetSymbolAddress "lkbt51_init"` "cpu.PC = cpu.LR"
+cpu AddHook `sysbus GetSymbolAddress "wireless_init"` "cpu.PC = cpu.LR"
+cpu AddHook `sysbus GetSymbolAddress "wireless_tasks"` "cpu.PC = cpu.LR"
+
+# The DWT cycle counter and external SNLED27351 device are hardware sinks in
+# this model. RGB policy and frame generation still execute in the ELF.
+cpu AddHook `sysbus GetSymbolAddress "chSysPolledDelayX"` "cpu.PC = cpu.LR"
+cpu AddHook `sysbus GetSymbolAddress "spi_init"` "cpu.PC = cpu.LR"
+cpu AddHook `sysbus GetSymbolAddress "snled27351_write"` $return_one
+
+# Avoid spending simulated seconds in the bootmagic sampling delay. Matrix
+# scanning itself remains enabled and is the boot-completion oracle.
+cpu AddHook `sysbus GetSymbolAddress "bootmagic_lite"` "cpu.PC = cpu.LR"
+
+cpu AddHook `sysbus GetSymbolAddress "qmk_swift_post_init"` "print('OBBUT_STM32_SWIFT_READY board=q15')"
+cpu AddHook `sysbus GetSymbolAddress "HardFault_Handler"` $fault
+cpu AddHook `sysbus GetSymbolAddress "matrix_scan"` $steady_loop
+
+logLevel 3
+emulation RunFor "0.25"
+quit

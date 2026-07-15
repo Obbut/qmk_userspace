@@ -1,0 +1,62 @@
+using sysbus
+
+$firmware?=@/firmware.elf
+
+set return_zero
+"""
+from Antmicro.Renode.Peripherals.CPU import RegisterValue
+cpu.SetRegister(0, RegisterValue.Create(0, 32))
+cpu.PC = cpu.LR
+"""
+
+set steady_loop
+"""
+if 'scan_count' not in globals():
+    scan_count = 0
+scan_count += 1
+if scan_count == 250:
+    print('OBBUT_STM32_BOOT_OK board=planck scans=250')
+"""
+
+set fault
+"""
+print('OBBUT_STM32_FAULT board=planck')
+"""
+
+mach create "planck"
+machine LoadPlatformDescription @platforms/cpus/stm32f4.repl
+
+# Renode does not ship an STM32F303 platform. Its Cortex-M4F core and memory
+# model execute the ELF, while this mapped region supplies the F3 GPIO bank.
+machine LoadPlatformDescriptionFromString """
+gpioF3: Memory.MappedMemory @ sysbus 0x48000000
+    size: 0x1800
+"""
+
+sysbus LoadELF $firmware
+
+# Pull every F3 GPIO input high; pressed-key rows are driven by scenarios.
+sysbus WriteDoubleWord 0x48000010 0x0000FFFF
+sysbus WriteDoubleWord 0x48000410 0x0000FFFF
+sysbus WriteDoubleWord 0x48000810 0x0000FFFF
+sysbus WriteDoubleWord 0x48000C10 0x0000FFFF
+sysbus WriteDoubleWord 0x48001010 0x0000FFFF
+sysbus WriteDoubleWord 0x48001410 0x0000FFFF
+
+# The generic platform cannot configure F3 clocks, USB, DWT, or the external
+# IS31FL3737. Bypass only those hardware boundaries; QMK and Swift continue
+# through their normal production entry points and steady scan loop.
+cpu AddHook `sysbus GetSymbolAddress "stm32_clock_init"` "cpu.PC = cpu.LR"
+cpu AddHook `sysbus GetSymbolAddress "chSysPolledDelayX"` "cpu.PC = cpu.LR"
+cpu AddHook `sysbus GetSymbolAddress "chThdSleep"` "cpu.PC = cpu.LR"
+cpu AddHook `sysbus GetSymbolAddress "protocol_pre_init"` "cpu.PC = cpu.LR"
+cpu AddHook `sysbus GetSymbolAddress "protocol_post_task"` "cpu.PC = cpu.LR"
+cpu AddHook `sysbus GetSymbolAddress "i2c_write_register"` $return_zero
+
+cpu AddHook `sysbus GetSymbolAddress "qmk_swift_post_init"` "print('OBBUT_STM32_SWIFT_READY board=planck')"
+cpu AddHook `sysbus GetSymbolAddress "HardFault_Handler"` $fault
+cpu AddHook `sysbus GetSymbolAddress "matrix_scan"` $steady_loop
+
+logLevel 3
+emulation RunFor "0.25"
+quit

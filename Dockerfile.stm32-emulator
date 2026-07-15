@@ -1,0 +1,5 @@
+FROM antmicro/renode@sha256:7905c3295be5b35a934ddb353e43e47e64c073b97da248d378b13c664b9fb061
+
+COPY STM32Emulator /opt/obbut-stm32-emulator
+
+ENTRYPOINT ["python3", "/opt/obbut-stm32-emulator/run.py"]

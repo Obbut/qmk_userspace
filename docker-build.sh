@@ -12,6 +12,7 @@ IMAGE_NAME="qmk-userspace-swift-builder"
 KEYCHRON_IMAGE_NAME="qmk-keychron-builder"
 ZSA_IMAGE_NAME="qmk-zsa-builder"
 EMULATOR_IMAGE_NAME="qmk-userspace-emulator"
+STM32_EMULATOR_IMAGE_NAME="qmk-userspace-stm32-emulator"
 BUILD_CACHE="$SCRIPT_DIR/.docker-build-cache"
 KEYCHRON_BUILD_CACHE="$SCRIPT_DIR/.docker-build-cache-keychron"
 ZSA_BUILD_CACHE="$SCRIPT_DIR/.docker-build-cache-zsa"
@@ -67,6 +68,14 @@ build_zsa_image() {
 build_emulator_image() {
     echo "Building Kyria emulator image..."
     docker build -t "$EMULATOR_IMAGE_NAME" -f "$SCRIPT_DIR/Dockerfile.emulator" "$SCRIPT_DIR"
+}
+
+build_stm32_emulator_image() {
+    echo "Building STM32 emulator image..."
+    docker build --platform linux/amd64 \
+        -t "$STM32_EMULATOR_IMAGE_NAME" \
+        -f "$SCRIPT_DIR/Dockerfile.stm32-emulator" \
+        "$SCRIPT_DIR"
 }
 
 # Find the RPI-RP2 bootloader drive (cross-platform)
@@ -368,6 +377,22 @@ build_planck() {
     echo "Build complete: zsa_planck_ez_glow_obbut.bin"
 }
 
+test_stm32_emulators() {
+    build_q15
+    build_planck
+    build_stm32_emulator_image
+
+    docker run --rm --platform linux/amd64 \
+        -v "$KEYCHRON_BUILD_CACHE/keychron_q15_max_ansi_encoder_obbut.elf:/firmware.elf:ro" \
+        "$STM32_EMULATOR_IMAGE_NAME" \
+        --board q15 --firmware /firmware.elf
+
+    docker run --rm --platform linux/amd64 \
+        -v "$ZSA_BUILD_CACHE/zsa_planck_ez_glow_obbut.elf:/firmware.elf:ro" \
+        "$STM32_EMULATOR_IMAGE_NAME" \
+        --board planck --firmware /firmware.elf
+}
+
 # Generate host-only documentation YAML from Swift.
 generate_docs() {
     build_qmk_image
@@ -495,6 +520,9 @@ case "${1:-help}" in
     planck)
         build_planck
         ;;
+    test-stm32-emulators)
+        test_stm32_emulators
+        ;;
     generate)
         generate_docs
         ;;
@@ -543,6 +571,7 @@ case "${1:-help}" in
         echo "Keychron Q15 Max commands:"
         echo "  q15                - Build Q15 Max firmware"
         echo "  flash-q15          - Build and flash Q15 Max (requires dfu-util)"
+        echo "  test-stm32-emulators - Build Q15 and Planck and boot both production ELFs in Renode"
         echo ""
         echo "ZSA Planck EZ Glow commands:"
         echo "  planck             - Build Planck EZ Glow firmware"
