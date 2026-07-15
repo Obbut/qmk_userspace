@@ -36,6 +36,11 @@ struct KeyMetadataTests {
 
         #expect(Key.a.withModifiers(.leftCommand).keycode.rawValue == 0x0804)
         #expect(Key.momentary(SyntheticLayer.base).keycode.rawValue == 0x5220)
+        #expect(Key.mute.keycode.rawValue == 0x00A8)
+        #expect(Key.volumeUp.keycode.rawValue == 0x00A9)
+        #expect(Key.volumeDown.keycode.rawValue == 0x00AA)
+        #expect(Key.keyboardVolumeUp.keycode.rawValue == 0x0080)
+        #expect(Key.keyboardVolumeDown.keycode.rawValue == 0x0081)
         #expect(encoder.encoderCount == 1)
         #expect(encoder.encoder(at: 0)?.index == 0)
         #expect(

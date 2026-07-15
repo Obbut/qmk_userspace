@@ -275,7 +275,11 @@ uint8_t encodermap_layer_count(void) {
 }
 
 uint16_t keycode_at_encodermap_location(uint8_t layer, uint8_t encoder, bool clockwise) {
-    return qmk_swift_encoder_keycode_at(layer, encoder, clockwise ? 1 : 0);
+    uint8_t encoder_count = qmk_swift_encoder_count();
+    if (encoder_count == 0) {
+        return KC_NO;
+    }
+    return qmk_swift_encoder_keycode_at(layer, encoder % encoder_count, clockwise ? 1 : 0);
 }
 #endif
 

@@ -104,9 +104,9 @@ func testAllKeymapsMatchGoldenFingerprints() {
     XCTAssertEqual(
         fingerprints,
         [
-            "kyria_rev4_obbut": 2_686_837_719,
-            "elora_rev2_obbut": 469_198_795,
-            "keychron_q15_max_ansi_encoder_obbut": 318_052_838,
+            "kyria_rev4_obbut": 1_883_100_667,
+            "elora_rev2_obbut": 1_440_087_964,
+            "keychron_q15_max_ansi_encoder_obbut": 1_016_172_256,
             "zsa_planck_ez_glow_obbut": 2_308_720_423,
         ]
     )

@@ -41,6 +41,16 @@ EMBEDDED_MACRO_HASH := $(shell cat $(EMBEDDED_MACRO_SOURCES) | sha256sum | cut -
 EMBEDDED_MACRO_EXECUTABLE := \
     $(INTERMEDIATE_OUTPUT)/swift-host/6.3.3-$(EMBEDDED_MACRO_HASH)/QMKFirmwareMacros
 
+EMBEDDED_SWIFT_ALL_SOURCES := \
+    $(EMBEDDED_QMK_KEYMAP_KIT_SOURCES) \
+    $(EMBEDDED_QMK_FIRMWARE_RUNTIME_SOURCES) \
+    $(EMBEDDED_OBBUT_KEYMAP_SOURCES) \
+    $(EMBEDDED_FIRMWARE_SOURCES) \
+    $(EMBEDDED_SELECTED_FIRMWARE_SOURCE)
+EMBEDDED_SWIFT_BUILD_HASH := $(shell cat $(EMBEDDED_SWIFT_ALL_SOURCES) | sha256sum | cut -c1-16)
+EMBEDDED_SWIFT_BUILD_STAMP := \
+    $(EMBEDDED_SWIFT_MODULE_DIR)/sources-$(EMBEDDED_SWIFT_BUILD_HASH).stamp
+
 ifneq ($(filter RP2040 rp2040,$(MCU)),)
     EMBEDDED_SWIFT_TARGET := armv6m-none-none-eabi
     EMBEDDED_SWIFT_CPU_FLAGS := -Xcc -mcpu=cortex-m0plus -Xcc -mthumb
@@ -102,8 +112,16 @@ $(EMBEDDED_MACRO_EXECUTABLE): $(EMBEDDED_MACRO_SOURCES) $(QMK_USERSPACE)/users/o
 		$(EMBEDDED_MACRO_SOURCES) \
 		-o $@
 
+$(EMBEDDED_SWIFT_BUILD_STAMP): \
+        $(EMBEDDED_SWIFT_ALL_SOURCES) \
+        $(EMBEDDED_SWIFT_BRIDGING_HEADER) \
+        $(QMK_USERSPACE)/users/obbut_keymap/rules.mk
+	@mkdir -p $(@D)
+	@touch $@
+
 $(INTERMEDIATE_OUTPUT)/embedded_qmk_keymap_kit.o: \
         $(EMBEDDED_QMK_KEYMAP_KIT_SOURCES) \
+        $(EMBEDDED_SWIFT_BUILD_STAMP) \
         $(EMBEDDED_MACRO_EXECUTABLE) \
         $(EMBEDDED_SWIFT_BRIDGING_HEADER) \
         $(QMK_USERSPACE)/users/obbut_keymap/rules.mk
@@ -118,6 +136,7 @@ $(INTERMEDIATE_OUTPUT)/embedded_qmk_keymap_kit.o: \
 
 $(INTERMEDIATE_OUTPUT)/embedded_qmk_firmware_runtime.o: \
         $(EMBEDDED_QMK_FIRMWARE_RUNTIME_SOURCES) \
+        $(EMBEDDED_SWIFT_BUILD_STAMP) \
         $(INTERMEDIATE_OUTPUT)/embedded_qmk_keymap_kit.o \
         $(EMBEDDED_MACRO_EXECUTABLE) \
         $(EMBEDDED_SWIFT_BRIDGING_HEADER) \
@@ -133,6 +152,7 @@ $(INTERMEDIATE_OUTPUT)/embedded_qmk_firmware_runtime.o: \
 
 $(INTERMEDIATE_OUTPUT)/embedded_obbut_keymaps.o: \
         $(EMBEDDED_OBBUT_KEYMAP_SOURCES) \
+        $(EMBEDDED_SWIFT_BUILD_STAMP) \
         $(INTERMEDIATE_OUTPUT)/embedded_qmk_firmware_runtime.o \
         $(EMBEDDED_MACRO_EXECUTABLE) \
         $(EMBEDDED_SWIFT_BRIDGING_HEADER) \
@@ -148,6 +168,7 @@ $(INTERMEDIATE_OUTPUT)/embedded_obbut_keymaps.o: \
 
 $(INTERMEDIATE_OUTPUT)/embedded_firmware_module.o: \
         $(EMBEDDED_FIRMWARE_SOURCES) \
+        $(EMBEDDED_SWIFT_BUILD_STAMP) \
         $(INTERMEDIATE_OUTPUT)/embedded_obbut_keymaps.o \
         $(EMBEDDED_MACRO_EXECUTABLE) \
         $(EMBEDDED_SWIFT_BRIDGING_HEADER) \
@@ -163,6 +184,7 @@ $(INTERMEDIATE_OUTPUT)/embedded_firmware_module.o: \
 
 $(INTERMEDIATE_OUTPUT)/embedded_selected_firmware.o: \
         $(EMBEDDED_SELECTED_FIRMWARE_SOURCE) \
+        $(EMBEDDED_SWIFT_BUILD_STAMP) \
         $(INTERMEDIATE_OUTPUT)/embedded_firmware_module.o \
         $(EMBEDDED_MACRO_EXECUTABLE) \
         $(EMBEDDED_SWIFT_BRIDGING_HEADER) \

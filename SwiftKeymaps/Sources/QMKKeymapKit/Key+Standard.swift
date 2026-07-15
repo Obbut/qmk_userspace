@@ -68,11 +68,11 @@ public extension Key {
     static var rightShift: Key { standard(0x00E5) }
     static var rightOption: Key { standard(0x00E6) }
     static var rightCommand: Key { standard(0x00E7) }
-    static var mute: Key { standard(0x007F) }
-    static var volumeUp: Key { standard(0x0080) }
-    static var volumeDown: Key { standard(0x0081) }
-    static var keyboardVolumeUp: Key { standard(0x00A9) }
-    static var keyboardVolumeDown: Key { standard(0x00AA) }
+    static var mute: Key { standard(0x00A8) }
+    static var volumeUp: Key { standard(0x00A9) }
+    static var volumeDown: Key { standard(0x00AA) }
+    static var keyboardVolumeUp: Key { standard(0x0080) }
+    static var keyboardVolumeDown: Key { standard(0x0081) }
     static var nextTrack: Key { standard(0x00AB) }
     static var previousTrack: Key { standard(0x00AC) }
     static var playPause: Key { standard(0x00AE) }
