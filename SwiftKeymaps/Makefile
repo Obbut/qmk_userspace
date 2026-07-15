@@ -1,8 +1,8 @@
-# Direct host build for the macro plugin and qmk-keymapc.
+# Direct host build for qmk-keymapc.
 #
 # This intentionally does not invoke SwiftPM. Xcode and tests still consume the
-# package manifest, while Docker/QMK builds use the compiler's plugin ABI
-# directly so the generated firmware path has no package-manager dependency.
+# package manifest, while Docker/QMK builds compile the modules directly so the
+# generated firmware path has no package-manager dependency.
 
 SWIFTC ?= swiftc
 ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
@@ -11,12 +11,9 @@ BIN_DIR := $(BUILD_DIR)/bin
 LIB_DIR := $(BUILD_DIR)/lib
 MODULE_DIR := $(BUILD_DIR)/modules
 
-SWIFT_RESOURCE_PATH := $(shell $(SWIFTC) -print-target-info | sed -n 's/.*"runtimeResourcePath" *: *"\([^"]*\)".*/\1/p')
-SWIFT_HOST_LIB_DIR ?= $(SWIFT_RESOURCE_PATH)/host
 UNAME_S := $(shell uname -s)
 SHLIB_EXT := $(if $(filter Darwin,$(UNAME_S)),dylib,so)
 
-PLUGIN := $(BIN_DIR)/QMKKeymapMacrosPlugin
 COMPILER := $(BIN_DIR)/qmk-keymapc
 
 QMK_KEYMAP_KIT_SOURCES := $(sort $(wildcard $(ROOT)/Sources/QMKKeymapKit/*.swift))
@@ -28,7 +25,6 @@ Q15_FIRMWARE_SOURCES := $(sort $(wildcard $(ROOT)/Sources/Q15Firmware/*.swift))
 PLANCK_FIRMWARE_SOURCES := $(sort $(wildcard $(ROOT)/Sources/PlanckFirmware/*.swift))
 OBBUT_CATALOG_SOURCES := $(sort $(wildcard $(ROOT)/Sources/ObbutKeyboardCatalog/*.swift))
 COMPILER_SOURCES := $(sort $(wildcard $(ROOT)/Sources/qmk-keymapc/*.swift))
-PLUGIN_SOURCES := $(sort $(wildcard $(ROOT)/Sources/QMKKeymapMacrosPlugin/*.swift))
 
 COMMON_SWIFT_FLAGS := \
 	-swift-version 6 \
@@ -40,8 +36,7 @@ COMMON_SWIFT_FLAGS := \
 MODULE_SWIFT_FLAGS := \
 	$(COMMON_SWIFT_FLAGS) \
 	-I $(MODULE_DIR) \
-	-L $(LIB_DIR) \
-	-load-plugin-executable $(PLUGIN)\#QMKKeymapMacrosPlugin
+	-L $(LIB_DIR)
 
 RPATH_FLAGS := -Xlinker -rpath -Xlinker $(LIB_DIR)
 
@@ -63,19 +58,7 @@ qmk-keymapc: $(COMPILER)
 generate: $(COMPILER)
 	$(COMPILER) $(ARGS)
 
-$(PLUGIN): $(PLUGIN_SOURCES)
-	@mkdir -p $(BIN_DIR)
-	$(SWIFTC) $(COMMON_SWIFT_FLAGS) \
-		-D QMK_DIRECT_PLUGIN \
-		-emit-executable \
-		-module-name QMKKeymapMacrosPlugin \
-		-I $(SWIFT_HOST_LIB_DIR) \
-		-L $(SWIFT_HOST_LIB_DIR) \
-		-Xlinker -rpath -Xlinker $(SWIFT_HOST_LIB_DIR) \
-		$(PLUGIN_SOURCES) \
-		-o $@
-
-$(QMK_KEYMAP_KIT_LIBRARY): $(QMK_KEYMAP_KIT_SOURCES) $(PLUGIN)
+$(QMK_KEYMAP_KIT_LIBRARY): $(QMK_KEYMAP_KIT_SOURCES) $(ROOT)/Makefile
 	@mkdir -p $(LIB_DIR) $(MODULE_DIR)
 	$(SWIFTC) $(MODULE_SWIFT_FLAGS) \
 		-emit-library -emit-module \

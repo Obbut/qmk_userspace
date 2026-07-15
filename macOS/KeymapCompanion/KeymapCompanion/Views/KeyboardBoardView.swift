@@ -23,7 +23,7 @@ struct KeyboardBoardView: View {
         self.scalesToFit = scalesToFit
     }
 
-    /// The production renderer used by both the app and `#KeymapPreview`.
+    /// The production renderer used by both the app and Xcode previews.
     var body: some View {
         let activeLayer = definition.highestActiveLayer(in: activeLayerMask)
         Group {

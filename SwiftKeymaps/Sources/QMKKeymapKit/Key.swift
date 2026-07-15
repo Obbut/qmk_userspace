@@ -194,4 +194,26 @@ public struct Key<Domain: KeymapDomain>: Equatable, Sendable {
             styleID: styleID
         )
     }
+
+    /// Creates a fork-specific or custom QMK keycode from a declared token.
+    ///
+    /// - Parameters:
+    ///   - token: The typed host representation of the QMK token.
+    ///   - legend: The renderer legend.
+    ///   - semanticID: An optional domain-owned semantic identifier.
+    ///   - styleID: An optional domain-owned style identifier.
+    /// - Returns: A domain-typed key action.
+    public static func qmk(
+        _ token: QMKToken,
+        legend: String? = nil,
+        semantic semanticID: Domain.Semantic? = nil,
+        style styleID: Domain.Style? = nil
+    ) -> Key {
+        qmk(
+            token.spelling,
+            legend: legend,
+            semantic: semanticID,
+            style: styleID
+        )
+    }
 }

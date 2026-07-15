@@ -1,4 +1,4 @@
-/// A host-side declaration that lets Swift type-check a QMK token captured by a macro.
+/// A host-side declaration that lets Swift type-check a QMK token at the generated C boundary.
 public struct QMKToken: Equatable, Hashable, Sendable {
     /// The token spelling emitted at the generated C boundary.
     public let spelling: String

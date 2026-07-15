@@ -1,4 +1,4 @@
-/// The validated keymap value produced by ``KeymapBuilder`` and `#Keymap`.
+/// The validated keymap value produced by ``KeymapBuilder``.
 public struct KeymapSpec<Domain: KeymapDomain>: KeymapSpecification, Sendable {
     /// The stable keymap identifier.
     public let id: String

@@ -12,7 +12,7 @@ public enum PlanckFirmware: QMKFirmware {
 
     /// The complete five-layer Planck keymap.
     public static var keymap: KeymapSpec<Domain> {
-        #Keymap(
+        KeymapSpec(
             id: "com.obbut.planck-ez-glow",
             layout: .zsaPlanckEZGlow
         ) {
@@ -42,6 +42,6 @@ import QMKKeymapRenderer
 import SwiftUI
 
 #Preview("Planck EZ") {
-    #KeymapPreview(PlanckFirmware.self)
+    KeymapPreviewView(PlanckFirmware.self)
 }
 #endif

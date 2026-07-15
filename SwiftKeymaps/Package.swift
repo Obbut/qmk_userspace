@@ -1,6 +1,5 @@
 // swift-tools-version: 6.3
 
-import CompilerPluginSupport
 import PackageDescription
 
 /// The complete Swift-first keymap workspace.
@@ -21,32 +20,14 @@ let package = Package(
         .library(name: "QMKKeymapRenderer", targets: ["QMKKeymapRenderer"]),
         .executable(name: "qmk-keymapc", targets: ["qmk-keymapc"]),
     ],
-    dependencies: [
-        .package(
-            url: "https://github.com/swiftlang/swift-syntax.git",
-            exact: "603.0.2"
-        )
-    ],
     targets: [
-        .macro(
-            name: "QMKKeymapMacrosPlugin",
-            dependencies: [
-                .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
-                .product(name: "SwiftDiagnostics", package: "swift-syntax"),
-                .product(name: "SwiftSyntax", package: "swift-syntax"),
-                .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
-                .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
-            ],
-            swiftSettings: strictSwiftSettings
-        ),
         .target(
             name: "QMKKeymapKit",
-            dependencies: ["QMKKeymapMacrosPlugin"],
             swiftSettings: strictSwiftSettings
         ),
         .target(
             name: "QMKFirmwareRuntime",
-            dependencies: ["QMKKeymapKit", "QMKKeymapMacrosPlugin"],
+            dependencies: ["QMKKeymapKit"],
             swiftSettings: strictSwiftSettings
         ),
         .target(
@@ -75,7 +56,6 @@ let package = Package(
             dependencies: [
                 "QMKKeymapKit",
                 "QMKFirmwareRuntime",
-                "QMKKeymapMacrosPlugin",
             ],
             swiftSettings: strictSwiftSettings
         ),
@@ -90,14 +70,7 @@ let package = Package(
         ),
         .testTarget(
             name: "QMKKeymapKitTests",
-            dependencies: [
-                "QMKKeymapKit",
-                .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
-                .product(name: "SwiftDiagnostics", package: "swift-syntax"),
-                .product(name: "SwiftSyntax", package: "swift-syntax"),
-                .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
-                .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
-            ],
+            dependencies: ["QMKKeymapKit"],
             swiftSettings: strictSwiftSettings
         ),
         .testTarget(

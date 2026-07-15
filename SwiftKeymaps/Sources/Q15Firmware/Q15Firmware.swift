@@ -12,7 +12,7 @@ public enum Q15Firmware: QMKFirmware {
 
     /// The complete six-layer Q15 keymap and both encoder maps.
     public static var keymap: KeymapSpec<Domain> {
-        #Keymap(
+        KeymapSpec(
             id: "com.obbut.keychron-q15-max",
             layout: .keychronQ15Max
         ) {
@@ -72,7 +72,7 @@ import QMKKeymapRenderer
 import SwiftUI
 
 #Preview("Q15 Max") {
-    #KeymapPreview(Q15Firmware.self)
+    KeymapPreviewView(Q15Firmware.self)
 }
 #endif
 

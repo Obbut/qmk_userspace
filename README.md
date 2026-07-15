@@ -32,8 +32,8 @@ owner of stable semantic/style identifiers and shared behavior. Individual
 firmware modules select board composition and hardware policy only.
 
 See [SwiftKeymaps/README.md](SwiftKeymaps/README.md) for the authored API,
-Embedded Swift customization, `#Keymap`, `#KeymapPreview`, `#qmkKeycode`, and
-`#qmkBridge`.
+result-builder keymaps, previews, custom QMK tokens, and Embedded Swift
+callback bridges.
 
 ## Keymap Companion
 

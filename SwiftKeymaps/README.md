@@ -47,6 +47,8 @@ public enum ObbutKeymapDomain: KeymapDomain {
 Shared domain actions stay typed, readable, and reusable:
 
 ```swift
+private let keychronBluetoothHost1 = QMKToken("BT_HST1")
+
 public enum ObbutKey {
     public static var screenshot: Key<ObbutKeymapDomain> {
         .four
@@ -55,8 +57,8 @@ public enum ObbutKey {
     }
 
     public static var bluetoothHost1: Key<ObbutKeymapDomain> {
-        #qmkKeycode(
-            BT_HST1,
+        Key.qmk(
+            keychronBluetoothHost1,
             legend: "Bluetooth 1",
             semantic: .bluetoothHost1,
             style: .wireless
@@ -76,7 +78,7 @@ public enum KyriaFirmware: QMKFirmware {
     public static let outputName = "kyria_rev4_obbut"
 
     public static var keymap: KeymapSpec<Domain> {
-        #Keymap(id: "com.obbut.kyria-rev4", layout: .splitKBKyriaRev4) {
+        KeymapSpec(id: "com.obbut.kyria-rev4", layout: .splitKBKyriaRev4) {
             SharedHalcyonLayers(layout: .kyria)
             KyriaPointerLayer()
             ObbutEncoder.halcyon(includesPointerLayer: true)
@@ -102,7 +104,7 @@ public enum KyriaFirmware: QMKFirmware {
 
 #if canImport(SwiftUI)
 #Preview("Kyria") {
-    #KeymapPreview(KyriaFirmware.self)
+    KeymapPreviewView(KyriaFirmware.self)
 }
 #endif
 ```
@@ -126,16 +128,16 @@ a QMK callback not represented by a higher-level feature, declare host tokens
 and a typed bridge in the firmware module:
 
 ```swift
-private let example_housekeeping = QMKToken("example_housekeeping")
-private let example_process_record = QMKToken("example_process_record")
+private let exampleHousekeeping = QMKToken("example_housekeeping")
+private let exampleProcessRecord = QMKToken("example_process_record")
 
 @FirmwareFeatureBuilder
 public static var features: FirmwareFeatures {
     ExistingSharedFeatures()
-    #qmkBridge(
+    QMKBridgeFeature(
         id: "example.custom-behavior",
-        housekeeping: example_housekeeping,
-        processRecord: example_process_record
+        housekeeping: exampleHousekeeping,
+        processRecord: exampleProcessRecord
     )
 }
 ```
@@ -157,12 +159,12 @@ func example_process_record(_ keycode: UInt16, _ pressed: UInt8) -> UInt8 {
 #endif
 ```
 
-`#qmkBridge` supports post-initialization, housekeeping, record processing,
-layer-state transforms, pointing initialization/report transforms, RGB Matrix
-indicators, and Raw HID receive. The macro captures otherwise-undeclared C
-symbols, the framework validates identifier safety, and `qmk-keymapc` generates
-the correctly typed declarations and composition glue. `#qmkKeycode` performs
-the equivalent job for fork-only or custom keycode expressions.
+`QMKBridgeFeature` supports post-initialization, housekeeping, record
+processing, layer-state transforms, pointing initialization/report transforms,
+RGB Matrix indicators, and Raw HID receive. Labeled arguments select typed
+callbacks, the framework validates symbol safety, and `qmk-keymapc` generates
+the correctly typed declarations and composition glue. `Key.qmk` accepts either
+a declared `QMKToken` or a trusted expression for fork-only and custom keycodes.
 
 QMK configuration is authored as `QMKConfigurationComponent` values. Source,
 Make, define, undefine, and include settings remain available for QMK facilities
@@ -187,14 +189,13 @@ Firmware builds keep the existing commands:
 ./docker-build.sh planck
 ```
 
-The Docker images pin Swift 6.3.3. The host Makefile builds and loads the macro
-executable directly with `swiftc`, then compiles `qmk-keymapc` module-by-module;
-firmware generation therefore has no SwiftPM dependency. QMK Make derives the
-ARM target and ABI settings, compiles Embedded Swift, and links generated,
-ignored C artifacts. `draw-keymap.sh` regenerates diagram YAML from the same
-Swift definitions before rendering SVGs.
+The Docker images pin Swift 6.3.3. The host Makefile compiles `qmk-keymapc`
+module-by-module directly with `swiftc`, so firmware generation has no SwiftPM
+dependency. QMK Make derives the ARM target and ABI settings, compiles Embedded
+Swift, and links generated, ignored C artifacts. `draw-keymap.sh` regenerates
+diagram YAML from the same Swift definitions before rendering SVGs.
 
 Open `macOS/KeymapCompanion/KeymapCompanion.xcodeproj` to edit the local package.
-Each firmware embeds `#KeymapPreview` in Apple's discoverable `#Preview` macro.
-The previews and live macOS app use `QMKKeymapRenderer` and the same
-catalog-resolved document model.
+Each firmware constructs `KeymapPreviewView` inside Apple's discoverable
+`#Preview` macro. The previews and live macOS app use `QMKKeymapRenderer` and
+the same catalog-resolved document model.

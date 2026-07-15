@@ -22,8 +22,8 @@ public enum ObbutKey {
 
     /// Selects Bluetooth host one.
     public static var bluetoothHost1: Key<ObbutKeymapDomain> {
-        #qmkKeycode(
-            BT_HST1,
+        Key.qmk(
+            keychronBluetoothHost1,
             legend: "Bluetooth 1",
             semantic: .bluetoothHost1,
             style: .wireless
@@ -32,8 +32,8 @@ public enum ObbutKey {
 
     /// Selects Bluetooth host two.
     public static var bluetoothHost2: Key<ObbutKeymapDomain> {
-        #qmkKeycode(
-            BT_HST2,
+        Key.qmk(
+            keychronBluetoothHost2,
             legend: "Bluetooth 2",
             semantic: .bluetoothHost2,
             style: .wireless
@@ -42,8 +42,8 @@ public enum ObbutKey {
 
     /// Selects Bluetooth host three.
     public static var bluetoothHost3: Key<ObbutKeymapDomain> {
-        #qmkKeycode(
-            BT_HST3,
+        Key.qmk(
+            keychronBluetoothHost3,
             legend: "Bluetooth 3",
             semantic: .bluetoothHost3,
             style: .wireless
@@ -52,8 +52,8 @@ public enum ObbutKey {
 
     /// Selects the 2.4 GHz radio.
     public static var wireless24GHz: Key<ObbutKeymapDomain> {
-        #qmkKeycode(
-            P2P4G,
+        Key.qmk(
+            keychronWireless24GHz,
             legend: "2.4 GHz",
             semantic: .wireless24GHz,
             style: .wireless
@@ -62,8 +62,8 @@ public enum ObbutKey {
 
     /// Displays the battery level.
     public static var batteryLevel: Key<ObbutKeymapDomain> {
-        #qmkKeycode(
-            BAT_LVL,
+        Key.qmk(
+            keychronBatteryLevel,
             legend: "Battery",
             semantic: .batteryLevel,
             style: .number

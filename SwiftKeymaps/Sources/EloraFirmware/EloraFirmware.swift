@@ -12,7 +12,7 @@ public enum EloraFirmware: QMKFirmware {
 
     /// The complete five-layer Elora keymap.
     public static var keymap: KeymapSpec<Domain> {
-        #Keymap(
+        KeymapSpec(
             id: "com.obbut.elora-rev2",
             layout: .splitKBEloraRev2
         ) {
@@ -43,6 +43,6 @@ import QMKKeymapRenderer
 import SwiftUI
 
 #Preview("Elora") {
-    #KeymapPreview(EloraFirmware.self)
+    KeymapPreviewView(EloraFirmware.self)
 }
 #endif

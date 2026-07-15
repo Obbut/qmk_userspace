@@ -4,7 +4,7 @@ Keymap Companion is a native SwiftUI utility for all four Swift-authored
 firmwares in this repository. It discovers QMK Raw HID devices, downloads the
 compiled keymap, resolves domain-owned semantics and styles, follows layer
 changes in realtime, and renders the result with the same
-`QMKKeymapRenderer` used by `#KeymapPreview`.
+`QMKKeymapRenderer` used by the Xcode keymap previews.
 
 The app uses protocol v4 only. There is intentionally no legacy decoder or
 compatibility mode. The protocol carries a stable layout ID, keymap and catalog
@@ -16,7 +16,7 @@ keycodes continue to render.
 
 Open `KeymapCompanion.xcodeproj`, choose the `KeymapCompanion` scheme and My
 Mac, then Run. The local package dependency graph includes `SwiftKeymaps`, so
-the four firmware modules, `ObbutKeymaps`, macros, and renderer are editable in
+the four firmware modules, `ObbutKeymaps`, and renderer are editable in
 the same Xcode workspace. Each firmware source ends with:
 
 ```swift
@@ -25,7 +25,7 @@ import QMKKeymapRenderer
 import SwiftUI
 
 #Preview("Kyria") {
-    #KeymapPreview(KyriaFirmware.self)
+    KeymapPreviewView(KyriaFirmware.self)
 }
 #endif
 ```

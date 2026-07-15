@@ -12,7 +12,7 @@ public enum KyriaFirmware: QMKFirmware {
 
     /// The complete six-layer Kyria keymap.
     public static var keymap: KeymapSpec<Domain> {
-        #Keymap(
+        KeymapSpec(
             id: "com.obbut.kyria-rev4",
             layout: .splitKBKyriaRev4
         ) {
@@ -46,6 +46,6 @@ import QMKKeymapRenderer
 import SwiftUI
 
 #Preview("Kyria") {
-    #KeymapPreview(KyriaFirmware.self)
+    KeymapPreviewView(KyriaFirmware.self)
 }
 #endif
