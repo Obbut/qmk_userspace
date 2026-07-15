@@ -49,13 +49,14 @@ public struct AnyFirmware: Sendable {
                 encoder.mappings.flatMap { [$0.counterclockwise, $0.clockwise] }
             }
         let metadata = GeneratedKeyMetadata(keys: keys)
+        let fingerprints = FirmwareRuntime<Firmware>.metadataFingerprints()
         id = keymap.id
         outputName = StaticStringContent.string(firmware.outputName)
         layout = keymap.layout
         layers = keymap.layers.map { AnyFirmwareLayer($0, metadata: metadata) }
         encoders = keymap.encoders.map { AnyFirmwareEncoder($0, metadata: metadata) }
-        semanticFingerprint = metadata.semanticFingerprint
-        styleFingerprint = metadata.styleFingerprint
+        semanticFingerprint = fingerprints.semantic
+        styleFingerprint = fingerprints.style
         layoutID = KeymapMetadataFingerprint.identifier(keymap.layout.id)
         semantics = metadata.semantics
         styles = metadata.styles

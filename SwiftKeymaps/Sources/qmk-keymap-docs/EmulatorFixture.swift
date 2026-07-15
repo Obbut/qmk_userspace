@@ -70,9 +70,9 @@ struct EmulatorFixture: Encodable {
             else {
                 return 0
             }
-            return UInt32(style.color.red)
+            return (UInt32(style.color.red) << 16)
                 | (UInt32(style.color.green) << 8)
-                | (UInt32(style.color.blue) << 16)
+                | UInt32(style.color.blue)
         }
 
         let encoderKeys = Self.encoderKeys(firmware: firmware)

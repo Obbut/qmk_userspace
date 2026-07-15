@@ -119,9 +119,12 @@ public struct FirmwareRuntime<Firmware: QMKFirmware>: Sendable {
     }
 
     public func packedStyleColor(layer: UInt8, row: UInt8, column: UInt8) -> UInt32 {
-        guard let color = key(layer: layer, row: row, column: column)?.appearance.color else {
+        guard let appearance = key(layer: layer, row: row, column: column)?.appearance,
+            appearance.contentID != 0
+        else {
             return 0
         }
+        let color = appearance.color
         return UInt32(color.red) << 16 | UInt32(color.green) << 8 | UInt32(color.blue)
     }
 
@@ -158,7 +161,20 @@ public struct FirmwareRuntime<Firmware: QMKFirmware>: Sendable {
         return direction == 0 ? mapping.counterclockwise : mapping.clockwise
     }
 
+    /// Calculates the semantic and style fingerprints reported by this firmware.
+    ///
+    /// - Returns: Fingerprints derived in the same order as embedded lookup traversal.
+    public static func metadataFingerprints() -> (semantic: UInt32, style: UInt32) {
+        FirmwareRuntime().calculatedMetadataFingerprints()
+    }
+
     fileprivate mutating func updateMetadataFingerprints() {
+        let fingerprints = calculatedMetadataFingerprints()
+        context.semanticFingerprint = fingerprints.semantic
+        context.styleFingerprint = fingerprints.style
+    }
+
+    fileprivate func calculatedMetadataFingerprints() -> (semantic: UInt32, style: UInt32) {
         var semanticHash: UInt32 = 2_166_136_261
         var styleHash: UInt32 = 2_166_136_261
         for layer in 0..<layerCount {
@@ -177,8 +193,7 @@ public struct FirmwareRuntime<Firmware: QMKFirmware>: Sendable {
                 }
             }
         }
-        context.semanticFingerprint = semanticHash
-        context.styleFingerprint = styleHash
+        return (semanticHash, styleHash)
     }
 
     fileprivate static func add(_ value: UInt16, to hash: UInt32) -> UInt32 {

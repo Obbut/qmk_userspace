@@ -125,7 +125,15 @@ let package = Package(
         ),
         .testTarget(
             name: "FirmwareParityTests",
-            dependencies: ["ObbutKeyboardCatalog", "QMKFirmwareHost"],
+            dependencies: [
+                "EloraFirmware",
+                "KyriaFirmware",
+                "ObbutKeyboardCatalog",
+                "PlanckFirmware",
+                "Q15Firmware",
+                "QMKFirmwareHost",
+                "QMKFirmwareRuntime",
+            ],
             swiftSettings: strictSwiftSettings
         ),
     ],

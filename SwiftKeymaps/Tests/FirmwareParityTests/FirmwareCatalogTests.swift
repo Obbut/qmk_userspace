@@ -1,5 +1,10 @@
+import EloraFirmware
+import KyriaFirmware
 import ObbutKeyboardCatalog
+import PlanckFirmware
+import Q15Firmware
 import QMKFirmwareHost
+import QMKFirmwareRuntime
 import XCTest
 
 /// Verifies all build outputs, layers, matrices, and encoders remain catalogued.
@@ -69,6 +74,14 @@ func testAllFirmwareDefinitionsAreComplete() {
             }
         )
     }
+}
+
+/// Verifies host catalog compatibility fingerprints use the embedded traversal algorithm.
+func testHostAndEmbeddedMetadataFingerprintsMatch() {
+    assertMetadataFingerprintsMatch(KyriaFirmware.self)
+    assertMetadataFingerprintsMatch(EloraFirmware.self)
+    assertMetadataFingerprintsMatch(Q15Firmware.self)
+    assertMetadataFingerprintsMatch(PlanckFirmware.self)
 }
 
 /// Pins the two-unit Planck spacebar between its adjacent bottom-row keys.
@@ -151,6 +164,17 @@ private func keymapFingerprint(_ firmware: AnyFirmware) -> UInt32 {
         }
     }
     return hash
+}
+
+/// Compares one erased host firmware with its generic runtime fingerprints.
+///
+/// - Parameter firmware: The concrete firmware type shared by host and embedded builds.
+private func assertMetadataFingerprintsMatch<Firmware: QMKFirmware>(_ firmware: Firmware.Type)
+where Firmware.Layout: HostFirmwareLayout {
+    let host = AnyFirmware(firmware)
+    let embedded = FirmwareRuntime<Firmware>.metadataFingerprints()
+    XCTAssertEqual(host.semanticFingerprint, embedded.semantic)
+    XCTAssertEqual(host.styleFingerprint, embedded.style)
 }
 
 /// A concise golden representation of one firmware's structural ABI.
