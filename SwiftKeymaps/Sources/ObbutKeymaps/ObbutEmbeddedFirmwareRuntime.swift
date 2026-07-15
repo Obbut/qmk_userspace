@@ -1,7 +1,7 @@
 #if hasFeature(Embedded)
 import QMKFirmwareRuntime
 
-/// Allocation-free Obbut firmware behavior executed directly by Embedded Swift.
+/// Allocation-free firmware behavior shared by Obbut keyboards.
 enum ObbutEmbeddedFirmwareRuntime {
     /// Board policy selected by the individual firmware module.
     nonisolated(unsafe) fileprivate static var profile: UInt8 = 0
@@ -327,45 +327,25 @@ enum ObbutEmbeddedFirmwareRuntime {
 
 /// Compact key classifications emitted by generated QMK glue.
 fileprivate enum ObbutEmbeddedKeyKind: UInt8 {
-    /// An action with no shared behavior.
     case other = 0
-    /// Momentary dominant-axis scrolling.
     case pointerScroll = 1
-    /// Momentary precision cursor movement.
     case pointerSniper = 2
-    /// Latched primary-button dragging.
     case pointerDragLock = 3
-    /// Decreases pointer sensitivity.
     case pointerSensitivityDown = 4
-    /// Increases pointer sensitivity.
     case pointerSensitivityUp = 5
-    /// Decreases drag-scroll speed.
     case pointerScrollSpeedDown = 6
-    /// Increases drag-scroll speed.
     case pointerScrollSpeedUp = 7
-    /// The primary pointer button.
     case pointerLeftClick = 8
-    /// The secondary pointer button.
     case pointerRightClick = 9
-    /// The middle pointer button.
     case pointerMiddleClick = 10
-    /// Browser backward navigation.
     case browserBack = 11
-    /// Browser forward navigation.
     case browserForward = 12
-    /// A firmware RGB control.
     case rgbControl = 20
-    /// Keyboard volume increase.
     case volumeUp = 30
-    /// Keyboard volume decrease.
     case volumeDown = 31
-    /// The macOS screenshot chord.
     case screenshot = 32
-    /// Left Control.
     case leftControl = 33
-    /// Left Command.
     case leftCommand = 34
-    /// Any modifier that may remain active during a drag.
     case modifier = 40
 
     /// Whether the action should keep the automatic pointer layer active.

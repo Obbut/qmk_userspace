@@ -1,4 +1,4 @@
-/// The complete mapping for one physical encoder.
+/// Layer-specific actions for one physical encoder.
 public struct Encoder<Domain: KeymapDomain>: Sendable {
     /// The zero-based QMK encoder index.
     public let index: Int

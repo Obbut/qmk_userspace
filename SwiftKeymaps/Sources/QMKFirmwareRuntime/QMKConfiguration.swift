@@ -1,4 +1,4 @@
-/// A complete generated QMK configuration.
+/// Build settings and header directives emitted for QMK.
 public struct QMKConfiguration: QMKConfigurationComponent, Sendable {
     /// The settings written to generated build artifacts.
     public let qmkBuildSettings: [QMKBuildSetting]

@@ -2,18 +2,18 @@ import ObbutKeyboardCatalog
 import QMKFirmwareRuntime
 import QMKKeymapKit
 
-/// The complete renderer input for one catalog-backed keyboard layout.
+/// Renderer input for one catalog-backed keyboard layout.
 public struct KeymapDefinition: Equatable, Sendable {
     /// The stable protocol-v4 layout identifier.
     public let layoutID: LayoutID
 
-    /// The keyboard name supplied by its Swift layout descriptor.
+    /// The keyboard name supplied by its layout descriptor.
     public let displayName: String
 
     /// The model's renderer geometry.
     public let geometry: KeyboardGeometry
 
-    /// The ordered layers supplied by the authored firmware definition.
+    /// Layers in firmware index order.
     public let supportedLayers: [KeymapLayer]
 
     /// The physical switches and their firmware-owned mappings.
@@ -31,7 +31,7 @@ public struct KeymapDefinition: Equatable, Sendable {
     /// Creates renderer input from a validated firmware keymap.
     ///
     /// Returns `nil` when the layout is unknown or its compiled dimensions do not
-    /// match the same layout's authored Swift descriptor.
+    /// match the catalogued layout descriptor.
     ///
     /// - Parameter firmwareKeymap: The complete firmware keymap to transform.
     public init?(firmwareKeymap: FirmwareKeymap) {
@@ -43,15 +43,15 @@ public struct KeymapDefinition: Equatable, Sendable {
     /// Returns the highest supported layer in a QMK layer mask.
     ///
     /// - Parameter mask: The effective momentary and default layer mask.
-    /// - Returns: The highest active authored layer.
+    /// - Returns: The highest active supported layer.
     public func highestActiveLayer(in mask: UInt32) -> KeymapLayer {
         KeymapLayer.highestActiveLayer(inLayerMask: mask, supportedLayers: supportedLayers)
     }
 
-    /// Creates a preview from the same authored Swift firmware used by generation.
+    /// Builds preview data from a catalogued firmware definition.
     ///
     /// - Parameter layoutID: The catalog layout to preview.
-    /// - Returns: Production renderer input for every authored layer and encoder.
+    /// - Returns: Renderer input for every layer and encoder.
     public static func makePreview(for layoutID: LayoutID) -> KeymapDefinition {
         guard let firmware = ObbutKeyboardCatalog.firmware(layoutID: layoutID.rawValue) else {
             preconditionFailure("Xcode previews require a layout from ObbutKeyboardCatalog.")
@@ -73,8 +73,8 @@ public struct KeymapDefinition: Equatable, Sendable {
         }
         for layer in firmware.layers {
             for encoder in descriptor.encoders.sorted(by: { $0.index < $1.index }) {
-                let authoredEncoder = firmware.encoders.first { $0.index == encoder.index }
-                let mapping = authoredEncoder?.mappings.first { $0.layer == layer.id }
+                let firmwareEncoder = firmware.encoders.first { $0.index == encoder.index }
+                let mapping = firmwareEncoder?.mappings.first { $0.layer == layer.id }
                 entries.append(mapping?.counterclockwise.previewEntry ?? .unassigned)
                 entries.append(mapping?.clockwise.previewEntry ?? .unassigned)
             }
@@ -91,16 +91,16 @@ public struct KeymapDefinition: Equatable, Sendable {
             entries: entries
         )
         guard let definition = KeymapDefinition(firmwareKeymap: previewKeymap, firmware: firmware) else {
-            preconditionFailure("Authored firmware must match its own layout descriptor.")
+            preconditionFailure("Firmware must match its catalogued layout descriptor.")
         }
         return definition
     }
 
-    /// Creates renderer input after resolving its exact authored firmware catalog.
+    /// Resolves live keymap data against its exact firmware catalog.
     ///
     /// - Parameters:
     ///   - firmwareKeymap: The live compiled keymap.
-    ///   - firmware: The matching host-side Swift definition.
+    ///   - firmware: The matching host-side firmware definition.
     private init?(firmwareKeymap: FirmwareKeymap, firmware: AnyFirmware) {
         let descriptor = firmware.layout
         let layers = firmware.layers.map {
@@ -282,7 +282,7 @@ public struct KeymapDefinition: Equatable, Sendable {
 
 /// Resolves catalog-scoped IDs while preserving useful mismatch diagnostics.
 fileprivate struct CatalogResolver {
-    /// The host-side authored firmware definition.
+    /// The matching host-side firmware definition.
     let firmware: AnyFirmware
 
     /// Whether semantic values may be interpreted safely.
@@ -335,7 +335,7 @@ fileprivate extension FirmwareKeymapEntry {
     )
 }
 
-/// Host-preview conversion for authored keys before QMK compiles their expressions.
+/// Converts source key actions before QMK compiles their expressions.
 fileprivate extension AnyFirmwareKey {
     var previewEntry: FirmwareKeymapEntry {
         FirmwareKeymapEntry(

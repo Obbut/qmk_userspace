@@ -2,13 +2,11 @@ import QMKKeymapKit
 
 /// The semantic and visual domain shared by the four Obbut firmware modules.
 public enum ObbutKeymapDomain: KeymapDomain {
-    /// The concrete semantic catalog type.
     public typealias Semantics = SemanticCatalogValue<ObbutSemantic>
 
-    /// The concrete style catalog type.
     public typealias Styles = StyleCatalogValue<ObbutStyle>
 
-    /// Presentation for every Obbut semantic identifier.
+    /// Labels and symbols used by previews, companions, and generated metadata.
     @SemanticCatalogBuilder
     public static var semantics: Semantics {
         QMKKeymapKit.Semantic(ObbutSemantic.screenshot, legend: "Screenshot", symbol: .camera)
@@ -32,7 +30,7 @@ public enum ObbutKeymapDomain: KeymapDomain {
         QMKKeymapKit.Semantic(ObbutSemantic.batteryLevel, legend: "Battery", symbol: .battery)
     }
 
-    /// Presentation for every Obbut visual-style identifier.
+    /// Colors used by previews, companions, and firmware layer lighting.
     @StyleCatalogBuilder
     public static var styles: Styles {
         QMKKeymapKit.Style(ObbutStyle.standard, color: .rgb(90, 90, 96))

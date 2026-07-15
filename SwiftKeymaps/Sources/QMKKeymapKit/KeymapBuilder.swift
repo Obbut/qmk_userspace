@@ -40,7 +40,7 @@ public enum KeymapBuilder<Domain: KeymapDomain> {
     /// Flattens all keymap components.
     ///
     /// - Parameter components: The components in declaration order.
-    /// - Returns: The complete declaration sequence.
+    /// - Returns: Declarations in source order.
     public static func buildBlock(
         _ components: [KeymapElement<Domain>]...
     ) -> [KeymapElement<Domain>] {

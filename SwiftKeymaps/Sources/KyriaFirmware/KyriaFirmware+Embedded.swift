@@ -1,7 +1,7 @@
 #if hasFeature(Embedded)
 import ObbutKeymaps
 
-/// Selects Kyria-specific policy in the shared Obbut Embedded Swift runtime.
+/// Identifies Kyria as runtime profile 1 at the generated C ABI boundary.
 @c @implementation
 func obbut_firmware_profile() -> UInt8 { 1 }
 #endif

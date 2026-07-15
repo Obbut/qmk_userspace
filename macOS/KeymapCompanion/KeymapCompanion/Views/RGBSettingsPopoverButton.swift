@@ -23,7 +23,7 @@ struct RGBSettingsPopoverButton: View {
     }
 }
 
-/// The complete native RGB settings popover.
+/// Base-layer lighting controls shown by the toolbar popover.
 private struct RGBSettingsView: View {
     /// Shared state used to read and write the keyboard configuration.
     let model: AppModel
@@ -84,7 +84,7 @@ private struct RGBSettingsHeader: View {
     }
 }
 
-/// The complete set of editable QMK RGB Matrix controls.
+/// Effect, color, brightness, and speed controls.
 private struct RGBSettingsControls: View {
     /// Shared state used to update the keyboard configuration.
     let model: AppModel

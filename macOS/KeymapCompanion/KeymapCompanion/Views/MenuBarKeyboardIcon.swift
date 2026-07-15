@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-/// A compact menu-bar glyph derived from the connected Swift layout descriptor.
+/// A compact menu-bar glyph derived from the connected layout descriptor.
 struct MenuBarKeyboardIcon: View {
     /// The connected layout.
     let layoutID: LayoutID
@@ -64,7 +64,7 @@ fileprivate enum MenuBarKeyboardIconRenderer {
         return image
     }
 
-    /// Draws the complete dynamic icon.
+    /// Draws the keyboard outline and active-layer badge.
     static func draw(
         definition: KeymapDefinition,
         activeLayer: KeymapLayer,

@@ -3,10 +3,8 @@ import QMKFirmwareRuntime
 
 /// Emits documentation YAML from the same firmware definitions as generated C.
 struct KeymapDrawerEmitter {
-    /// The authored firmware to document.
     let firmware: AnyFirmware
 
-    /// Creates a complete keymap-drawer document.
     func yaml() -> String {
         let layers = firmware.layers.map { layer in
             let entries = layer.keys.map(yamlEntry).joined(separator: ", ")
@@ -23,7 +21,6 @@ struct KeymapDrawerEmitter {
         """
     }
 
-    /// The repository-local QMK layout description used by keymap-drawer.
     private var layoutJSONName: String {
         switch firmware.id {
         case "com.obbut.kyria-rev4": "kyria-layout.json"
@@ -34,7 +31,6 @@ struct KeymapDrawerEmitter {
         }
     }
 
-    /// Creates one scalar or styled key entry.
     private func yamlEntry(for key: AnyFirmwareKey) -> String {
         let legend = key.legend
             ?? key.semanticID.flatMap { id in firmware.semantics.first { $0.id == id }?.legend }
@@ -43,7 +39,6 @@ struct KeymapDrawerEmitter {
         return "{t: \(quoted(legend)), type: \(quoted(styleName))}"
     }
 
-    /// Maps domain style IDs to the documentation stylesheet.
     private func styleName(for styleID: UInt16?) -> String? {
         switch styleID {
         case 1: "rgb-purple"
@@ -59,7 +54,6 @@ struct KeymapDrawerEmitter {
         }
     }
 
-    /// Creates a readable legend for a standard QMK expression.
     private func fallbackLegend(for key: AnyFirmwareKey) -> String {
         if key.cExpression == "KC_NO" || key.cExpression == "KC_TRNS" { return "" }
         return key.cExpression

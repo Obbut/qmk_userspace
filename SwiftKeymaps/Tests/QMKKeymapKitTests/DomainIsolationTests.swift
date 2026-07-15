@@ -49,7 +49,7 @@ fileprivate enum SyntheticStyle: UInt16, KeyStyleID {
     case accent = 7
 }
 
-/// A complete synthetic keymap domain.
+/// A non-Obbut domain used to verify framework isolation.
 fileprivate enum SyntheticDomain: KeymapDomain {
     /// The semantic catalog type.
     typealias Semantics = SemanticCatalogValue<SyntheticSemantic>

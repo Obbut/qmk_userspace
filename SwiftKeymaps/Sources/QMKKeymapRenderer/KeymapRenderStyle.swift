@@ -12,7 +12,6 @@ public struct KeymapRenderStyle: Equatable, Sendable {
     /// Whether the catalog recognized the style identifier.
     public let isKnown: Bool
 
-    /// Creates renderer-ready style presentation.
     public init(red: UInt8, green: UInt8, blue: UInt8, isKnown: Bool = true) {
         self.red = red
         self.green = green

@@ -2,15 +2,12 @@ import ObbutKeymaps
 import QMKFirmwareRuntime
 import QMKKeymapKit
 
-/// Swift-authored firmware composition for the Keychron Q15 Max.
+/// Keychron Q15 Max definition with macOS and Windows base layers.
 public enum Q15Firmware: QMKFirmware {
-    /// The shared Obbut semantic and visual domain.
     public typealias Domain = ObbutKeymapDomain
 
-    /// The stable output filename without extension.
     public static let outputName = "keychron_q15_max_ansi_encoder_obbut"
 
-    /// The complete six-layer Q15 keymap and both encoder maps.
     public static var keymap: KeymapSpec<Domain> {
         KeymapSpec(
             id: "com.obbut.keychron-q15-max",
@@ -128,21 +125,18 @@ public enum Q15Firmware: QMKFirmware {
         }
     }
 
-    /// QMK settings generated for the Q15.
     public static var configuration: QMKConfiguration {
         QMKConfiguration {
             ObbutQ15Configuration()
         }
     }
 
-    /// Stateful firmware behaviors selected by the Q15.
     public static var features: FirmwareFeatures {
         ObbutKeymapCompanion()
         ObbutLayerLighting()
         KeychronCommonFeature()
     }
 
-    /// Creates one of the Q15's identical encoder maps.
     fileprivate static func q15Encoder(index: Int, id: String) -> Encoder<Domain> {
         Encoder(index, id: id) {
             On(Q15Layer.macBase, counterclockwise: .volumeDown, clockwise: .volumeUp)
@@ -154,7 +148,6 @@ public enum Q15Firmware: QMKFirmware {
         }
     }
 
-    /// Creates a repeated transparent-key sequence.
     fileprivate static func transparent(count: Int) -> [Key<Domain>] {
         Array(repeating: .transparent, count: count)
     }

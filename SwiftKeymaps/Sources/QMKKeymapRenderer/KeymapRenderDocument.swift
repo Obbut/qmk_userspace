@@ -1,7 +1,7 @@
 import QMKFirmwareRuntime
 import QMKKeymapKit
 
-/// Platform-neutral production renderer input for one complete keymap.
+/// Platform-neutral input for keymap renderers.
 public struct KeymapRenderDocument: Equatable, Sendable {
     /// The stable protocol layout identifier.
     public let layoutID: UInt32
@@ -15,16 +15,15 @@ public struct KeymapRenderDocument: Equatable, Sendable {
     /// The logical renderer height.
     public let canvasHeight: Double
 
-    /// Every authored layer.
+    /// Layers in firmware index order.
     public let layers: [KeymapRenderLayer]
 
-    /// Every physical matrix key.
+    /// Physical matrix keys in layout order.
     public let keys: [KeymapRenderKey]
 
-    /// Every physical encoder.
+    /// Physical encoders in QMK index order.
     public let encoders: [KeymapRenderEncoder]
 
-    /// Creates a complete renderer document.
     public init(
         layoutID: UInt32,
         displayName: String,
@@ -43,14 +42,14 @@ public struct KeymapRenderDocument: Equatable, Sendable {
         self.encoders = encoders
     }
 
-    /// Creates production renderer input from authored Swift firmware.
+    /// Resolves a firmware definition into renderer geometry and legends.
     ///
     /// - Parameter firmware: The same type-erased definition consumed by generation.
     public init(firmware: AnyFirmware) {
         let layers = firmware.layers.map {
             KeymapRenderLayer(id: $0.id.rawValue, name: $0.name, showsHUD: $0.showsHUD)
         }
-        let legendResolver = AuthoredLegendResolver(firmware: firmware)
+        let legendResolver = FirmwareLegendResolver(firmware: firmware)
         let keys = firmware.layout.keys.enumerated().map { index, placement in
             KeymapRenderKey(
                 id: "r\(placement.matrixPosition.row)c\(placement.matrixPosition.column)",
@@ -61,13 +60,13 @@ public struct KeymapRenderDocument: Equatable, Sendable {
             )
         }
         let encoders = firmware.layout.encoders.sorted(by: { $0.index < $1.index }).map { encoder in
-            let authoredEncoder = firmware.encoders.first { $0.index == encoder.index }
+            let firmwareEncoder = firmware.encoders.first { $0.index == encoder.index }
             let counterclockwise = firmware.layers.map { layer in
-                let key = authoredEncoder?.mappings.first { $0.layer == layer.id }?.counterclockwise
+                let key = firmwareEncoder?.mappings.first { $0.layer == layer.id }?.counterclockwise
                 return key.map { legendResolver.legend(for: $0, layers: layers) } ?? .empty
             }
             let clockwise = firmware.layers.map { layer in
-                let key = authoredEncoder?.mappings.first { $0.layer == layer.id }?.clockwise
+                let key = firmwareEncoder?.mappings.first { $0.layer == layer.id }?.clockwise
                 return key.map { legendResolver.legend(for: $0, layers: layers) } ?? .empty
             }
             let press = encoder.pressPosition.map { position in
@@ -98,12 +97,9 @@ public struct KeymapRenderDocument: Equatable, Sendable {
     }
 }
 
-/// Resolves authored key metadata into renderer presentation.
-fileprivate struct AuthoredLegendResolver {
-    /// The domain-erased firmware catalog.
+fileprivate struct FirmwareLegendResolver {
     let firmware: AnyFirmware
 
-    /// Resolves one authored key.
     func legend(for key: AnyFirmwareKey, layers: [KeymapRenderLayer]) -> KeymapRenderLegend {
         let semantic = key.semanticID.flatMap { id in firmware.semantics.first { $0.id == id } }
         let style = key.styleID.flatMap { id in firmware.styles.first { $0.id == id } }
@@ -125,9 +121,7 @@ fileprivate struct AuthoredLegendResolver {
     }
 }
 
-/// Compact host labels for standard authored QMK actions.
 fileprivate enum HostLegend {
-    /// Resolves a standard HID value or readable C-expression fallback.
     static func label(for key: AnyFirmwareKey, layers: [KeymapRenderLayer]) -> String {
         if let value = key.hidValue {
             if value == 0 || value == 1 { return "" }
@@ -155,7 +149,6 @@ fileprivate enum HostLegend {
     }
 }
 
-/// Empty encoder or matrix presentation.
 fileprivate extension KeymapRenderLegend {
     static let empty = KeymapRenderLegend(label: "")
 }

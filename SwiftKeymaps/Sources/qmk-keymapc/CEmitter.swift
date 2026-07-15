@@ -2,12 +2,8 @@ import QMKFirmwareRuntime
 
 /// Emits QMK ABI artifacts from one domain-erased Swift firmware definition.
 struct CEmitter {
-    /// The firmware being emitted.
     let firmware: AnyFirmware
 
-    /// Creates every generated artifact for the firmware.
-    ///
-    /// - Returns: The complete generated artifact set.
     func artifacts() -> GeneratedArtifacts {
         GeneratedArtifacts(
             keymapC: keymapC(),
@@ -18,7 +14,6 @@ struct CEmitter {
         )
     }
 
-    /// Creates the complete QMK keymap translation unit.
     private func keymapC() -> String {
         let forkInclude = isQ15 ? "\n#include \"keychron_common.h\"" : ""
         return """
@@ -40,9 +35,8 @@ struct CEmitter {
         """
     }
 
-    /// Creates declarations for custom feature bridges and Embedded Swift hooks.
     private func featureDeclarations() -> String {
-        let authoredDeclarations = firmware.features.descriptors.flatMap(\.cDeclarations)
+        let featureDeclarations = firmware.features.descriptors.flatMap(\.cDeclarations)
         let hookDeclarations = embeddedSwiftHooks.map { hook in
             switch hook.callback {
             case .keyboardPostInit, .housekeeping, .pointingDeviceInit:
@@ -59,16 +53,14 @@ struct CEmitter {
                 return "void \(hook.symbol)(uint8_t *data, uint8_t length);"
             }
         }
-        return (authoredDeclarations + hookDeclarations).joined(separator: "\n")
+        return (featureDeclarations + hookDeclarations).joined(separator: "\n")
     }
 
-    /// Creates the generated layer enumeration.
     private func layerEnumeration() -> String {
         let cases = firmware.layers.map { "    \($0.id.cIdentifier) = \($0.id.rawValue)," }
         return "enum obbut_generated_layers {\n\(cases.joined(separator: "\n"))\n};"
     }
 
-    /// Creates custom pointer keycodes used by the Halcyon behavior runtime.
     private func customKeycodeEnumeration() -> String {
         guard isHalcyon else { return "" }
         return """
@@ -84,7 +76,6 @@ struct CEmitter {
         """
     }
 
-    /// Creates the QMK keymap array.
     private func keymapArray() -> String {
         let layers = firmware.layers.map { layer in
             """
@@ -100,7 +91,6 @@ struct CEmitter {
         """
     }
 
-    /// Creates all encoder actions in layer-major order.
     private func encoderArray() -> String {
         guard !firmware.encoders.isEmpty else { return "" }
         let rows = firmware.layers.map { layer in
@@ -125,12 +115,10 @@ struct CEmitter {
         """
     }
 
-    /// Creates one QMK encoder-pair macro invocation.
     private func encoderPair(_ mapping: AnyFirmwareEncoderMapping) -> String {
         "ENCODER_CCW_CW(\(mapping.counterclockwise.cExpression), \(mapping.clockwise.cExpression))"
     }
 
-    /// Creates the generated semantic and style matrix tables.
     private func metadataArrays() -> String {
         let semanticLayers = firmware.layers.map { layer in
             let values = layer.keys.map { String($0.semanticID ?? 0) }
@@ -152,7 +140,6 @@ struct CEmitter {
         """
     }
 
-    /// Creates encoder semantic and style metadata tables when encoders are present.
     private func encoderMetadataArrays() -> String {
         guard !firmware.encoders.isEmpty else { return "" }
         let semanticRows = firmware.layers.map { layer in
@@ -184,7 +171,6 @@ struct CEmitter {
         """
     }
 
-    /// Creates the narrow metadata functions used by protocol v4 and lighting.
     private func metadataFunctions() -> String {
         let encoderFunctions: String
         if firmware.encoders.isEmpty {
@@ -233,14 +219,12 @@ struct CEmitter {
         """
     }
 
-    /// Creates board-specific QMK callback bridges.
     private func firmwareCallbacks() -> String {
         if isHalcyon { return halcyonCallbacks() }
         if isQ15 { return q15Callbacks() }
         return planckCallbacks()
     }
 
-    /// Creates callbacks into the shared Obbut Embedded Swift behavior engine.
     private func halcyonCallbacks() -> String {
         """
         static uint8_t obbut_generated_key_kind(uint16_t keycode) {
@@ -341,7 +325,6 @@ struct CEmitter {
         """
     }
 
-    /// Creates Q15 callback bridges and style-catalog-driven lighting.
     private func q15Callbacks() -> String {
         """
         void keyboard_post_init_user(void) {
@@ -372,7 +355,6 @@ struct CEmitter {
         """
     }
 
-    /// Creates Planck platform overrides, LEDs, protocol callbacks, and lighting.
     private func planckCallbacks() -> String {
         let screenshotSemanticID = firmware.semantics.first { $0.legend == "Screenshot" }?.id
         let screenshot = firmware.layers
@@ -413,7 +395,6 @@ struct CEmitter {
         """
     }
 
-    /// Creates protocol-v4 callback bridges for non-Halcyon boards.
     private func commonProtocolCallbacks() -> String {
         """
         #if defined(RAW_ENABLE)
@@ -429,7 +410,6 @@ struct CEmitter {
         """
     }
 
-    /// Creates optional state and pointer callbacks for non-Halcyon custom hooks.
     private func nonHalcyonCustomCallbacks() -> String {
         var callbacks: [String] = []
         if embeddedSwiftHooks.contains(where: { $0.callback == .layerStateSet }) {
@@ -466,7 +446,6 @@ struct CEmitter {
         return callbacks.joined(separator: "\n")
     }
 
-    /// Creates style-catalog-driven RGB Matrix indicators.
     private func rgbCallback(
         baseLayers: [String],
         overlaysBaseRGBOn overlayLayer: String?,
@@ -544,19 +523,17 @@ struct CEmitter {
         """
     }
 
-    /// All custom Embedded Swift hooks in feature declaration order.
+    /// Hook order follows feature declaration order.
     private var embeddedSwiftHooks: [EmbeddedSwiftHook] {
         firmware.features.descriptors.flatMap(\.embeddedSwiftHooks)
     }
 
-    /// Creates statement calls for hooks with no return-value composition.
     private func hookCalls(_ callback: EmbeddedSwiftCallback, arguments: String = "") -> String {
         embeddedSwiftHooks.filter { $0.callback == callback }.map { hook in
             "    \(hook.symbol)(\(arguments));"
         }.joined(separator: "\n")
     }
 
-    /// Creates short-circuiting calls for Boolean callback hooks.
     private func filteringHookCalls(
         _ callback: EmbeddedSwiftCallback,
         arguments: String,
@@ -570,14 +547,12 @@ struct CEmitter {
         }.joined(separator: "\n")
     }
 
-    /// Creates ordered state-transform calls for a value-returning hook.
     private func transformingHookCalls(_ callback: EmbeddedSwiftCallback, value: String) -> String {
         embeddedSwiftHooks.filter { $0.callback == callback }.map { hook in
             "    \(value) = \(hook.symbol)(\(value));"
         }.joined(separator: "\n")
     }
 
-    /// Creates one formatted QMK layout macro invocation.
     private func layoutCall(values: [String]) -> String {
         let chunks = stride(from: 0, to: values.count, by: 12).map { start -> String in
             let end = min(start + 12, values.count)
@@ -586,7 +561,6 @@ struct CEmitter {
         return "\(firmware.layout.cMacro)(\n\(chunks.joined(separator: ",\n"))\n    )"
     }
 
-    /// Creates the generated configuration header.
     private func configH() -> String {
         let lines = firmware.buildSettings.compactMap { setting -> String? in
             switch setting {
@@ -609,7 +583,6 @@ struct CEmitter {
         """
     }
 
-    /// Creates the generated QMK Make fragment.
     private func rulesMK() -> String {
         var lines = firmware.buildSettings.compactMap { setting -> String? in
             switch setting {
@@ -637,7 +610,6 @@ struct CEmitter {
         """
     }
 
-    /// Creates the generated C header consumed by protocol v4.
     private func metadataH() -> String {
         """
         // Generated from Swift by qmk-keymapc. Do not edit.
@@ -659,22 +631,19 @@ struct CEmitter {
         """
     }
 
-    /// Whether this is one of the two Halcyon layouts.
     private var isHalcyon: Bool {
         firmware.layout.id.hasPrefix("splitkb.halcyon")
     }
 
-    /// Whether this is the Kyria layout with its pointer layer.
     private var isKyria: Bool {
         firmware.layout.id.hasPrefix("splitkb.halcyon.kyria")
     }
 
-    /// Whether this is the Keychron Q15 layout.
     private var isQ15: Bool {
         firmware.layout.id.hasPrefix("keychron.q15")
     }
 
-    /// The selected third-stage Embedded Swift firmware module.
+    /// Module linked after `QMKFirmwareRuntime` and `ObbutKeymaps`.
     private var embeddedFirmwareModule: String {
         if firmware.layout.id.hasPrefix("splitkb.halcyon.kyria") { return "KyriaFirmware" }
         if firmware.layout.id.hasPrefix("splitkb.halcyon.elora") { return "EloraFirmware" }

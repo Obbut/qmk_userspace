@@ -6,13 +6,12 @@ struct KeyboardBoardView: View {
     /// The visual definition downloaded from connected firmware.
     let definition: KeymapDefinition
 
-    /// The complete active-layer mask.
+    /// The union of momentary and persistent layer masks.
     let activeLayerMask: UInt32
 
-    /// Whether the complete keyboard should shrink to the available viewport.
+    /// Whether geometry scales to the viewport instead of scrolling.
     let scalesToFit: Bool
 
-    /// Creates a physical keymap visualization.
     init(
         definition: KeymapDefinition,
         activeLayerMask: UInt32,
@@ -23,7 +22,6 @@ struct KeyboardBoardView: View {
         self.scalesToFit = scalesToFit
     }
 
-    /// The production renderer used by both the app and Xcode previews.
     var body: some View {
         let activeLayer = definition.highestActiveLayer(in: activeLayerMask)
         Group {
@@ -49,7 +47,6 @@ struct KeyboardBoardView: View {
         }
     }
 
-    /// Creates the shared renderer for the active layer.
     private func renderer(activeLayerID: UInt8) -> some View {
         KeymapRendererView(
             document: definition.renderDocument,

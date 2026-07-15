@@ -2,10 +2,10 @@ import QMKKeymapKit
 
 /// Reusable encoder maps for Obbut keyboards.
 public enum ObbutEncoder {
-    /// Creates the shared Halcyon encoder map.
+    /// Uses the pointer-layer mapping only on Kyria.
     ///
     /// - Parameter includesPointerLayer: Whether the Kyria pointer layer is present.
-    /// - Returns: The right encoder's complete layer map.
+    /// - Returns: The right encoder's mappings in layer order.
     public static func halcyon(includesPointerLayer: Bool) -> Encoder<ObbutKeymapDomain> {
         Encoder(0, id: "right") {
             On(ObbutLayer.base, counterclockwise: .keyboardVolumeDown, clockwise: .keyboardVolumeUp)

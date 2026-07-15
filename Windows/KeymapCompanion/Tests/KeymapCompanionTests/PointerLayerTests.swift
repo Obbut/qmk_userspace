@@ -1,7 +1,7 @@
 import KeymapCompanionCore
 import Testing
 
-/// Verifies every Swift-authored Obbut firmware can drive the Windows renderer.
+/// Verifies every Obbut firmware definition can drive the Windows renderer.
 @Test
 func windowsSupportsEveryCatalogKeyboard() {
     for layoutID in [LayoutID.kyria, .elora, .q15, .planck] {

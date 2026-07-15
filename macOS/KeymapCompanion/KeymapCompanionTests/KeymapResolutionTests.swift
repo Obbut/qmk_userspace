@@ -21,7 +21,7 @@ func everyFirmwareProducesACompleteRenderDefinition() {
     }
 }
 
-/// Verifies transparent mappings fall through the authored active-layer stack.
+/// Verifies transparent mappings fall through the active-layer stack.
 @Test
 func transparentMappingsResolveThroughActiveLayers() throws {
     let definition = KeymapDefinition.makePreview(for: .kyria)

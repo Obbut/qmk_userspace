@@ -5,7 +5,7 @@ import WinUI
 
 /// RGB Matrix lighting presentation for the Windows app controller.
 extension WindowsAppController {
-    /// Creates the complete native lighting flyout.
+    /// Builds the lighting flyout from the current RGB settings.
     ///
     /// - Returns: The configured flyout content.
     func makeRGBFlyoutContent() -> UIElement {

@@ -7,12 +7,12 @@ public protocol StyleCatalog: Sendable {
     var entries: [Style<ID>] { get }
 }
 
-/// The concrete style catalog produced by ``StyleCatalogBuilder``.
+/// Immutable catalog storage returned by ``StyleCatalogBuilder``.
 public struct StyleCatalogValue<ID: KeyStyleID>: StyleCatalog, Sendable {
     /// The catalog entries in stable declaration order.
     public let entries: [Style<ID>]
 
-    /// Creates a catalog from validated entries.
+    /// Traps when two entries use the same identifier.
     ///
     /// - Parameter entries: The catalog entries in stable declaration order.
     public init(entries: [Style<ID>]) {
@@ -24,10 +24,10 @@ public struct StyleCatalogValue<ID: KeyStyleID>: StyleCatalog, Sendable {
 /// Builds a strongly typed visual-style catalog.
 @resultBuilder
 public enum StyleCatalogBuilder {
-    /// Combines catalog entries.
+    /// Preserves declaration order and a single identifier type.
     ///
     /// - Parameter entries: The entries declared by the domain.
-    /// - Returns: A concrete typed catalog.
+    /// - Returns: An immutable catalog value.
     public static func buildBlock<ID: KeyStyleID>(
         _ entries: Style<ID>...
     ) -> StyleCatalogValue<ID> {

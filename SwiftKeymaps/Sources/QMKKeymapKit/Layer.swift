@@ -1,4 +1,4 @@
-/// One complete keymap layer in layout-macro argument order.
+/// A keymap layer in layout-macro argument order.
 public struct Layer<Domain: KeymapDomain>: Sendable {
     /// The stable layer identifier.
     public let id: LayerID

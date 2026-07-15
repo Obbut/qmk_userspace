@@ -1,6 +1,6 @@
 import QMKKeymapKit
 
-/// A positioned physical key with a legend for every authored layer.
+/// A positioned physical key with a legend for every layer.
 public struct KeymapRenderKey: Equatable, Identifiable, Sendable {
     /// Stable matrix-derived identity.
     public let id: String
@@ -11,7 +11,6 @@ public struct KeymapRenderKey: Equatable, Identifiable, Sendable {
     /// Layer-major legends.
     public let legends: [KeymapRenderLegend]
 
-    /// Creates a positioned renderer key.
     public init(id: String, placement: PhysicalKeyPlacement, legends: [KeymapRenderLegend]) {
         self.id = id
         self.placement = placement

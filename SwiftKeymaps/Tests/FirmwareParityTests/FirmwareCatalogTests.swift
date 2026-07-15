@@ -68,12 +68,12 @@ func allFirmwareDefinitionsAreGeneratorReady() {
     }
 }
 
-/// Pins every authored matrix action, semantic, style, and encoder mapping.
+/// Pins every matrix action, semantic, style, and encoder mapping.
 @Test
-func allAuthoredKeymapsMatchGoldenFingerprints() {
+func allKeymapsMatchGoldenFingerprints() {
     let fingerprints = Dictionary(
         uniqueKeysWithValues: ObbutKeyboardCatalog.all.map {
-            ($0.outputName, authoredKeymapFingerprint($0))
+            ($0.outputName, keymapFingerprint($0))
         }
     )
 
@@ -87,11 +87,11 @@ func allAuthoredKeymapsMatchGoldenFingerprints() {
     )
 }
 
-/// Computes a deterministic FNV-1a fixture for one complete authored keymap.
+/// Computes a deterministic FNV-1a fixture for a firmware definition.
 ///
 /// - Parameter firmware: The domain-erased firmware definition.
 /// - Returns: A fixture covering every layer key and encoder direction.
-private func authoredKeymapFingerprint(_ firmware: AnyFirmware) -> UInt32 {
+private func keymapFingerprint(_ firmware: AnyFirmware) -> UInt32 {
     var hash: UInt32 = 2_166_136_261
 
     /// Adds one delimiter-terminated field to the fixture hash.

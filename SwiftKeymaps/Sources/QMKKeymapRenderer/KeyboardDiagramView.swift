@@ -3,13 +3,10 @@ import SwiftUI
 
 /// Scaled keyboard geometry used by the public production renderer.
 struct KeyboardDiagramView: View {
-    /// The complete renderer document.
     let document: KeymapRenderDocument
 
-    /// The selected QMK layer identifier.
     let selectedLayerID: UInt8
 
-    /// The keyboard canvas.
     var body: some View {
         GeometryReader { proxy in
             let scale = min(
@@ -60,12 +57,9 @@ struct KeyboardDiagramView: View {
     }
 }
 
-/// One styled switch in the keyboard diagram.
 fileprivate struct KeymapKeyCell: View {
-    /// Layer-specific legend.
     let legend: KeymapRenderLegend
 
-    /// The styled key cap.
     var body: some View {
         RoundedRectangle(cornerRadius: 8)
             .fill(legend.style.color.opacity(legend.isTransparent ? 0.16 : 0.72))
@@ -82,12 +76,9 @@ fileprivate struct KeymapKeyCell: View {
     }
 }
 
-/// One physical encoder knob in the keyboard diagram.
 fileprivate struct KeymapEncoderCell: View {
-    /// Layer-specific press legend.
     let legend: KeymapRenderLegend
 
-    /// The styled encoder knob.
     var body: some View {
         Circle()
             .fill(.black.opacity(0.78))
@@ -104,7 +95,6 @@ fileprivate struct KeymapEncoderCell: View {
     }
 }
 
-/// SwiftUI conversion for domain RGB colors.
 fileprivate extension KeymapRenderStyle {
     var color: Color {
         Color(

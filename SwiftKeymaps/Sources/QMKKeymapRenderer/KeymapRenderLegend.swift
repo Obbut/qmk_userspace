@@ -12,7 +12,6 @@ public struct KeymapRenderLegend: Equatable, Sendable {
     /// Whether QMK should resolve this entry through lower active layers.
     public let isTransparent: Bool
 
-    /// Creates a renderer legend.
     public init(
         label: String,
         symbolName: String? = nil,

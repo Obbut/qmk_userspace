@@ -1,4 +1,4 @@
-/// A complete, domain-typed keyboard definition.
+/// A domain-typed keyboard definition.
 public protocol KeymapSpecification<Domain>: Sendable {
     /// The semantic and style domain selected by the keymap.
     associatedtype Domain: KeymapDomain

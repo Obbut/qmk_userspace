@@ -3,7 +3,7 @@ import QMKKeymapRenderer
 
 /// Conversion from live protocol data to the production renderer document.
 public extension KeymapDefinition {
-    /// The renderer input shared with authored-firmware Xcode previews.
+    /// The renderer input shared with Xcode previews.
     var renderDocument: KeymapRenderDocument {
         KeymapRenderDocument(
             layoutID: layoutID.rawValue,

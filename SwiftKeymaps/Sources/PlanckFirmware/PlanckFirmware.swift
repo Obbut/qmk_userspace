@@ -2,15 +2,12 @@ import ObbutKeymaps
 import QMKFirmwareRuntime
 import QMKKeymapKit
 
-/// Swift-authored firmware composition for the ZSA Planck EZ Glow.
+/// ZSA Planck EZ Glow definition using the two-unit center-space layout.
 public enum PlanckFirmware: QMKFirmware {
-    /// The shared Obbut semantic and visual domain.
     public typealias Domain = ObbutKeymapDomain
 
-    /// The stable output filename without extension.
     public static let outputName = "zsa_planck_ez_glow_obbut"
 
-    /// The complete five-layer Planck keymap.
     public static var keymap: KeymapSpec<Domain> {
         KeymapSpec(
             id: "com.obbut.planck-ez-glow",
@@ -100,24 +97,20 @@ public enum PlanckFirmware: QMKFirmware {
         }
     }
 
-    /// Creates a repeated transparent-key sequence.
     fileprivate static func transparent(count: Int) -> [Key<Domain>] {
         Array(repeating: .transparent, count: count)
     }
 
-    /// Creates a styled function key.
     fileprivate static func functionKey(_ number: Int) -> Key<Domain> {
         .function(number).style(.function)
     }
 
-    /// QMK settings generated for the Planck.
     public static var configuration: QMKConfiguration {
         QMKConfiguration {
             ObbutPlanckConfiguration()
         }
     }
 
-    /// Stateful firmware behaviors selected by the Planck.
     public static var features: FirmwareFeatures {
         ObbutKeymapCompanion()
         ObbutWindowsOverrides()

@@ -210,7 +210,7 @@ final class WindowsAppController {
         model.updateRGBSettings(update)
     }
 
-    /// Creates the complete scrollable application content.
+    /// Rebuilds the root content from the current model snapshot.
     ///
     /// - Returns: The root WinUI element.
     private func makeContent() -> UIElement {
@@ -270,7 +270,7 @@ final class WindowsAppController {
         }
     }
 
-    /// Rebuilds the complete visual tree for a structural model change.
+    /// Replaces the visual tree after a structural model change.
     private func renderAll() {
         window.content = makeContent()
     }

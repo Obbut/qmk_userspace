@@ -14,7 +14,7 @@ func protocolRequestsUseVersionFourEnvelope() {
     #expect(request[5] == 3)
 }
 
-/// Verifies every authored keyboard produces complete dynamic renderer input.
+/// Verifies every catalogued keyboard produces valid renderer input.
 @Test
 func allCatalogKeyboardsProduceRendererDocuments() {
     #expect(ObbutKeyboardCatalog.all.count == 4)

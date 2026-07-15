@@ -2,34 +2,30 @@
 import QMKFirmwareRuntime
 import SwiftUI
 
-/// Interactive Xcode preview for one authored firmware type.
+/// Interactive Xcode preview for a firmware definition.
 public struct KeymapPreviewView<Firmware: QMKFirmware>: View {
-    /// Renderer input produced directly from the firmware type.
     private let document: KeymapRenderDocument
 
-    /// The layer selected by the interactive preview control.
     @State private var selectedLayerID: UInt8
 
-    /// Whether every layer is shown as an overview.
     @State private var showsAllLayers = true
 
-    /// Creates an interactive production-renderer preview.
+    /// Uses the same renderer document as the companion applications.
     ///
-    /// - Parameter firmware: The authored firmware type.
+    /// - Parameter firmware: The firmware definition to preview.
     public init(_ firmware: Firmware.Type) {
         let document = KeymapRenderDocument(firmware: AnyFirmware(firmware))
         self.document = document
         _selectedLayerID = State(initialValue: document.layers.first?.id ?? 0)
     }
 
-    /// The all-layers overview and interactive layer selector.
     public var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(document.displayName)
                         .font(.title2.bold())
-                    Text("Swift-authored QMK keymap")
+                    Text("QMK keymap")
                         .foregroundStyle(.secondary)
                 }
                 Spacer()

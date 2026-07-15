@@ -1,9 +1,9 @@
 import Testing
 @testable import KeymapCompanion
 
-/// Verifies authored layer metadata controls transient HUD eligibility.
+/// Verifies layer metadata controls transient HUD eligibility.
 @Test
-func authoredLayersControlHUDEligibility() throws {
+func layerMetadataControlsHUDEligibility() throws {
     let definition = KeymapDefinition.makePreview(for: .kyria)
     let defaultLayer = try #require(definition.supportedLayers.first)
     let lower = try #require(definition.supportedLayers.first { $0.displayName == "Lower" })

@@ -91,7 +91,7 @@ private struct LayerStrip: View {
     /// The highest active layer.
     let activeLayer: KeymapLayer
 
-    /// The complete active-layer mask.
+    /// The union of momentary and persistent layer masks.
     let activeLayerMask: UInt32
 
     /// The layer strip content.

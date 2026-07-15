@@ -2,7 +2,7 @@ import QMKKeymapKit
 
 /// A physical encoder with press and rotation legends for every layer.
 public struct KeymapRenderEncoder: Equatable, Identifiable, Sendable {
-    /// Stable authored encoder identity.
+    /// Stable identity from the layout descriptor.
     public let id: String
 
     /// Physical size and position.
@@ -17,7 +17,6 @@ public struct KeymapRenderEncoder: Equatable, Identifiable, Sendable {
     /// Clockwise legends in layer order.
     public let clockwiseLegends: [KeymapRenderLegend]
 
-    /// Creates a renderer encoder.
     public init(
         id: String,
         placement: PhysicalKeyPlacement,

@@ -1,6 +1,6 @@
 import QMKKeymapKit
 
-/// Obbut keyboard layouts expressed entirely in Swift.
+/// Layout descriptors for the supported Obbut keyboards.
 public extension LayoutDescriptor {
     /// The SplitKB Kyria Rev4 Halcyon layout.
     static let splitKBKyriaRev4 = ObbutLayoutFactory.kyria()
@@ -15,9 +15,7 @@ public extension LayoutDescriptor {
     static let zsaPlanckEZGlow = ObbutLayoutFactory.planck()
 }
 
-/// Produces physical geometry and matrix mappings for the Obbut layouts.
 fileprivate enum ObbutLayoutFactory {
-    /// Creates the Kyria layout descriptor.
     static func kyria() -> LayoutDescriptor {
         let placements =
             [70.0, 126.0].flatMap { splitMatrixRow(baseline: $0) }
@@ -52,7 +50,6 @@ fileprivate enum ObbutLayoutFactory {
         )
     }
 
-    /// Creates the Elora layout descriptor.
     static func elora() -> LayoutDescriptor {
         let placements =
             [70.0, 126.0, 182.0].flatMap { splitMatrixRow(baseline: $0) }
@@ -88,7 +85,6 @@ fileprivate enum ObbutLayoutFactory {
         )
     }
 
-    /// Creates the Q15 layout descriptor.
     static func q15() -> LayoutDescriptor {
         let rows: [[(Int, Double, Double, Double)]] = [
             (0..<14).map { ($0, Double($0), 0, 1) },
@@ -141,7 +137,6 @@ fileprivate enum ObbutLayoutFactory {
         )
     }
 
-    /// Creates the Planck layout descriptor.
     static func planck() -> LayoutDescriptor {
         let positions =
             splitPlanckRow(leftRow: 0, rightRow: 4)
@@ -203,13 +198,11 @@ fileprivate enum ObbutLayoutFactory {
         )
     }
 
-    /// Returns matrix positions for one complete split row.
     static func splitMatrixPositions(leftRow: Int, rightRow: Int) -> [MatrixPosition] {
         (1...6).reversed().map { MatrixPosition(row: leftRow, column: $0) }
             + (1...6).map { MatrixPosition(row: rightRow, column: $0) }
     }
 
-    /// Returns matrix positions for a split keyboard's extended bottom row.
     static func splitBottomPositions(
         leftRow: Int,
         leftInnerRow: Int,
@@ -226,7 +219,6 @@ fileprivate enum ObbutLayoutFactory {
             + (1...6).map { MatrixPosition(row: rightRow, column: $0) }
     }
 
-    /// Returns matrix positions for both split thumb clusters.
     static func splitThumbPositions(leftRow: Int, rightRow: Int) -> [MatrixPosition] {
         [
             MatrixPosition(row: leftRow, column: 4),
@@ -242,13 +234,11 @@ fileprivate enum ObbutLayoutFactory {
         ]
     }
 
-    /// Returns the ten Halcyon module arguments appended after physical switches.
     static func modulePositions(leftRow: Int, rightRow: Int) -> [MatrixPosition] {
         (0..<5).map { MatrixPosition(row: leftRow, column: $0) }
             + (0..<5).map { MatrixPosition(row: rightRow, column: $0) }
     }
 
-    /// Returns physical placements for one staggered split row.
     static func splitMatrixRow(baseline: Double) -> [PhysicalKeyPlacement] {
         let leftX = [28.0, 84.0, 140.0, 196.0, 252.0, 308.0]
         let leftYOffset = [0.0, 0.0, -28.0, -42.0, -28.0, -21.0]
@@ -263,7 +253,6 @@ fileprivate enum ObbutLayoutFactory {
         return left + right
     }
 
-    /// Returns physical placements for a split keyboard's extended bottom row.
     static func splitBottomRow(baseline: Double) -> [PhysicalKeyPlacement] {
         let matrix = splitMatrixRow(baseline: baseline)
         let inner = [
@@ -275,7 +264,6 @@ fileprivate enum ObbutLayoutFactory {
         return Array(matrix.prefix(6)) + inner + Array(matrix.suffix(6))
     }
 
-    /// Returns physical placements for both split thumb clusters.
     static func splitThumbClusters(verticalOffset: Double) -> [PhysicalKeyPlacement] {
         [
             PhysicalKeyPlacement(centerX: 168, centerY: 210 + verticalOffset),
@@ -291,7 +279,6 @@ fileprivate enum ObbutLayoutFactory {
         ]
     }
 
-    /// Returns Planck matrix positions for one visible twelve-key row.
     static func splitPlanckRow(leftRow: Int, rightRow: Int) -> [MatrixPosition] {
         (0..<6).map { MatrixPosition(row: leftRow, column: $0) }
             + (0..<6).map { MatrixPosition(row: rightRow, column: $0) }

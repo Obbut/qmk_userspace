@@ -2,15 +2,12 @@ import ObbutKeymaps
 import QMKFirmwareRuntime
 import QMKKeymapKit
 
-/// Swift-authored firmware composition for both Kyria Rev4 halves.
+/// Shared definition for the Kyria Rev4 Cirque-left and encoder-right builds.
 public enum KyriaFirmware: QMKFirmware {
-    /// The shared Obbut semantic and visual domain.
     public typealias Domain = ObbutKeymapDomain
 
-    /// The stable output base name.
     public static let outputName = "kyria_rev4_obbut"
 
-    /// The complete six-layer Kyria keymap.
     public static var keymap: KeymapSpec<Domain> {
         KeymapSpec(
             id: "com.obbut.kyria-rev4",
@@ -22,7 +19,6 @@ public enum KyriaFirmware: QMKFirmware {
         }
     }
 
-    /// QMK settings generated for the Kyria.
     public static var configuration: QMKConfiguration {
         QMKConfiguration {
             ObbutHalcyonConfiguration()
@@ -30,7 +26,6 @@ public enum KyriaFirmware: QMKFirmware {
         }
     }
 
-    /// Stateful firmware behaviors selected by the Kyria.
     public static var features: FirmwareFeatures {
         ObbutKeymapCompanion()
         ObbutWindowsOverrides()

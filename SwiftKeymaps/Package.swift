@@ -2,7 +2,6 @@
 
 import PackageDescription
 
-/// The complete Swift-first keymap workspace.
 let package = Package(
     name: "SwiftQMKKeymaps",
     platforms: [
@@ -92,16 +91,11 @@ let package = Package(
     swiftLanguageModes: [.v6]
 )
 
-/// Strict compiler settings shared by every Swift keymap target.
 let strictSwiftSettings: [SwiftSetting] = [
     .enableExperimentalFeature("StrictConcurrency"),
     .treatAllWarnings(as: .error),
 ]
 
-/// Creates one board-specific firmware target.
-///
-/// - Parameter name: The Swift module name.
-/// - Returns: A target that sees the shared Obbut domain and preview renderer.
 func firmwareTarget(name: String) -> Target {
     .target(
         name: name,

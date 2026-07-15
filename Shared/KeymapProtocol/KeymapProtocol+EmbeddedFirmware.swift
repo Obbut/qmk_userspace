@@ -1,4 +1,4 @@
-// Embedded Swift protocol-v4 engine.
+// Firmware-side protocol-v4 engine.
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #if hasFeature(Embedded)

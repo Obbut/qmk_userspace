@@ -22,7 +22,7 @@ public enum QMKConfigurationBuilder {
     /// Flattens configuration components.
     ///
     /// - Parameter components: The components in declaration order.
-    /// - Returns: The complete generated configuration.
+    /// - Returns: Settings in declaration order.
     public static func buildBlock(_ components: [QMKBuildSetting]...) -> [QMKBuildSetting] {
         components.flatMap { $0 }
     }

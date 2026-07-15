@@ -3,7 +3,6 @@ import QMKFirmwareRuntime
 
 /// Writes generated QMK artifacts to the userspace overlay.
 struct ArtifactWriter {
-    /// The repository root receiving generated files.
     let repositoryRoot: URL
 
     /// Writes one firmware's generated files atomically.
@@ -24,7 +23,6 @@ struct ArtifactWriter {
         )
     }
 
-    /// Returns the userspace keymap directory for one firmware.
     private func relativeDirectory(for firmware: AnyFirmware) -> String {
         switch firmware.id {
         case "com.obbut.kyria-rev4":
@@ -40,7 +38,6 @@ struct ArtifactWriter {
         }
     }
 
-    /// Returns the stable documentation filename component.
     private func shortName(for firmware: AnyFirmware) -> String {
         switch firmware.id {
         case "com.obbut.kyria-rev4": "kyria"
@@ -51,7 +48,6 @@ struct ArtifactWriter {
         }
     }
 
-    /// Writes UTF-8 text atomically.
     private func write(_ contents: String, to url: URL) throws {
         try Data(contents.utf8).write(to: url, options: .atomic)
     }

@@ -2,7 +2,6 @@ import QMKFirmwareRuntime
 
 /// Generated QMK configuration for the ZSA Planck EZ Glow.
 public struct ObbutPlanckConfiguration: QMKConfigurationComponent, Sendable {
-    /// The Planck build and header settings.
     public let qmkBuildSettings: [QMKBuildSetting] = [
         .make(variable: "OS_DETECTION_ENABLE", value: "yes"),
         .make(variable: "TRI_LAYER_ENABLE", value: "yes"),
@@ -20,6 +19,5 @@ public struct ObbutPlanckConfiguration: QMKConfigurationComponent, Sendable {
         .define(name: "TRI_LAYER_ADJUST_LAYER", value: "4"),
     ]
 
-    /// Creates the Planck configuration.
     public init() {}
 }

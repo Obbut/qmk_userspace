@@ -6,10 +6,8 @@ public protocol KeymapDomain: Sendable {
     /// The domain-owned style identifier type.
     associatedtype Style: KeyStyleID
 
-    /// The concrete semantic catalog type.
     associatedtype Semantics: SemanticCatalog where Semantics.ID == Semantic
 
-    /// The concrete style catalog type.
     associatedtype Styles: StyleCatalog where Styles.ID == Style
 
     /// Presentation for every semantic emitted by this domain.

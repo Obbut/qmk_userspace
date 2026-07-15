@@ -1,4 +1,4 @@
-/// Builds the complete per-layer map for one encoder.
+/// Builds the per-layer map for one encoder.
 @resultBuilder
 public enum EncoderBuilder<Domain: KeymapDomain> {
     /// Combines encoder mappings in declaration order.
@@ -16,7 +16,7 @@ public enum EncoderBuilder<Domain: KeymapDomain> {
     /// Flattens mapping components.
     ///
     /// - Parameter components: The mapping components.
-    /// - Returns: The complete mapping sequence.
+    /// - Returns: Mappings in declaration order.
     public static func buildBlock(_ components: [On<Domain>]...) -> [On<Domain>] {
         components.flatMap { $0 }
     }

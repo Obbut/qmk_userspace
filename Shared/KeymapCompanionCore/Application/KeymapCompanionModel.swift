@@ -45,7 +45,7 @@ public final class KeymapCompanionModel {
     /// The injected platform hardware implementation.
     @ObservationIgnored @Dependency(\.keyboardHardware) private var hardware
 
-    /// The complete reduced state before observation-specific projection.
+    /// Canonical reducer state kept outside Observation tracking.
     @ObservationIgnored private var state = CompanionState()
 
     /// The delayed and coalesced RGB write currently pending.
@@ -88,7 +88,7 @@ public final class KeymapCompanionModel {
     /// Creates a model from deterministic state without starting hardware access.
     ///
     /// - Parameters:
-    ///   - state: The complete reduced model state.
+    ///   - state: The canonical reducer state.
     ///   - layerHUD: The layer HUD state machine.
     private init(state: CompanionState, layerHUD: LayerHUDModel) {
         self.state = state

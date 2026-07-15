@@ -12,13 +12,13 @@ public struct LayoutDescriptor: Equatable, Sendable {
     /// The number of keys accepted by the layout macro.
     public let keyCount: Int
 
-    /// The complete QMK matrix row count.
+    /// The QMK matrix row count, including both halves of split keyboards.
     public let matrixRowCount: Int
 
     /// The QMK matrix column count.
     public let matrixColumnCount: Int
 
-    /// Matrix coordinates in complete QMK layout-macro argument order.
+    /// Matrix coordinates in QMK layout-macro argument order.
     public let matrixMapping: [MatrixPosition]
 
     /// The renderer's logical canvas width.
@@ -33,14 +33,14 @@ public struct LayoutDescriptor: Equatable, Sendable {
     /// The zero, one, or more physical encoders.
     public let encoders: [EncoderPlacement]
 
-    /// Creates a complete layout descriptor.
+    /// Validates geometry, matrix mapping, and encoder identities.
     ///
     /// - Parameters:
     ///   - id: The stable protocol layout identifier.
     ///   - displayName: The user-facing keyboard name.
     ///   - cMacro: The QMK layout macro called by generated C.
     ///   - keyCount: The number of keys accepted by the layout macro.
-    ///   - matrixRowCount: The complete QMK matrix row count.
+    ///   - matrixRowCount: The QMK matrix row count, including both split halves.
     ///   - matrixColumnCount: The QMK matrix column count.
     ///   - matrixMapping: Matrix coordinates for every layout-macro argument.
     ///   - canvasWidth: The renderer's logical canvas width.

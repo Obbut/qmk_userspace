@@ -1,7 +1,7 @@
 #if hasFeature(Embedded)
 import ObbutKeymaps
 
-/// Selects Elora-specific policy in the shared Obbut Embedded Swift runtime.
+/// Identifies Elora as runtime profile 2 at the generated C ABI boundary.
 @c @implementation
 func obbut_firmware_profile() -> UInt8 { 2 }
 #endif
