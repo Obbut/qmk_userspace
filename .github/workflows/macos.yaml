@@ -1,0 +1,39 @@
+name: macOS
+
+on:
+  push:
+    paths:
+      - ".github/workflows/macos.yaml"
+      - "macOS/**"
+      - "Shared/KeymapProtocol/**"
+  pull_request:
+    paths:
+      - ".github/workflows/macos.yaml"
+      - "macOS/**"
+      - "Shared/KeymapProtocol/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build and test on Apple silicon
+    runs-on: macos-26
+
+    steps:
+      - name: Checkout userspace
+        uses: actions/checkout@v4
+
+      - name: Verify ARM64 runner
+        run: test "$(uname -m)" = arm64
+
+      - name: Build and test Keymap Companion
+        working-directory: macOS/KeymapCompanion
+        run: |
+          xcodebuild \
+            -project KeymapCompanion.xcodeproj \
+            -scheme KeymapCompanion \
+            -destination 'platform=macOS,arch=arm64' \
+            CODE_SIGNING_ALLOWED=NO \
+            test

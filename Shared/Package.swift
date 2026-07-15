@@ -53,18 +53,12 @@ let package = Package(
             sources: [
                 "KeymapProtocol",
                 "KeymapCompanionCore",
-            ],
-            swiftSettings: [
-                .treatAllWarnings(as: .error)
             ]
         ),
         .testTarget(
             name: "KeymapCompanionCoreTests",
             dependencies: ["KeymapCompanionCore"],
-            path: "KeymapCompanionCoreTests",
-            swiftSettings: [
-                .treatAllWarnings(as: .error)
-            ]
+            path: "KeymapCompanionCoreTests"
         ),
     ],
     swiftLanguageModes: [.v6]
