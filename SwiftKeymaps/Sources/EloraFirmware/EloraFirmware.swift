@@ -29,7 +29,6 @@ public enum EloraFirmware: QMKFirmware {
     }
 
     /// Stateful firmware behaviors selected by the Elora.
-    @FirmwareFeatureBuilder
     public static var features: FirmwareFeatures {
         ObbutKeymapCompanion()
         ObbutWindowsOverrides()

@@ -28,7 +28,6 @@ public enum PlanckFirmware: QMKFirmware {
     }
 
     /// Stateful firmware behaviors selected by the Planck.
-    @FirmwareFeatureBuilder
     public static var features: FirmwareFeatures {
         ObbutKeymapCompanion()
         ObbutWindowsOverrides()

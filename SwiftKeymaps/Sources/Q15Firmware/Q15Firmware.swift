@@ -47,7 +47,6 @@ public enum Q15Firmware: QMKFirmware {
     }
 
     /// Stateful firmware behaviors selected by the Q15.
-    @FirmwareFeatureBuilder
     public static var features: FirmwareFeatures {
         ObbutKeymapCompanion()
         ObbutLayerLighting()

@@ -31,7 +31,6 @@ public enum KyriaFirmware: QMKFirmware {
     }
 
     /// Stateful firmware behaviors selected by the Kyria.
-    @FirmwareFeatureBuilder
     public static var features: FirmwareFeatures {
         ObbutKeymapCompanion()
         ObbutWindowsOverrides()
