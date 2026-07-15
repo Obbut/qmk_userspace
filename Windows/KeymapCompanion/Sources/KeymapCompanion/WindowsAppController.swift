@@ -3,6 +3,7 @@ import Dispatch
 import KeymapCompanionCore
 import Observation
 import UWP
+import WinAppSDK
 import WinUI
 
 /// The main-actor owner of native Windows presentation and shared app state.
@@ -83,6 +84,9 @@ final class WindowsAppController {
     /// Builds, observes, and activates the primary window and tray icon.
     func launch() {
         window.title = "Keymap Companion"
+        try? window.appWindow.setIcon(
+            WinAppSDK.IconId(value: UInt64(KEYMAP_COMPANION_ICON))
+        )
         try? window.appWindow.resize(SizeInt32(width: 1200, height: 780))
         window.content = makeContent()
         renderedSnapshot = WindowsViewSnapshot(model: model)

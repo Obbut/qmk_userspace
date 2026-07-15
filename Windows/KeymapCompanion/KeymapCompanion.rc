@@ -1,0 +1,3 @@
+#include "Sources\\CWindowsShell\\include\\KeymapCompanionResources.h"
+
+KEYMAP_COMPANION_ICON ICON "Assets\\KeymapCompanion.ico"

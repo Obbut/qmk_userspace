@@ -1,5 +1,6 @@
 #include "CWindowsTrayIcon.h"
 #include "CWindowsShell.h"
+#include "KeymapCompanionResources.h"
 
 #include <string.h>
 
@@ -165,6 +166,22 @@ HICON keymap_create_tray_icon(
     uint32_t keyboard_kind,
     uint32_t active_layer
 ) {
+    if (connection_state == KEYMAP_TRAY_CONNECTION_CONNECTED
+            && keyboard_kind == KEYMAP_TRAY_KEYBOARD_KYRIA
+            && active_layer == KEYMAP_TRAY_LAYER_DEFAULT) {
+        HICON application_icon = LoadImageW(
+            GetModuleHandleW(NULL),
+            MAKEINTRESOURCEW(KEYMAP_COMPANION_ICON),
+            IMAGE_ICON,
+            KEYMAP_TRAY_ICON_SIZE,
+            KEYMAP_TRAY_ICON_SIZE,
+            LR_DEFAULTCOLOR
+        );
+        if (application_icon != NULL) {
+            return application_icon;
+        }
+    }
+
     BITMAPV5HEADER header;
     memset(&header, 0, sizeof(header));
     header.bV5Size = sizeof(header);

@@ -9,12 +9,19 @@ let manifestPath = URL(fileURLWithPath: #filePath)
     .appendingPathComponent("KeymapCompanion.manifest")
     .path
 
+/// The absolute path to the compiled Windows application resources.
+let applicationResourcesPath = URL(fileURLWithPath: #filePath)
+    .deletingLastPathComponent()
+    .appendingPathComponent(".build/KeymapCompanion.res")
+    .path
+
 /// The linker settings required for a windowed, manifested Windows application.
 let guiLinkerSettings: [LinkerSetting] = [
     .unsafeFlags([
         "-Xlinker", "/MANIFEST:EMBED",
         "-Xlinker", "/MANIFESTINPUT:\(manifestPath)",
     ]),
+    .unsafeFlags(["-Xlinker", applicationResourcesPath]),
     .unsafeFlags(["-Xlinker", "/SUBSYSTEM:WINDOWS"]),
     .unsafeFlags(["-Xlinker", "/ENTRY:mainCRTStartup"]),
 ]

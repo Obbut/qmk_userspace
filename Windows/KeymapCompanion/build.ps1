@@ -49,6 +49,17 @@ if ($version -notmatch 'Swift version 6\.3\.3') {
     throw "Swift 6.3.3 is required; active toolchain is: $version"
 }
 
+$resourceCompiler = Get-Command 'rc.exe' -ErrorAction Stop
+$resourceOutput = Join-Path $PSScriptRoot '.build\KeymapCompanion.res'
+New-Item -ItemType Directory -Force -Path (Split-Path $resourceOutput) | Out-Null
+& $resourceCompiler.Source `
+    /nologo `
+    /fo $resourceOutput `
+    (Join-Path $PSScriptRoot 'KeymapCompanion.rc')
+if ($LASTEXITCODE -ne 0) {
+    throw "Windows resource compilation failed with exit code $LASTEXITCODE."
+}
+
 swift build --package-path $PSScriptRoot --configuration $Configuration
 if ($LASTEXITCODE -ne 0) {
     throw "Swift build failed with exit code $LASTEXITCODE."

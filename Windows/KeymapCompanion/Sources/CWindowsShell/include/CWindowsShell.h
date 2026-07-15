@@ -1,5 +1,7 @@
 #pragma once
 
+#include "KeymapCompanionResources.h"
+
 #include <stdint.h>
 #include <wchar.h>
 
