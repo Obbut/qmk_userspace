@@ -36,17 +36,3 @@ public macro qmkKeycode<Domain: KeymapDomain>(
     module: "QMKKeymapMacrosPlugin",
     type: "QMKKeycodeMacro"
 )
-
-/// Creates an interactive Xcode preview using the production keymap renderer.
-///
-/// The preview defaults to an all-layers overview and includes an interactive
-/// selector for inspecting one authored layer at a time.
-///
-/// - Parameter firmware: The concrete authored firmware type to render.
-@freestanding(declaration, names: named(__KeymapPreview))
-public macro KeymapPreview<Firmware>(
-    _ firmware: Firmware.Type
-) = #externalMacro(
-    module: "QMKKeymapMacrosPlugin",
-    type: "KeymapPreviewMacro"
-)

@@ -42,5 +42,7 @@ public enum EloraFirmware: QMKFirmware {
 import QMKKeymapRenderer
 import SwiftUI
 
-#KeymapPreview(EloraFirmware.self)
+#Preview("Elora") {
+    #KeymapPreview(EloraFirmware.self)
+}
 #endif

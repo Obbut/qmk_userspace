@@ -101,7 +101,9 @@ public enum KyriaFirmware: QMKFirmware {
 }
 
 #if canImport(SwiftUI)
-#KeymapPreview(KyriaFirmware.self)
+#Preview("Kyria") {
+    #KeymapPreview(KyriaFirmware.self)
+}
 #endif
 ```
 
@@ -192,6 +194,7 @@ ARM target and ABI settings, compiles Embedded Swift, and links generated,
 ignored C artifacts. `draw-keymap.sh` regenerates diagram YAML from the same
 Swift definitions before rendering SVGs.
 
-Open `macOS/KeymapCompanion/KeymapCompanion.xcodeproj` to edit the local package
-and use the per-firmware `#KeymapPreview` declarations. Previews and the live
-macOS app use `QMKKeymapRenderer` and the same catalog-resolved document model.
+Open `macOS/KeymapCompanion/KeymapCompanion.xcodeproj` to edit the local package.
+Each firmware embeds `#KeymapPreview` in Apple's discoverable `#Preview` macro.
+The previews and live macOS app use `QMKKeymapRenderer` and the same
+catalog-resolved document model.

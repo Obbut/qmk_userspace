@@ -24,7 +24,9 @@ the same Xcode workspace. Each firmware source ends with:
 import QMKKeymapRenderer
 import SwiftUI
 
-#KeymapPreview(KyriaFirmware.self)
+#Preview("Kyria") {
+    #KeymapPreview(KyriaFirmware.self)
+}
 #endif
 ```
 

@@ -72,7 +72,11 @@ let package = Package(
         ),
         .target(
             name: "QMKKeymapRenderer",
-            dependencies: ["QMKKeymapKit", "QMKFirmwareRuntime"],
+            dependencies: [
+                "QMKKeymapKit",
+                "QMKFirmwareRuntime",
+                "QMKKeymapMacrosPlugin",
+            ],
             swiftSettings: strictSwiftSettings
         ),
         .executableTarget(

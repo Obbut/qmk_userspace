@@ -45,5 +45,7 @@ public enum KyriaFirmware: QMKFirmware {
 import QMKKeymapRenderer
 import SwiftUI
 
-#KeymapPreview(KyriaFirmware.self)
+#Preview("Kyria") {
+    #KeymapPreview(KyriaFirmware.self)
+}
 #endif

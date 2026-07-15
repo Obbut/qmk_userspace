@@ -41,5 +41,7 @@ public enum PlanckFirmware: QMKFirmware {
 import QMKKeymapRenderer
 import SwiftUI
 
-#KeymapPreview(PlanckFirmware.self)
+#Preview("Planck EZ") {
+    #KeymapPreview(PlanckFirmware.self)
+}
 #endif

@@ -71,7 +71,9 @@ public enum Q15Firmware: QMKFirmware {
 import QMKKeymapRenderer
 import SwiftUI
 
-#KeymapPreview(Q15Firmware.self)
+#Preview("Q15 Max") {
+    #KeymapPreview(Q15Firmware.self)
+}
 #endif
 
 /// Q15 typing-layer definitions.

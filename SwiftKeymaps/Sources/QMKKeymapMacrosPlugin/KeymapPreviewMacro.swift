@@ -3,18 +3,18 @@ import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 
-/// Expands `#KeymapPreview` into an Xcode `#Preview` declaration.
-public struct KeymapPreviewMacro: DeclarationMacro {
-    /// Expands one firmware preview declaration.
+/// Expands `#KeymapPreview` into the production keymap renderer.
+public struct KeymapPreviewMacro: ExpressionMacro {
+    /// Expands one firmware preview expression.
     ///
     /// - Parameters:
     ///   - node: The source macro invocation.
     ///   - context: The compiler expansion context.
-    /// - Returns: One Xcode preview provider using the production renderer.
+    /// - Returns: A production renderer expression for Apple's `#Preview` macro.
     public static func expansion(
         of node: some FreestandingMacroExpansionSyntax,
         in context: some MacroExpansionContext
-    ) throws -> [DeclSyntax] {
+    ) throws -> ExprSyntax {
         guard node.arguments.count == 1,
             let firmware = node.arguments.first?.expression
         else {
@@ -27,17 +27,8 @@ public struct KeymapPreviewMacro: DeclarationMacro {
                     )
                 )
             )
-            return []
+            return "fatalError(\"Invalid #KeymapPreview invocation\")"
         }
-        return [
-            """
-            @MainActor
-            private struct __KeymapPreview: SwiftUI.PreviewProvider {
-                static var previews: some SwiftUI.View {
-                    QMKKeymapRenderer.KeymapPreviewView(\(firmware))
-                }
-            }
-            """
-        ]
+        return "QMKKeymapRenderer.KeymapPreviewView(\(firmware))"
     }
 }
