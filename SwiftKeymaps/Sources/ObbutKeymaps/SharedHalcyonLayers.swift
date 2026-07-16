@@ -37,12 +37,12 @@ extension SharedHalcyonLayers {
             Row(.escape, .a, .r, .s, .t, .g, .m, .n, .e, .i, .o, .quote)
             Row(
                 .leftShift, .z, .x, .c, .d, .v,
-                .leftOption, ObbutKey.pointerLeftClick,
+                .leftOption, .pointerLeftClick,
                 .momentary(ObbutLayer.function), .no,
                 .k, .h, .comma, .period, .slash, .return
             )
             Row(
-                ObbutKey.screenshot, .leftControl, .leftCommand, ObbutKey.aerospace, .space,
+                .screenshot, .leftControl, .leftCommand, .aerospace, .space,
                 .no, .space, .momentary(ObbutLayer.raise), .momentary(ObbutLayer.lower), .no
             )
             Row(.no, .no, .no, .no, .no, .mute, .no, .no, .no, .no)
@@ -67,7 +67,7 @@ extension SharedHalcyonLayers {
             )
             Row(
                 .leftShift, .z, .x, .c, .v, .b,
-                .leftOption.style(.gaming), ObbutKey.pointerLeftClick,
+                .leftOption.style(.gaming), .pointerLeftClick,
                 .momentary(ObbutLayer.function), .no,
                 .n, .m, .comma, .period, .slash, .return
             )

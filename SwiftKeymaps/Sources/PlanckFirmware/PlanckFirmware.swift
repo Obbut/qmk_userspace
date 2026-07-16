@@ -15,7 +15,7 @@ public enum PlanckFirmware {
             Row(.escape, .a, .r, .s, .t, .g, .m, .n, .e, .i, .o, .quote)
             Row(.leftShift, .z, .x, .c, .d, .v, .k, .h, .comma, .period, .slash, .return)
             Row(
-                ObbutKey.screenshot, .leftControl, .leftOption, ObbutKey.aerospace,
+                .screenshot, .leftControl, .leftOption, .aerospace,
                 .leftCommand, .space,
                 .qmk(.triLayerUpper, legend: "Raise"), .qmk(.triLayerLower, legend: "Lower"),
                 .momentary(LayerID.function), .rightOption, .delete

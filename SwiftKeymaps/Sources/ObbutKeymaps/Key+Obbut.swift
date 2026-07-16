@@ -1,7 +1,7 @@
 import QMKKeymapKit
 
 /// Common actions shared by Obbut firmware modules.
-public enum ObbutKey {
+extension Key {
     /// The macOS screenshot chord.
     public static var screenshot: Key {
         Key.four

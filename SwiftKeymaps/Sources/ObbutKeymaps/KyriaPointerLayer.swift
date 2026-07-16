@@ -11,26 +11,26 @@ public struct KyriaPointerLayer: KeymapComponent, Sendable {
         Layer(ObbutLayer.pointer, name: "Pointer") {
             Row {
                 Repeat(.transparent, count: 7)
-                ObbutKey.pointerSensitivityDown
-                ObbutKey.pointerSensitivityUp
-                ObbutKey.pointerScrollSpeedDown
-                ObbutKey.pointerScrollSpeedUp
+                Key.pointerSensitivityDown
+                Key.pointerSensitivityUp
+                Key.pointerScrollSpeedDown
+                Key.pointerScrollSpeedUp
                 Key.transparent
             }
             Row {
                 Repeat(.transparent, count: 6)
-                ObbutKey.browserBack
-                ObbutKey.pointerLeftClick
-                ObbutKey.pointerRightClick
-                ObbutKey.pointerMiddleClick
-                ObbutKey.browserForward
+                Key.browserBack
+                Key.pointerLeftClick
+                Key.pointerRightClick
+                Key.pointerMiddleClick
+                Key.browserForward
                 Key.transparent
             }
             Row {
                 Repeat(.transparent, count: 11)
-                ObbutKey.pointerScroll
-                ObbutKey.pointerSniper
-                ObbutKey.pointerDragLock
+                Key.pointerScroll
+                Key.pointerSniper
+                Key.pointerDragLock
                 Repeat(.transparent, count: 2)
             }
             Row { Repeat(.transparent, count: 10) }

@@ -25,7 +25,7 @@ public struct ObbutWindowsOverrides: FirmwareFeature, Sendable {
         }
 
         let replacement: UInt16? = switch event.keycode {
-        case ObbutKey.screenshot.keycode.rawValue: Key.printScreen.keycode.rawValue
+        case Key.screenshot.keycode.rawValue: Key.printScreen.keycode.rawValue
         case 0x00E0: 0x00E3
         case 0x00E3: 0x00E0
         case 0x00A9: 0x0080

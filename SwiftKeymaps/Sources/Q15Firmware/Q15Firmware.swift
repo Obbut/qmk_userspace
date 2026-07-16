@@ -13,152 +13,42 @@ public enum Q15Firmware {
 
     public static var keymap: some KeymapDefinition {
         Layer(Q15Layer.macBase, name: "macOS") {
-            Row {
-                ObbutKey.screenshot
-                Key.one
-                Key.two
-                Key.three
-                Key.four
-                Key.five
-                Key.six
-                Key.seven
-                Key.eight
-                Key.nine
-                Key.zero
-                Key.minus
-                Key.backspace
-                Key.playPause
-                Key.tab
-                Key.q
-                Key.w
-                Key.e
-                Key.r
-                Key.t
-                Key.y
-                Key.u
-            }
-            Row {
-                Key.i
-                Key.o
-                Key.p
-                Key.leftBracket
-                Key.rightBracket
-                Key.backslash
-                ObbutKey.escapeAerospace
-                Key.a
-                Key.s
-                Key.d
-                Key.f
-                Key.g
-                Key.h
-                Key.j
-                Key.k
-                Key.l
-                Key.semicolon
-                Key.quote
-                Key.return
-                Key.leftShift
-                Key.z
-                Key.x
-            }
-            Row {
-                Key.c
-                Key.v
-                Key.b
-                Key.n
-                Key.m
-                Key.comma
-                Key.period
-                Key.slash
-                Key.rightShift
-                Key.up
-                Key.delete
-                Key.leftControl
-                Key.no
-                Key.leftOption
-                Key.leftCommand
-                Key.space
-                Key.layerTap(Q15Layer.raise, key: .space)
-                Key.momentary(Q15Layer.macFunction)
-                Key.momentary(Q15Layer.commonFunction)
-                Key.left
-                Key.down
-                Key.right
-            }
+            Row(
+                .screenshot, .one, .two, .three, .four, .five, .six, .seven,
+                .eight, .nine, .zero, .minus, .backspace, .playPause, .tab, .q, .w,
+                .e, .r, .t, .y, .u
+            )
+            Row(
+                .i, .o, .p, .leftBracket, .rightBracket, .backslash,
+                .escapeAerospace, .a, .s, .d, .f, .g, .h, .j, .k, .l,
+                .semicolon, .quote, .return, .leftShift, .z, .x
+            )
+            Row(
+                .c, .v, .b, .n, .m, .comma, .period, .slash, .rightShift, .up,
+                .delete, .leftControl, .no, .leftOption, .leftCommand, .space,
+                .layerTap(Q15Layer.raise, key: .space),
+                .momentary(Q15Layer.macFunction), .momentary(Q15Layer.commonFunction),
+                .left, .down, .right
+            )
         }
         Layer(Q15Layer.windowsBase, name: "Windows") {
-            Row {
-                Key.printScreen
-                Key.one
-                Key.two
-                Key.three
-                Key.four
-                Key.five
-                Key.six
-                Key.seven
-                Key.eight
-                Key.nine
-                Key.zero
-                Key.minus
-                Key.backspace
-                Key.playPause
-                Key.tab
-                Key.q
-                Key.w
-                Key.e
-                Key.r
-                Key.t
-                Key.y
-                Key.u
-            }
-            Row {
-                Key.i
-                Key.o
-                Key.p
-                Key.leftBracket
-                Key.rightBracket
-                Key.backslash
-                Key.escape
-                Key.a
-                Key.s
-                Key.d
-                Key.f
-                Key.g
-                Key.h
-                Key.j
-                Key.k
-                Key.l
-                Key.semicolon
-                Key.quote
-                Key.return
-                Key.leftShift
-                Key.z
-                Key.x
-            }
-            Row {
-                Key.c
-                Key.v
-                Key.b
-                Key.n
-                Key.m
-                Key.comma
-                Key.period
-                Key.slash
-                Key.rightShift
-                Key.up
-                Key.delete
-                Key.leftControl
-                Key.leftCommand
-                Key.no
-                Key.leftOption
-                Key.space
-                Key.layerTap(Q15Layer.raise, key: .space)
-                Key.momentary(Q15Layer.windowsFunction)
-                Key.momentary(Q15Layer.commonFunction)
-                Key.left
-                Key.down
-                Key.right
-            }
+            Row(
+                .printScreen, .one, .two, .three, .four, .five, .six, .seven,
+                .eight, .nine, .zero, .minus, .backspace, .playPause, .tab, .q, .w,
+                .e, .r, .t, .y, .u
+            )
+            Row(
+                .i, .o, .p, .leftBracket, .rightBracket, .backslash, .escape,
+                .a, .s, .d, .f, .g, .h, .j, .k, .l, .semicolon, .quote, .return,
+                .leftShift, .z, .x
+            )
+            Row(
+                .c, .v, .b, .n, .m, .comma, .period, .slash, .rightShift, .up,
+                .delete, .leftControl, .leftCommand, .no, .leftOption, .space,
+                .layerTap(Q15Layer.raise, key: .space),
+                .momentary(Q15Layer.windowsFunction), .momentary(Q15Layer.commonFunction),
+                .left, .down, .right
+            )
         }
         Layer(Q15Layer.macFunction, name: "macOS Function", showsHUD: true) {
             Row {
@@ -177,10 +67,10 @@ public enum Q15Firmware {
                 Key.equal
                 Key.transparent
                 Key.bootloader.style(.bootloader)
-                ObbutKey.bluetoothHost1
-                ObbutKey.bluetoothHost2
-                ObbutKey.bluetoothHost3
-                ObbutKey.wireless24GHz
+                Key.bluetoothHost1
+                Key.bluetoothHost2
+                Key.bluetoothHost3
+                Key.wireless24GHz
                 Repeat(.transparent, count: 47)
             }
         }
@@ -201,10 +91,10 @@ public enum Q15Firmware {
                 Key.equal
                 Key.transparent
                 Key.bootloader.style(.bootloader)
-                ObbutKey.bluetoothHost1
-                ObbutKey.bluetoothHost2
-                ObbutKey.bluetoothHost3
-                ObbutKey.wireless24GHz
+                Key.bluetoothHost1
+                Key.bluetoothHost2
+                Key.bluetoothHost3
+                Key.wireless24GHz
                 Repeat(.transparent, count: 47)
             }
         }
@@ -215,7 +105,7 @@ public enum Q15Firmware {
                 Key.transparent
                 Repeat(.transparent, count: 27)
                 Repeat(.transparent, count: 5)
-                ObbutKey.batteryLevel
+                Key.batteryLevel
                 Repeat(.transparent, count: 6)
                 Key.qmk(.keychronRGBValueUp, legend: "Brightness +").style(.increase)
                 Key.transparent
