@@ -1,8 +1,7 @@
 import QMKKeymapKit
 
 /// The five reusable typing and control layers shared by Kyria and Elora.
-public struct SharedHalcyonLayers: KeymapComponent, Sendable {
-    @usableFromInline
+public struct SharedHalcyonLayers: Sendable {
     internal let layout: HalcyonLayoutKind
 
     /// Includes a physical number row for the Elora layout.
@@ -11,23 +10,9 @@ public struct SharedHalcyonLayers: KeymapComponent, Sendable {
     public init(layout: HalcyonLayoutKind) {
         self.layout = layout
     }
-
-    @_alwaysEmitIntoClient
-    @inline(__always)
-    @Keymap
-    public var body: some KeymapDefinition {
-        Self.baseLayer(layout: layout)
-        Self.qwertyLayer(layout: layout)
-        Self.lowerLayer(layout: layout)
-        Self.raiseLayer(layout: layout)
-        Self.functionLayer(layout: layout)
-    }
 }
 
 extension SharedHalcyonLayers {
-    @usableFromInline
-    @_alwaysEmitIntoClient
-    @inline(__always)
     internal static func baseLayer(layout: HalcyonLayoutKind) -> some KeymapDefinition {
         Layer(ObbutLayer.base, name: "Default", context: layout) { layout in
             if layout == .elora {
@@ -49,9 +34,6 @@ extension SharedHalcyonLayers {
         }
     }
 
-    @usableFromInline
-    @_alwaysEmitIntoClient
-    @inline(__always)
     internal static func qwertyLayer(layout: HalcyonLayoutKind) -> some KeymapDefinition {
         Layer(ObbutLayer.qwerty, name: "QWERTY", context: layout) { layout in
             if layout == .elora {
@@ -80,9 +62,6 @@ extension SharedHalcyonLayers {
         }
     }
 
-    @usableFromInline
-    @_alwaysEmitIntoClient
-    @inline(__always)
     internal static func lowerLayer(layout: HalcyonLayoutKind) -> some KeymapDefinition {
         Layer(ObbutLayer.lower, name: "Lower", showsHUD: true, context: layout) { layout in
             if layout == .elora {
@@ -111,9 +90,6 @@ extension SharedHalcyonLayers {
         }
     }
 
-    @usableFromInline
-    @_alwaysEmitIntoClient
-    @inline(__always)
     internal static func raiseLayer(layout: HalcyonLayoutKind) -> some KeymapDefinition {
         Layer(ObbutLayer.raise, name: "Raise", showsHUD: true, context: layout) { layout in
             if layout == .elora {
@@ -144,9 +120,6 @@ extension SharedHalcyonLayers {
         }
     }
 
-    @usableFromInline
-    @_alwaysEmitIntoClient
-    @inline(__always)
     internal static func functionLayer(layout: HalcyonLayoutKind) -> some KeymapDefinition {
         Layer(ObbutLayer.function, name: "Function", showsHUD: true, context: layout) { layout in
             if layout == .elora {
