@@ -36,6 +36,11 @@ public struct ObbutLayerLighting: FirmwareFeature, Sendable {
         context: inout FirmwareContext
     ) -> Bool {
 #if hasFeature(Embedded)
+        // QMK's split RGB task can hand the right USB master an empty shard
+        // encoded with reversed bounds. C indicator loops naturally skip it,
+        // while constructing Swift's half-open Range would trap.
+        guard !range.isEmpty else { return false }
+
         let layer = context.highestLayer
         guard (context.unstyledLayerMask & (1 << layer)) == 0 else { return false }
         if context.pointerFeatureActive, layer == 4, context.rgbPreviewMode { return false }

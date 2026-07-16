@@ -7,4 +7,9 @@ public struct RGBIndicatorRange: Sendable {
         self.lowerBound = lowerBound
         self.upperBound = upperBound
     }
+
+    /// Whether the interval contains no safely iterable LED indices.
+    public var isEmpty: Bool {
+        lowerBound >= upperBound
+    }
 }

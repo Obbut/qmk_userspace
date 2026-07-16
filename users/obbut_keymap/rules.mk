@@ -11,6 +11,15 @@ SRC += embedded_qmk_firmware_runtime.clib
 SRC += embedded_qmk_keymap_kit.clib
 RAW_ENABLE = yes
 
+# Embedded Swift needs more process-stack headroom than ChibiOS's 2 KiB
+# default. RP2040 places both stacks and per-core state in a fixed 4 KiB
+# scratch bank, so its exception stack must be smaller to fit the proven 3 KiB
+# process stack without a custom linker layout.
+USE_PROCESS_STACKSIZE = 0xC00
+ifneq ($(filter RP2040 rp2040,$(MCU)),)
+    USE_EXCEPTIONS_STACKSIZE = 0x200
+endif
+
 # Preserve line tables in the matching ELF/map without putting debug data in
 # the flashed UF2/bin.
 EXTRAFLAGS += -g3
