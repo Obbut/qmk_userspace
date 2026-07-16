@@ -18,6 +18,16 @@
             makeRequest(type: .getKeymapMetadata)
         }
 
+        /// Creates a request for the most recent retained crash record.
+        public static func makeCrashReportRequest() -> [UInt8] {
+            makeRequest(type: .getCrashReport)
+        }
+
+        /// Acknowledges successful durable persistence of the crash record.
+        public static func makeClearCrashReportRequest() -> [UInt8] {
+            makeRequest(type: .clearCrashReport)
+        }
+
         /// Creates a request for consecutive keymap entries.
         ///
         /// - Parameter startIndex: The first layer-major matrix entry to return.
@@ -98,6 +108,35 @@
                     sequence: uint32(from: report, at: 18),
                     capabilities: capabilities,
                     rgbSettings: rgbSettings
+                )
+            }
+        }
+
+        /// Returns a validated retained crash record from a Raw HID packet.
+        public static func crashReport(from bytes: [UInt8]) -> CrashReport? {
+            bytes.withUnsafeBufferPointer { report in
+                let flags = report.count > 8 ? report[8] : 0
+                let guardFlags = flags & 0x06
+                guard hasValidHeader(in: report, messageType: .crashReport),
+                    let reason = CrashReason(rawValue: report[6]),
+                    let phase = CrashPhase(rawValue: report[7]),
+                    flags & ~0x1F == 0,
+                    guardFlags != 0x06,
+                    (flags & 0x08 == 0 && guardFlags == 0)
+                        || (flags & 0x08 != 0 && (guardFlags == 0x02 || guardFlags == 0x04)),
+                    report[9] > 0 || reason == .powerOnOrBrownout || reason == .unknown
+                else { return nil }
+                return CrashReport(
+                    reason: reason,
+                    phase: phase,
+                    flags: flags,
+                    consecutiveFailures: report[9],
+                    buildID: uint32(from: report, at: 10),
+                    uptime: uint32(from: report, at: 14),
+                    programCounter: uint32(from: report, at: 18),
+                    linkRegister: uint32(from: report, at: 22),
+                    stackPointer: uint32(from: report, at: 26),
+                    stackFree: uint16(from: report, at: 30)
                 )
             }
         }

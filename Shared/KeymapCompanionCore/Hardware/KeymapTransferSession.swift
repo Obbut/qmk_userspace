@@ -17,13 +17,16 @@ public struct KeymapTransferSession: Sendable {
 
     /// Starts a fresh firmware keymap download.
     ///
-    /// - Returns: The initial keymap-metadata request action.
+    /// - Returns: Initial keymap-metadata and retained-crash request actions.
     public mutating func start() -> [KeymapSessionAction] {
         latestReport = nil
         latestKeymap = nil
         keymapMetadata = nil
         keymapEntries.removeAll(keepingCapacity: true)
-        return [.write(report: KeymapProtocol.makeKeymapMetadataRequest())]
+        return [
+            .write(report: KeymapProtocol.makeKeymapMetadataRequest()),
+            .write(report: KeymapProtocol.makeCrashReportRequest()),
+        ]
     }
 
     /// Routes one input report through state decoding and keymap pagination.
@@ -32,6 +35,9 @@ public struct KeymapTransferSession: Sendable {
     ///
     /// - Returns: The hardware and publication actions produced by the report.
     public mutating func receive(_ bytes: [UInt8]) -> [KeymapSessionAction] {
+        if let crash = KeymapProtocol.crashReport(from: bytes) {
+            return [.crashReport(crash)]
+        }
         if let metadata = KeymapProtocol.keymapMetadataReport(from: bytes) {
             return beginKeymapTransfer(with: metadata)
         }

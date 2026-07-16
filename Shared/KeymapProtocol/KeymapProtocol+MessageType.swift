@@ -28,5 +28,14 @@ extension KeymapProtocol {
 
         /// Firmware acknowledgement before a deferred bootloader restart.
         case bootloaderAcknowledgement = 9
+
+        /// A host request for the retained crash record.
+        case getCrashReport = 10
+
+        /// The retained crash record encoded in the complete 26-byte payload.
+        case crashReport = 11
+
+        /// A host acknowledgement that durable crash persistence succeeded.
+        case clearCrashReport = 12
     }
 }

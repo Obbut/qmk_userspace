@@ -1,3 +1,4 @@
+import Foundation
 import ObbutKeyboardCatalog
 import ObbutKeymaps
 import Testing
@@ -12,6 +13,13 @@ func protocolRequestsUseVersionFourEnvelope() {
     #expect(Array(request.prefix(4)) == Array("KMAP".utf8))
     #expect(request[4] == 4)
     #expect(request[5] == 3)
+
+    let crashRequest = KeymapProtocol.makeCrashReportRequest()
+    let clearRequest = KeymapProtocol.makeClearCrashReportRequest()
+    #expect(crashRequest.count == KeymapProtocol.reportSize)
+    #expect(crashRequest[5] == 10)
+    #expect(clearRequest.count == KeymapProtocol.reportSize)
+    #expect(clearRequest[5] == 12)
 }
 
 /// Verifies bootloader entry requires the protocol's complete confirmation token.
@@ -29,6 +37,70 @@ func bootloaderRequestIsDeliberateAndAcknowledged() {
     #expect(KeymapProtocol.isBootloaderAcknowledgement(acknowledgement))
     acknowledgement[6] = 0
     #expect(!KeymapProtocol.isBootloaderAcknowledgement(acknowledgement))
+}
+
+/// Verifies the fixed 26-byte crash payload round-trips without padding.
+@Test
+func crashReportRoundTripsAndRejectsMalformedPackets() {
+    let crash = CrashReport(
+        reason: .hardFault,
+        phase: .pointingTask,
+        flags: 0x0B,
+        consecutiveFailures: 2,
+        buildID: 0x1234_5678,
+        uptime: 9_876,
+        programCounter: 0x1000_1235,
+        linkRegister: 0x1000_4567,
+        stackPointer: 0x2004_0B00,
+        stackFree: 321
+    )
+    var packet = [UInt8](repeating: 0, count: KeymapProtocol.reportSize)
+    #expect(packet.withUnsafeMutableBufferPointer {
+        KeymapProtocol.encodeCrashReport(to: $0, report: crash)
+    })
+    #expect(packet[5] == 11)
+    #expect(KeymapProtocol.crashReport(from: packet) == crash)
+
+    var session = KeymapTransferSession()
+    #expect(session.receive(packet) == [.crashReport(crash)])
+
+    packet[7] = 0xFF
+    #expect(KeymapProtocol.crashReport(from: packet) == nil)
+    packet[7] = CrashPhase.pointingTask.rawValue
+    packet[8] = 0x0F
+    #expect(KeymapProtocol.crashReport(from: packet) == nil)
+    packet[8] = crash.flags
+    packet[9] = 0
+    #expect(KeymapProtocol.crashReport(from: packet) == nil)
+    packet.removeLast()
+    #expect(KeymapProtocol.crashReport(from: packet) == nil)
+}
+
+/// Verifies persistence is structured and append-only before acknowledgement.
+@Test
+func crashReportPersistenceAppendsStructuredEntries() throws {
+    let directory = FileManager.default.temporaryDirectory
+        .appendingPathComponent("CrashReportLogTests-\(UUID().uuidString)")
+    defer { try? FileManager.default.removeItem(at: directory) }
+    let report = CrashReport(
+        reason: .watchdog,
+        phase: .protocolHousekeeping,
+        flags: 8,
+        consecutiveFailures: 1,
+        buildID: 7,
+        uptime: 8,
+        programCounter: 0,
+        linkRegister: 0,
+        stackPointer: 9,
+        stackFree: 10
+    )
+    try CrashReportLog.persist(report, in: directory)
+    try CrashReportLog.persist(report, in: directory)
+    let data = try Data(contentsOf: directory.appendingPathComponent("firmware-crashes.jsonl"))
+    let lines = String(decoding: data, as: UTF8.self).split(separator: "\n")
+    #expect(lines.count == 2)
+    #expect(lines.allSatisfy { $0.contains("\"buildID\":7") })
+    #expect(lines.allSatisfy { $0.contains("\"recordedAt\"") })
 }
 
 /// Verifies every catalogued keyboard produces valid renderer input.
@@ -166,7 +238,10 @@ func transferSessionPublishesZeroEncoderKeymap() {
     }
 
     var session = KeymapTransferSession()
-    #expect(session.start() == [.write(report: KeymapProtocol.makeKeymapMetadataRequest())])
+    #expect(session.start() == [
+        .write(report: KeymapProtocol.makeKeymapMetadataRequest()),
+        .write(report: KeymapProtocol.makeCrashReportRequest()),
+    ])
     #expect(session.receive(metadata) == [.write(report: KeymapProtocol.makeKeymapChunkRequest(startingAt: 0))])
     let completion = session.receive(chunk)
 

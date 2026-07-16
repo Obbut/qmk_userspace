@@ -3,6 +3,26 @@
 
 /// Firmware-side protocol-v4 report encoders.
 extension KeymapProtocol {
+    /// Encodes the complete retained crash record into the 26-byte payload.
+    @discardableResult
+    public static func encodeCrashReport(
+        to bytes: UnsafeMutableBufferPointer<UInt8>,
+        report: CrashReport
+    ) -> Bool {
+        guard initializeReport(bytes, as: .crashReport) else { return false }
+        bytes[6] = report.reason.rawValue
+        bytes[7] = report.phase.rawValue
+        bytes[8] = report.flags
+        bytes[9] = report.consecutiveFailures
+        writeUInt32(report.buildID, to: bytes, at: 10)
+        writeUInt32(report.uptime, to: bytes, at: 14)
+        writeUInt32(report.programCounter, to: bytes, at: 18)
+        writeUInt32(report.linkRegister, to: bytes, at: 22)
+        writeUInt32(report.stackPointer, to: bytes, at: 26)
+        writeUInt16(report.stackFree, to: bytes, at: 30)
+        return true
+    }
+
     /// Encodes acknowledgement of an accepted bootloader request.
     @discardableResult
     public static func encodeBootloaderAcknowledgement(

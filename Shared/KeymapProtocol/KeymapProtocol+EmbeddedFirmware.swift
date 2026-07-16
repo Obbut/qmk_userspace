@@ -66,11 +66,16 @@
                     startingAt: KeymapProtocol.uint16(from: bytes, at: 6),
                     using: keymap_protocol_platform_get_snapshot()
                 )
+            case .getCrashReport:
+                isConnected = true
+                sendCrashReport()
+            case .clearCrashReport:
+                keymap_protocol_platform_clear_crash_report()
             case .setRGBSettings:
                 applyRGBSettings(from: bytes)
             case .enterBootloader:
                 acceptBootloaderRequest(from: bytes)
-            case .state, .keymapMetadata, .keymapChunk, .bootloaderAcknowledgement:
+            case .state, .keymapMetadata, .keymapChunk, .bootloaderAcknowledgement, .crashReport:
                 break
             }
         }
@@ -170,6 +175,36 @@
                     styleFingerprint: snapshot.style_fingerprint,
                     entryCount: entryCount,
                     encoderCount: snapshot.encoder_count
+                )
+            }
+            guard encoded else { return }
+            send(&report)
+        }
+
+        /// Reads the retained C record directly and sends it without recreating state in Swift.
+        fileprivate static func sendCrashReport() {
+            var retained = obbut_crash_report_t()
+            guard keymap_protocol_platform_get_crash_report(&retained) != 0,
+                let reason = CrashReason(rawValue: retained.reason),
+                let phase = CrashPhase(rawValue: retained.phase)
+            else { return }
+            let crash = CrashReport(
+                reason: reason,
+                phase: phase,
+                flags: retained.flags,
+                consecutiveFailures: retained.consecutive_failures,
+                buildID: retained.build_id,
+                uptime: retained.uptime,
+                programCounter: retained.program_counter,
+                linkRegister: retained.link_register,
+                stackPointer: retained.stack_pointer,
+                stackFree: retained.stack_free
+            )
+            var report: [32 of UInt8] = .init(repeating: 0)
+            let encoded = withUnsafeMutableBytes(of: &report) { rawBytes in
+                KeymapProtocol.encodeCrashReport(
+                    to: rawBytes.bindMemory(to: UInt8.self),
+                    report: crash
                 )
             }
             guard encoded else { return }

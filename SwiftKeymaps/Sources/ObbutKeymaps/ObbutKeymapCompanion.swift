@@ -12,7 +12,17 @@ public struct ObbutKeymapCompanion: FirmwareFeature, Sendable {
         context: inout FirmwareContext
     ) {
         guard context.isKeyboardMaster else { return }
+#if OBBUT_DIAGNOSTICS && !OBBUT_BYPASS_PROTOCOL_HOUSEKEEPING
+#if hasFeature(Embedded)
+        obbut_crash_recovery_mark_phase(4)
+#endif
         FirmwareProtocolBridge.housekeeping()
+#if hasFeature(Embedded)
+        obbut_crash_recovery_mark_phase(3)
+#endif
+#else
+        FirmwareProtocolBridge.housekeeping()
+#endif
     }
 
     public static func rawHIDReceive(

@@ -2,6 +2,8 @@
 *.uf2
 *.hex
 *.bin
+*.elf
+*.map
 
 # QMK build artifacts
 .build/

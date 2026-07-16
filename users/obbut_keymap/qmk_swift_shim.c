@@ -4,6 +4,12 @@
 #include QMK_KEYBOARD_H
 #include "keymap_protocol_bridge.h"
 
+#if defined(OBBUT_DIAGNOSTICS)
+#    define OBBUT_DEEP_PHASE(phase) obbut_crash_recovery_mark_phase(phase)
+#else
+#    define OBBUT_DEEP_PHASE(phase) ((void)0)
+#endif
+
 // Cortex-M0+ has naturally atomic aligned 32-bit loads and stores, but the
 // bare-metal toolchain ships without libatomic. Swift uses these helpers only
 // for its one-time initialization tokens before QMK begins processing input.
@@ -246,32 +252,53 @@ void obbut_platform_rgb_set_color(
 }
 
 uint16_t obbut_platform_swift_keycode(uint8_t layer, uint8_t row, uint8_t column) {
-    return qmk_swift_keycode_at(layer, row, column);
+    OBBUT_DEEP_PHASE(OBBUT_CRASH_PHASE_METADATA_TRAVERSAL);
+    uint16_t value = qmk_swift_keycode_at(layer, row, column);
+    OBBUT_DEEP_PHASE(OBBUT_CRASH_PHASE_RAW_HID);
+    return value;
 }
 
 uint16_t obbut_platform_swift_legend_id(uint8_t layer, uint8_t row, uint8_t column) {
-    return qmk_swift_legend_id_at(layer, row, column);
+    OBBUT_DEEP_PHASE(OBBUT_CRASH_PHASE_METADATA_TRAVERSAL);
+    uint16_t value = qmk_swift_legend_id_at(layer, row, column);
+    OBBUT_DEEP_PHASE(OBBUT_CRASH_PHASE_RAW_HID);
+    return value;
 }
 
 uint16_t obbut_platform_swift_style_id(uint8_t layer, uint8_t row, uint8_t column) {
-    return qmk_swift_style_id_at(layer, row, column);
+    OBBUT_DEEP_PHASE(OBBUT_CRASH_PHASE_METADATA_TRAVERSAL);
+    uint16_t value = qmk_swift_style_id_at(layer, row, column);
+    OBBUT_DEEP_PHASE(OBBUT_CRASH_PHASE_RAW_HID);
+    return value;
 }
 
 uint32_t obbut_platform_swift_style_color(uint8_t layer, uint8_t row, uint8_t column) {
-    return qmk_swift_style_color_at(layer, row, column);
+    OBBUT_DEEP_PHASE(OBBUT_CRASH_PHASE_METADATA_TRAVERSAL);
+    uint32_t value = qmk_swift_style_color_at(layer, row, column);
+    OBBUT_DEEP_PHASE(OBBUT_CRASH_PHASE_RAW_HID);
+    return value;
 }
 
 uint8_t keymap_layer_count(void) {
-    return qmk_swift_layer_count();
+    OBBUT_DEEP_PHASE(OBBUT_CRASH_PHASE_KEY_LOOKUP);
+    uint8_t value = qmk_swift_layer_count();
+    OBBUT_DEEP_PHASE(OBBUT_CRASH_PHASE_IDLE);
+    return value;
 }
 
 uint16_t keycode_at_keymap_location(uint8_t layer, uint8_t row, uint8_t column) {
-    return qmk_swift_keycode_at(layer, row, column);
+    OBBUT_DEEP_PHASE(OBBUT_CRASH_PHASE_KEY_LOOKUP);
+    uint16_t value = qmk_swift_keycode_at(layer, row, column);
+    OBBUT_DEEP_PHASE(OBBUT_CRASH_PHASE_IDLE);
+    return value;
 }
 
 #if defined(ENCODER_MAP_ENABLE)
 uint8_t encodermap_layer_count(void) {
-    return qmk_swift_layer_count();
+    OBBUT_DEEP_PHASE(OBBUT_CRASH_PHASE_KEY_LOOKUP);
+    uint8_t value = qmk_swift_layer_count();
+    OBBUT_DEEP_PHASE(OBBUT_CRASH_PHASE_IDLE);
+    return value;
 }
 
 uint16_t keycode_at_encodermap_location(uint8_t layer, uint8_t encoder, bool clockwise) {
@@ -279,54 +306,100 @@ uint16_t keycode_at_encodermap_location(uint8_t layer, uint8_t encoder, bool clo
     if (encoder_count == 0) {
         return KC_NO;
     }
-    return qmk_swift_encoder_keycode_at(layer, encoder % encoder_count, clockwise ? 1 : 0);
+    OBBUT_DEEP_PHASE(OBBUT_CRASH_PHASE_KEY_LOOKUP);
+    uint16_t value = qmk_swift_encoder_keycode_at(layer, encoder % encoder_count, clockwise ? 1 : 0);
+    OBBUT_DEEP_PHASE(OBBUT_CRASH_PHASE_IDLE);
+    return value;
 }
 #endif
 
 void keyboard_post_init_user(void) {
+    obbut_crash_recovery_init();
+    obbut_crash_recovery_mark_phase(OBBUT_CRASH_PHASE_SWIFT_POST_INIT);
     qmk_swift_post_init();
+    obbut_crash_recovery_initialize_stack();
+    obbut_crash_recovery_mark_phase(OBBUT_CRASH_PHASE_IDLE);
 }
 
 void housekeeping_task_user(void) {
+    obbut_crash_recovery_mark_phase(OBBUT_CRASH_PHASE_SWIFT_HOUSEKEEPING);
     qmk_swift_housekeeping();
+    obbut_crash_recovery_mark_phase(OBBUT_CRASH_PHASE_IDLE);
+    obbut_crash_recovery_heartbeat();
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    obbut_crash_recovery_mark_phase(OBBUT_CRASH_PHASE_PROCESS_RECORD);
     obbut_current_keyrecord = record;
     bool should_continue = qmk_swift_process_record(keycode, record->event.pressed ? 1 : 0) != 0;
     obbut_current_keyrecord = NULL;
+    obbut_crash_recovery_mark_phase(OBBUT_CRASH_PHASE_IDLE);
     return should_continue;
 }
 
 layer_state_t layer_state_set_user(layer_state_t state) {
-    return (layer_state_t)qmk_swift_layer_state_set((uint32_t)state);
+    obbut_crash_recovery_mark_phase(OBBUT_CRASH_PHASE_LAYER_STATE);
+    layer_state_t result = (layer_state_t)qmk_swift_layer_state_set((uint32_t)state);
+    obbut_crash_recovery_mark_phase(OBBUT_CRASH_PHASE_IDLE);
+    return result;
 }
 
 #if defined(POINTING_DEVICE_ENABLE)
 void pointing_device_init_user(void) {
+#    if !defined(OBBUT_BYPASS_POINTER)
+    OBBUT_DEEP_PHASE(OBBUT_CRASH_PHASE_POINTING_INITIALIZATION);
     qmk_swift_pointing_device_init();
+    OBBUT_DEEP_PHASE(OBBUT_CRASH_PHASE_IDLE);
+#    endif
 }
 
 report_mouse_t pointing_device_task_user(report_mouse_t report) {
+#    if !defined(OBBUT_BYPASS_POINTER)
+    OBBUT_DEEP_PHASE(OBBUT_CRASH_PHASE_POINTING_TASK);
     qmk_swift_pointing_device_task(&report.x, &report.y, &report.h, &report.v, &report.buttons);
+    OBBUT_DEEP_PHASE(OBBUT_CRASH_PHASE_IDLE);
+#    endif
     return report;
 }
 #endif
 
 #if defined(RGB_MATRIX_ENABLE)
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
-    return qmk_swift_rgb_matrix_indicators(led_min, led_max) != 0;
+#    if defined(OBBUT_BYPASS_RGB)
+    return true;
+#    else
+    OBBUT_DEEP_PHASE(OBBUT_CRASH_PHASE_RGB_RENDERING);
+    bool result = qmk_swift_rgb_matrix_indicators(led_min, led_max) != 0;
+    OBBUT_DEEP_PHASE(OBBUT_CRASH_PHASE_IDLE);
+    return result;
+#    endif
 }
 #endif
 
 #if defined(RAW_ENABLE)
 #    if defined(OBBUT_KEYCHRON_FIRMWARE)
 bool keychron_raw_hid_receive_user(uint8_t *data, uint8_t length) {
-    return qmk_swift_raw_hid_receive(data, length) != 0;
+#        if defined(OBBUT_BYPASS_RAW_HID)
+    (void)data;
+    (void)length;
+    return false;
+#        else
+    obbut_crash_recovery_mark_phase(OBBUT_CRASH_PHASE_RAW_HID);
+    bool result = qmk_swift_raw_hid_receive(data, length) != 0;
+    obbut_crash_recovery_mark_phase(OBBUT_CRASH_PHASE_IDLE);
+    return result;
+#        endif
 }
 #    else
 void raw_hid_receive(uint8_t *data, uint8_t length) {
+#        if !defined(OBBUT_BYPASS_RAW_HID)
+    obbut_crash_recovery_mark_phase(OBBUT_CRASH_PHASE_RAW_HID);
     (void)qmk_swift_raw_hid_receive(data, length);
+    obbut_crash_recovery_mark_phase(OBBUT_CRASH_PHASE_IDLE);
+#        else
+    (void)data;
+    (void)length;
+#        endif
 }
 #    endif
 #endif

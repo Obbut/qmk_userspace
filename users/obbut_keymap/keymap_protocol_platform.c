@@ -200,6 +200,14 @@ void keymap_protocol_platform_enter_bootloader(void) {
 #endif
 }
 
+uint8_t keymap_protocol_platform_get_crash_report(obbut_crash_report_t *report) {
+    return obbut_crash_recovery_get_report(report);
+}
+
+void keymap_protocol_platform_clear_crash_report(void) {
+    obbut_crash_recovery_clear_report();
+}
+
 uint8_t keymap_protocol_platform_apply_rgb(
     uint8_t effect_index,
     uint8_t hue,

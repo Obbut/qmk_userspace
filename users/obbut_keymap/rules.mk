@@ -3,6 +3,7 @@
 VPATH += $(QMK_USERSPACE)/users/obbut_keymap
 SRC += qmk_swift_shim.c
 SRC += keymap_protocol_platform.c
+SRC += crash_recovery.c
 SRC += embedded_selected_firmware.clib
 SRC += embedded_firmware_module.clib
 SRC += embedded_obbut_keymaps.clib
@@ -10,9 +11,45 @@ SRC += embedded_qmk_firmware_runtime.clib
 SRC += embedded_qmk_keymap_kit.clib
 RAW_ENABLE = yes
 
+# Preserve line tables in the matching ELF/map without putting debug data in
+# the flashed UF2/bin.
+EXTRAFLAGS += -g3
+
+ifneq ($(OBBUT_DIAGNOSTICS),)
+    OPT_DEFS += -DOBBUT_DIAGNOSTICS
+    EMBEDDED_SWIFT_CONDITIONAL_FLAGS += -D OBBUT_DIAGNOSTICS
+    CONSOLE_ENABLE = yes
+endif
+ifneq ($(OBBUT_INJECT_HARDFAULT),)
+    OPT_DEFS += -DOBBUT_INJECT_HARDFAULT
+endif
+ifneq ($(OBBUT_INJECT_HANG),)
+    OPT_DEFS += -DOBBUT_INJECT_HANG
+endif
+ifneq ($(OBBUT_INJECT_STACK_PRESSURE),)
+    OPT_DEFS += -DOBBUT_INJECT_STACK_PRESSURE
+endif
+ifneq ($(OBBUT_BYPASS_POINTER),)
+    OPT_DEFS += -DOBBUT_BYPASS_POINTER
+endif
+ifneq ($(OBBUT_BYPASS_RGB),)
+    OPT_DEFS += -DOBBUT_BYPASS_RGB
+endif
+ifneq ($(OBBUT_BYPASS_RAW_HID),)
+    OPT_DEFS += -DOBBUT_BYPASS_RAW_HID
+endif
+ifneq ($(OBBUT_BYPASS_SPLIT),)
+    OPT_DEFS += -DOBBUT_BYPASS_SPLIT
+endif
+ifneq ($(OBBUT_BYPASS_PROTOCOL_HOUSEKEEPING),)
+    OPT_DEFS += -DOBBUT_BYPASS_PROTOCOL_HOUSEKEEPING
+    EMBEDDED_SWIFT_CONDITIONAL_FLAGS += -D OBBUT_BYPASS_PROTOCOL_HOUSEKEEPING
+endif
+
 LDFLAGS += -Wl,-u,qmk_swift_post_init
 LDFLAGS += -Wl,-u,qmk_swift_keycode_at
 LDFLAGS += -Wl,-u,qmk_swift_process_record
+LDFLAGS += -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref
 
 EMBEDDED_SWIFT_ROOT := $(QMK_USERSPACE)/SwiftKeymaps
 EMBEDDED_SWIFT_SOURCE_ROOT := $(EMBEDDED_SWIFT_ROOT)/Sources
@@ -56,6 +93,20 @@ EMBEDDED_SWIFT_INPUTS := \
 EMBEDDED_SWIFT_INPUT_HASH := $(shell cat $(EMBEDDED_SWIFT_INPUTS) | sha256sum | cut -c1-16)
 EMBEDDED_SWIFT_INPUT_STAMP := $(EMBEDDED_SWIFT_MODULE_DIR)/input-hash.txt
 
+# Include the shared C boundary, board adapter, selected keymap, target, and
+# diagnostic/stack configuration in the retained report's compact build ID.
+# This is intentionally separate from the Swift incremental-build hash.
+OBBUT_BUILD_ID_INPUTS := $(sort \
+    $(EMBEDDED_SWIFT_INPUTS) \
+    $(wildcard $(QMK_USERSPACE)/users/obbut_keymap/*.[ch]) \
+    $(wildcard $(QMK_USERSPACE)/users/obbut_halcyon/*.[ch]) \
+    $(wildcard $(MAIN_KEYMAP_PATH_1)/*.[ch]) \
+    $(wildcard $(MAIN_KEYMAP_PATH_1)/*.mk))
+OBBUT_BUILD_SOURCE_HASH := $(shell cat $(OBBUT_BUILD_ID_INPUTS) | sha256sum | cut -c1-16)
+OBBUT_BUILD_CONFIGURATION := $(KEYBOARD)|$(KEYMAP)|$(TARGET)|$(MCU)|$(OBBUT_BUILD_SOURCE_HASH)|$(OBBUT_DIAGNOSTICS)|$(OBBUT_INJECT_HARDFAULT)|$(OBBUT_INJECT_HANG)|$(OBBUT_INJECT_STACK_PRESSURE)|$(OBBUT_BYPASS_POINTER)|$(OBBUT_BYPASS_RGB)|$(OBBUT_BYPASS_RAW_HID)|$(OBBUT_BYPASS_SPLIT)|$(OBBUT_BYPASS_PROTOCOL_HOUSEKEEPING)|$(USE_PROCESS_STACKSIZE)|$(USE_EXCEPTIONS_STACKSIZE)|$(HLC_CIRQUE_TRACKPAD)|$(HLC_ENCODER)|$(HLC_NONE)
+OBBUT_BUILD_ID := $(shell printf '%s' '$(OBBUT_BUILD_CONFIGURATION)' | sha256sum | cut -c1-8)
+OPT_DEFS += -DOBBUT_BUILD_ID=0x$(OBBUT_BUILD_ID)
+
 .PHONY: embedded-swift-input-force
 embedded-swift-input-force:
 
@@ -97,6 +148,8 @@ EMBEDDED_SWIFT_FLAGS = \
     -cross-module-optimization \
     -parse-as-library \
     -Osize \
+    -gline-tables-only \
+    $(EMBEDDED_SWIFT_CONDITIONAL_FLAGS) \
     -Xfrontend -function-sections \
     -Xfrontend -disable-stack-protector \
     $(EMBEDDED_SWIFT_CPU_FLAGS) \

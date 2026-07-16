@@ -4,7 +4,6 @@ OPT_DEFS += -DCOMMUNITY_MODULE_DEFAULTS_ENABLE -DOBBUT_PLANCK_FIRMWARE
 VPATH += modules/zsa/defaults
 POST_CONFIG_H += keyboards/zsa/common/keycode_aliases.h
 RAW_ENABLE = yes
-SRC += planck_crash_recovery.c
 OBBUT_SWIFT_FIRMWARE_MODULE = PlanckFirmware
 OBBUT_SWIFT_FIRMWARE_DEFINE = OBBUT_FIRMWARE_PLANCK
 include $(QMK_USERSPACE)/users/obbut_keymap/rules.mk

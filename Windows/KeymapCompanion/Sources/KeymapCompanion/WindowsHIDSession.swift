@@ -144,6 +144,15 @@ final class WindowsHIDSession: @unchecked Sendable {
                 eventHandler(.keymap(keymap))
             case let .state(report):
                 eventHandler(.state(report))
+            case let .crashReport(report):
+                do {
+                    try CrashReportLog.persist(report)
+                    enqueueWrite(KeymapProtocol.makeClearCrashReportRequest())
+                } catch {
+                    eventHandler(.failed(
+                        message: "Could not persist firmware crash report: \(error.localizedDescription)"
+                    ))
+                }
             case let .failed(message):
                 eventHandler(.failed(message: message))
             }

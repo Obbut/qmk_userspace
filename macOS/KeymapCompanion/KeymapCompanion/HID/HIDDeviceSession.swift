@@ -104,6 +104,15 @@ final class HIDDeviceSession {
                 monitor?.receive(keymap, from: self)
             case let .state(report):
                 monitor?.receive(report, from: self)
+            case let .crashReport(report):
+                do {
+                    try CrashReportLog.persist(report)
+                    send(KeymapProtocol.makeClearCrashReportRequest())
+                } catch {
+                    monitor?.receiveTransferFailure(
+                        "Could not persist firmware crash report: \(error.localizedDescription)"
+                    )
+                }
             case let .failed(message):
                 monitor?.receiveTransferFailure(message)
             }

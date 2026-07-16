@@ -26,6 +26,57 @@ enum obbut_custom_keycodes {
     PTR_SCROLL_UP,
 };
 
+// Stable across firmware builds: retained crash records may outlive the image
+// that produced them and must remain interpretable without its symbols.
+typedef enum {
+    OBBUT_CRASH_REASON_UNKNOWN = 0,
+    OBBUT_CRASH_REASON_HARD_FAULT = 1,
+    OBBUT_CRASH_REASON_MEMORY_MANAGEMENT_FAULT = 2,
+    OBBUT_CRASH_REASON_BUS_FAULT = 3,
+    OBBUT_CRASH_REASON_USAGE_FAULT = 4,
+    OBBUT_CRASH_REASON_WATCHDOG = 5,
+    OBBUT_CRASH_REASON_POWER_ON_OR_BROWNOUT = 6,
+} obbut_crash_reason_t;
+
+typedef enum {
+    OBBUT_CRASH_PHASE_IDLE = 0,
+    OBBUT_CRASH_PHASE_BOOT = 1,
+    OBBUT_CRASH_PHASE_SWIFT_POST_INIT = 2,
+    OBBUT_CRASH_PHASE_SWIFT_HOUSEKEEPING = 3,
+    OBBUT_CRASH_PHASE_PROTOCOL_HOUSEKEEPING = 4,
+    OBBUT_CRASH_PHASE_SPLIT_SYNCHRONIZATION = 5,
+    OBBUT_CRASH_PHASE_KEY_LOOKUP = 6,
+    OBBUT_CRASH_PHASE_PROCESS_RECORD = 7,
+    OBBUT_CRASH_PHASE_LAYER_STATE = 8,
+    OBBUT_CRASH_PHASE_POINTING_INITIALIZATION = 9,
+    OBBUT_CRASH_PHASE_POINTING_TASK = 10,
+    OBBUT_CRASH_PHASE_RGB_RENDERING = 11,
+    OBBUT_CRASH_PHASE_RAW_HID = 12,
+    OBBUT_CRASH_PHASE_METADATA_TRAVERSAL = 13,
+} obbut_crash_phase_t;
+
+enum obbut_crash_flags {
+    OBBUT_CRASH_FLAG_FAULT_REGISTERS_VALID = 1 << 0,
+    OBBUT_CRASH_FLAG_STACK_GUARD_VALID = 1 << 1,
+    OBBUT_CRASH_FLAG_STACK_GUARD_DAMAGED = 1 << 2,
+    OBBUT_CRASH_FLAG_STACK_HIGH_WATER_VALID = 1 << 3,
+    OBBUT_CRASH_FLAG_DEEP_DIAGNOSTICS = 1 << 4,
+};
+
+// Exactly 26 bytes: this is the complete protocol-v4 crash payload.
+typedef struct __attribute__((packed)) {
+    uint8_t reason;
+    uint8_t phase;
+    uint8_t flags;
+    uint8_t consecutive_failures;
+    uint32_t build_id;
+    uint32_t uptime;
+    uint32_t program_counter;
+    uint32_t link_register;
+    uint32_t stack_pointer;
+    uint16_t stack_free;
+} obbut_crash_report_t;
+
 static inline uint16_t obbut_qmk_keycode_brightness_down(void) { return KC_BRID; }
 static inline uint16_t obbut_qmk_keycode_brightness_up(void) { return KC_BRIU; }
 uint16_t obbut_qmk_keycode_mission_control(void);
@@ -114,6 +165,8 @@ keymap_protocol_platform_entry_t keymap_protocol_platform_get_entry(uint16_t ind
 void keymap_protocol_platform_send(uint8_t *KEYMAP_PROTOCOL_NONNULL data, uint8_t length);
 uint8_t keymap_protocol_platform_apply_rgb(uint8_t, uint8_t, uint8_t, uint8_t, uint8_t, uint8_t);
 void keymap_protocol_platform_enter_bootloader(void);
+uint8_t keymap_protocol_platform_get_crash_report(obbut_crash_report_t *KEYMAP_PROTOCOL_NONNULL report);
+void keymap_protocol_platform_clear_crash_report(void);
 
 void qmk_swift_post_init(void);
 void qmk_swift_housekeeping(void);
@@ -163,3 +216,9 @@ uint16_t obbut_platform_swift_keycode(uint8_t layer, uint8_t row, uint8_t column
 uint16_t obbut_platform_swift_legend_id(uint8_t layer, uint8_t row, uint8_t column);
 uint16_t obbut_platform_swift_style_id(uint8_t layer, uint8_t row, uint8_t column);
 uint32_t obbut_platform_swift_style_color(uint8_t layer, uint8_t row, uint8_t column);
+void obbut_crash_recovery_init(void);
+void obbut_crash_recovery_initialize_stack(void);
+void obbut_crash_recovery_mark_phase(uint8_t phase);
+void obbut_crash_recovery_heartbeat(void);
+uint8_t obbut_crash_recovery_get_report(obbut_crash_report_t *KEYMAP_PROTOCOL_NONNULL report);
+void obbut_crash_recovery_clear_report(void);

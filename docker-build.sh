@@ -263,6 +263,8 @@ build_kyria_left() {
         -e MAKEFLAGS="-j$BUILD_JOBS" \
         "$IMAGE_NAME" \
         sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/kyria/rev4 -km obbut -e HLC_CIRQUE_TRACKPAD=1 -e TARGET=kyria_rev4_obbut_left_cirque'
+    cp "$BUILD_CACHE/kyria_rev4_obbut_left_cirque.elf" "$SCRIPT_DIR/"
+    cp "$BUILD_CACHE/kyria_rev4_obbut_left_cirque.map" "$SCRIPT_DIR/"
     echo "Build complete: kyria_rev4_obbut_left_cirque.uf2"
 }
 
@@ -279,6 +281,8 @@ build_kyria_right() {
         -e MAKEFLAGS="-j$BUILD_JOBS" \
         "$IMAGE_NAME" \
         sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/kyria/rev4 -km obbut -e HLC_ENCODER=1 -e TARGET=kyria_rev4_obbut_right_encoder'
+    cp "$BUILD_CACHE/kyria_rev4_obbut_right_encoder.elf" "$SCRIPT_DIR/"
+    cp "$BUILD_CACHE/kyria_rev4_obbut_right_encoder.map" "$SCRIPT_DIR/"
     echo "Build complete: kyria_rev4_obbut_right_encoder.uf2"
 }
 
@@ -347,6 +351,8 @@ build_elora_left() {
         -e MAKEFLAGS="-j$BUILD_JOBS" \
         "$IMAGE_NAME" \
         sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/elora/rev2 -km obbut -e HLC_NONE=1 -e TARGET=elora_rev2_obbut_left'
+    cp "$BUILD_CACHE/elora_rev2_obbut_left.elf" "$SCRIPT_DIR/"
+    cp "$BUILD_CACHE/elora_rev2_obbut_left.map" "$SCRIPT_DIR/"
     echo "Build complete: elora_rev2_obbut_left.uf2"
 }
 
@@ -363,6 +369,8 @@ build_elora_right() {
         -e MAKEFLAGS="-j$BUILD_JOBS" \
         "$IMAGE_NAME" \
         sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/elora/rev2 -km obbut -e HLC_ENCODER=1 -e TARGET=elora_rev2_obbut_right_encoder'
+    cp "$BUILD_CACHE/elora_rev2_obbut_right_encoder.elf" "$SCRIPT_DIR/"
+    cp "$BUILD_CACHE/elora_rev2_obbut_right_encoder.map" "$SCRIPT_DIR/"
     echo "Build complete: elora_rev2_obbut_right_encoder.uf2"
 }
 
@@ -376,6 +384,8 @@ build_q15() {
         -e MAKEFLAGS="-j$BUILD_JOBS" \
         "$KEYCHRON_IMAGE_NAME" \
         sh -c 'export QMK_USERSPACE=/qmk_userspace && cd /qmk_firmware && make keychron/q15_max/ansi_encoder:obbut'
+    cp "$KEYCHRON_BUILD_CACHE/keychron_q15_max_ansi_encoder_obbut.elf" "$SCRIPT_DIR/"
+    cp "$KEYCHRON_BUILD_CACHE/keychron_q15_max_ansi_encoder_obbut.map" "$SCRIPT_DIR/"
     echo "Build complete: keychron_q15_max_ansi_encoder_obbut.bin"
 }
 
@@ -389,6 +399,8 @@ build_planck() {
         -e MAKEFLAGS="-j$BUILD_JOBS" \
         "$ZSA_IMAGE_NAME" \
         sh -c 'export QMK_USERSPACE=/qmk_userspace && cd /qmk_firmware && make zsa/planck_ez/glow:obbut'
+    cp "$ZSA_BUILD_CACHE/zsa_planck_ez_glow_obbut.elf" "$SCRIPT_DIR/"
+    cp "$ZSA_BUILD_CACHE/zsa_planck_ez_glow_obbut.map" "$SCRIPT_DIR/"
     echo "Build complete: zsa_planck_ez_glow_obbut.bin"
 }
 

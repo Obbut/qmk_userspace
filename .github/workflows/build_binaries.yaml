@@ -66,6 +66,14 @@ jobs:
             kyria_rev4_obbut_right_encoder.uf2
             elora_rev2_obbut_left.uf2
             elora_rev2_obbut_right_encoder.uf2
+            kyria_rev4_obbut_left_cirque.elf
+            kyria_rev4_obbut_left_cirque.map
+            kyria_rev4_obbut_right_encoder.elf
+            kyria_rev4_obbut_right_encoder.map
+            elora_rev2_obbut_left.elf
+            elora_rev2_obbut_left.map
+            elora_rev2_obbut_right_encoder.elf
+            elora_rev2_obbut_right_encoder.map
           retention-days: 1
 
   build-q15:
@@ -86,7 +94,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: q15-max-firmware
-          path: keychron_q15_max_ansi_encoder_obbut.bin
+          path: |
+            keychron_q15_max_ansi_encoder_obbut.bin
+            keychron_q15_max_ansi_encoder_obbut.elf
+            keychron_q15_max_ansi_encoder_obbut.map
           retention-days: 1
 
   build-planck:
@@ -107,7 +118,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: planck-firmware
-          path: zsa_planck_ez_glow_obbut.bin
+          path: |
+            zsa_planck_ez_glow_obbut.bin
+            zsa_planck_ez_glow_obbut.elf
+            zsa_planck_ez_glow_obbut.map
           retention-days: 1
 
   publish:
@@ -163,7 +177,19 @@ jobs:
             elora_rev2_obbut_left.uf2 \
             elora_rev2_obbut_right_encoder.uf2 \
             keychron_q15_max_ansi_encoder_obbut.bin \
-            zsa_planck_ez_glow_obbut.bin
+            zsa_planck_ez_glow_obbut.bin \
+            kyria_rev4_obbut_left_cirque.elf \
+            kyria_rev4_obbut_left_cirque.map \
+            kyria_rev4_obbut_right_encoder.elf \
+            kyria_rev4_obbut_right_encoder.map \
+            elora_rev2_obbut_left.elf \
+            elora_rev2_obbut_left.map \
+            elora_rev2_obbut_right_encoder.elf \
+            elora_rev2_obbut_right_encoder.map \
+            keychron_q15_max_ansi_encoder_obbut.elf \
+            keychron_q15_max_ansi_encoder_obbut.map \
+            zsa_planck_ez_glow_obbut.elf \
+            zsa_planck_ez_glow_obbut.map
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
