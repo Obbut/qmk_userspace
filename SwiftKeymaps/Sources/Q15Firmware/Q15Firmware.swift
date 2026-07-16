@@ -13,10 +13,152 @@ public enum Q15Firmware {
 
     public static var keymap: some KeymapDefinition {
         Layer(Q15Layer.macBase, name: "macOS") {
-            MacBaseKeys()
+            Row {
+                ObbutKey.screenshot
+                Key.one
+                Key.two
+                Key.three
+                Key.four
+                Key.five
+                Key.six
+                Key.seven
+                Key.eight
+                Key.nine
+                Key.zero
+                Key.minus
+                Key.backspace
+                Key.playPause
+                Key.tab
+                Key.q
+                Key.w
+                Key.e
+                Key.r
+                Key.t
+                Key.y
+                Key.u
+            }
+            Row {
+                Key.i
+                Key.o
+                Key.p
+                Key.leftBracket
+                Key.rightBracket
+                Key.backslash
+                ObbutKey.escapeAerospace
+                Key.a
+                Key.s
+                Key.d
+                Key.f
+                Key.g
+                Key.h
+                Key.j
+                Key.k
+                Key.l
+                Key.semicolon
+                Key.quote
+                Key.return
+                Key.leftShift
+                Key.z
+                Key.x
+            }
+            Row {
+                Key.c
+                Key.v
+                Key.b
+                Key.n
+                Key.m
+                Key.comma
+                Key.period
+                Key.slash
+                Key.rightShift
+                Key.up
+                Key.delete
+                Key.leftControl
+                Key.no
+                Key.leftOption
+                Key.leftCommand
+                Key.space
+                Key.layerTap(Q15Layer.raise, key: .space)
+                Key.momentary(Q15Layer.macFunction)
+                Key.momentary(Q15Layer.commonFunction)
+                Key.left
+                Key.down
+                Key.right
+            }
         }
         Layer(Q15Layer.windowsBase, name: "Windows") {
-            WindowsBaseKeys()
+            Row {
+                Key.printScreen
+                Key.one
+                Key.two
+                Key.three
+                Key.four
+                Key.five
+                Key.six
+                Key.seven
+                Key.eight
+                Key.nine
+                Key.zero
+                Key.minus
+                Key.backspace
+                Key.playPause
+                Key.tab
+                Key.q
+                Key.w
+                Key.e
+                Key.r
+                Key.t
+                Key.y
+                Key.u
+            }
+            Row {
+                Key.i
+                Key.o
+                Key.p
+                Key.leftBracket
+                Key.rightBracket
+                Key.backslash
+                Key.escape
+                Key.a
+                Key.s
+                Key.d
+                Key.f
+                Key.g
+                Key.h
+                Key.j
+                Key.k
+                Key.l
+                Key.semicolon
+                Key.quote
+                Key.return
+                Key.leftShift
+                Key.z
+                Key.x
+            }
+            Row {
+                Key.c
+                Key.v
+                Key.b
+                Key.n
+                Key.m
+                Key.comma
+                Key.period
+                Key.slash
+                Key.rightShift
+                Key.up
+                Key.delete
+                Key.leftControl
+                Key.leftCommand
+                Key.no
+                Key.leftOption
+                Key.space
+                Key.layerTap(Q15Layer.raise, key: .space)
+                Key.momentary(Q15Layer.windowsFunction)
+                Key.momentary(Q15Layer.commonFunction)
+                Key.left
+                Key.down
+                Key.right
+            }
         }
         Layer(Q15Layer.macFunction, name: "macOS Function", showsHUD: true) {
             Row {
@@ -124,218 +266,6 @@ public enum Q15Firmware {
         }
         Q15Firmware.q15Encoder(index: 0, id: "left")
         Q15Firmware.q15Encoder(index: 1, id: "right")
-    }
-
-    @usableFromInline
-    internal struct MacBaseKeys: KeySequence {
-        @usableFromInline
-        internal init() {}
-
-        @usableFromInline
-        internal var keyCount: Int { 66 }
-
-        @usableFromInline
-        internal func key(at index: Int) -> Key? {
-            let row1 = Q15Firmware.macBaseRow1
-            if index < row1.keyCount { return row1.key(at: index) }
-
-            let row2Index = index - row1.keyCount
-            let row2 = Q15Firmware.macBaseRow2
-            if row2Index < row2.keyCount { return row2.key(at: row2Index) }
-
-            let row3Index = row2Index - row2.keyCount
-            return Q15Firmware.macBaseRow3.key(at: row3Index)
-        }
-    }
-
-    @usableFromInline
-    internal struct WindowsBaseKeys: KeySequence {
-        @usableFromInline
-        internal init() {}
-
-        @usableFromInline
-        internal var keyCount: Int { 66 }
-
-        @usableFromInline
-        internal func key(at index: Int) -> Key? {
-            let row1 = Q15Firmware.windowsBaseRow1
-            if index < row1.keyCount { return row1.key(at: index) }
-
-            let row2Index = index - row1.keyCount
-            let row2 = Q15Firmware.windowsBaseRow2
-            if row2Index < row2.keyCount { return row2.key(at: row2Index) }
-
-            let row3Index = row2Index - row2.keyCount
-            return Q15Firmware.windowsBaseRow3.key(at: row3Index)
-        }
-    }
-
-    @usableFromInline
-    internal static var macBaseRow1: some KeySequence {
-        Row {
-            ObbutKey.screenshot
-            Key.one
-            Key.two
-            Key.three
-            Key.four
-            Key.five
-            Key.six
-            Key.seven
-            Key.eight
-            Key.nine
-            Key.zero
-            Key.minus
-            Key.backspace
-            Key.playPause
-            Key.tab
-            Key.q
-            Key.w
-            Key.e
-            Key.r
-            Key.t
-            Key.y
-            Key.u
-        }
-    }
-
-    @usableFromInline
-    internal static var macBaseRow2: some KeySequence {
-        Row {
-            Key.i
-            Key.o
-            Key.p
-            Key.leftBracket
-            Key.rightBracket
-            Key.backslash
-            ObbutKey.escapeAerospace
-            Key.a
-            Key.s
-            Key.d
-            Key.f
-            Key.g
-            Key.h
-            Key.j
-            Key.k
-            Key.l
-            Key.semicolon
-            Key.quote
-            Key.return
-            Key.leftShift
-            Key.z
-            Key.x
-        }
-    }
-
-    @usableFromInline
-    internal static var macBaseRow3: some KeySequence {
-        Row {
-            Key.c
-            Key.v
-            Key.b
-            Key.n
-            Key.m
-            Key.comma
-            Key.period
-            Key.slash
-            Key.rightShift
-            Key.up
-            Key.delete
-            Key.leftControl
-            Key.no
-            Key.leftOption
-            Key.leftCommand
-            Key.space
-            Key.layerTap(Q15Layer.raise, key: .space)
-            Key.momentary(Q15Layer.macFunction)
-            Key.momentary(Q15Layer.commonFunction)
-            Key.left
-            Key.down
-            Key.right
-        }
-    }
-
-    @usableFromInline
-    internal static var windowsBaseRow1: some KeySequence {
-        Row {
-            Key.printScreen
-            Key.one
-            Key.two
-            Key.three
-            Key.four
-            Key.five
-            Key.six
-            Key.seven
-            Key.eight
-            Key.nine
-            Key.zero
-            Key.minus
-            Key.backspace
-            Key.playPause
-            Key.tab
-            Key.q
-            Key.w
-            Key.e
-            Key.r
-            Key.t
-            Key.y
-            Key.u
-        }
-    }
-
-    @usableFromInline
-    internal static var windowsBaseRow2: some KeySequence {
-        Row {
-            Key.i
-            Key.o
-            Key.p
-            Key.leftBracket
-            Key.rightBracket
-            Key.backslash
-            Key.escape
-            Key.a
-            Key.s
-            Key.d
-            Key.f
-            Key.g
-            Key.h
-            Key.j
-            Key.k
-            Key.l
-            Key.semicolon
-            Key.quote
-            Key.return
-            Key.leftShift
-            Key.z
-            Key.x
-        }
-    }
-
-    @usableFromInline
-    internal static var windowsBaseRow3: some KeySequence {
-        Row {
-            Key.c
-            Key.v
-            Key.b
-            Key.n
-            Key.m
-            Key.comma
-            Key.period
-            Key.slash
-            Key.rightShift
-            Key.up
-            Key.delete
-            Key.leftControl
-            Key.leftCommand
-            Key.no
-            Key.leftOption
-            Key.space
-            Key.layerTap(Q15Layer.raise, key: .space)
-            Key.momentary(Q15Layer.windowsFunction)
-            Key.momentary(Q15Layer.commonFunction)
-            Key.left
-            Key.down
-            Key.right
-        }
     }
 
     public static var features: some FirmwareFeatureSet {
