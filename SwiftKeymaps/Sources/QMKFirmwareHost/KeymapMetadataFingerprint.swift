@@ -6,10 +6,14 @@ public enum KeymapMetadataFingerprint {
     ///
     /// - Parameter legends: Legends in generated wire-ID order.
     /// - Returns: A stable fingerprint covering every label.
-    public static func legends(_ legends: [StaticString]) -> UInt32 {
+    public static func legends(_ legends: [Legend]) -> UInt32 {
         legends.enumerated().reduce(seed) { hash, element in
-            let next = afterAdding(UInt16(element.offset + 1), to: hash)
-            return afterAdding(element.element, to: next)
+            var next = afterAdding(UInt16(element.offset + 1), to: hash)
+            next = afterAdding(element.element.label, to: next)
+            if let icon = element.element.icon {
+                next = afterAdding(icon.name, to: next)
+            }
+            return next
         }
     }
 

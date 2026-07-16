@@ -7,7 +7,7 @@ enum QMKKeycodeLegend {
     /// - Parameters:
     ///   - entry: The firmware keymap entry to describe.
     ///   - explicitLegend: The explicit legend, when resolved.
-    ///   - legendSymbolName: The native symbol inferred from the explicit legend.
+    ///   - legendSymbolName: The native symbol explicitly selected by the legend.
     ///   - style: The resolved key style.
     ///   - layers: The firmware-defined layers used for layer-action legends.
     ///

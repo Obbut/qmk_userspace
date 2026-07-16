@@ -21,7 +21,7 @@ public struct AnyFirmwareKey: Equatable, Sendable {
     ///   - metadata: The metadata collected from the complete firmware.
     init(_ key: Key, metadata: GeneratedKeyMetadata) {
         keycode = key.keycode.rawValue
-        legend = key.legend.map(StaticStringContent.string)
+        legend = key.legend.map { StaticStringContent.string($0.label) }
         legendID = metadata.legendID(for: key)
         styleID = metadata.styleID(for: key)
     }

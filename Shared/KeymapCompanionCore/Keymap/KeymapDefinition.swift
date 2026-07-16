@@ -298,7 +298,7 @@ fileprivate struct KeyMetadataResolver {
         return firmware.legends.first { $0.id == id.rawValue }?.label
     }
 
-    /// Returns the native symbol inferred from the matching legend.
+    /// Returns the native symbol explicitly selected by the matching legend.
     func legendSymbolName(for id: LegendID) -> String? {
         guard id != .none, legendsMatch else { return nil }
         return firmware.legends.first { $0.id == id.rawValue }?.symbolName

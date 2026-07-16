@@ -9,16 +9,16 @@ public struct Key: Sendable {
     internal let embeddedLegendID: UInt16
 
     /// Renderer legends are host presentation data and are not retained in firmware.
-    public var legend: StaticString? { nil }
+    public var legend: Legend? { nil }
 
     /// The deterministic identifier for the explicit legend.
     public var legendID: UInt16 { embeddedLegendID }
 #else
     /// An optional explicit renderer legend.
-    public let legend: StaticString?
+    public let legend: Legend?
 
     /// The deterministic identifier for the explicit legend.
-    public var legendID: UInt16 { legend.map(StaticStringContent.identifier) ?? 0 }
+    public var legendID: UInt16 { legend?.contentID ?? 0 }
 #endif
 
     /// The resolved appearance used by renderers and firmware lighting.
@@ -32,12 +32,12 @@ public struct Key: Sendable {
     ///   - appearance: The resolved visual appearance.
     public init(
         keycode: QMKKeycode,
-        legend: StaticString? = nil,
+        legend: Legend? = nil,
         appearance: KeyAppearance = .standard
     ) {
         self.keycode = keycode
 #if hasFeature(Embedded)
-        embeddedLegendID = legend.map(StaticStringContent.identifier) ?? 0
+        embeddedLegendID = legend?.contentID ?? 0
 #else
         self.legend = legend
 #endif
@@ -80,7 +80,7 @@ public struct Key: Sendable {
     }
 
     /// Returns this key with an explicit renderer legend.
-    public func labeled(_ legend: StaticString) -> Key {
+    public func labeled(_ legend: Legend) -> Key {
         Key(
             keycode: keycode,
             legend: legend,
@@ -166,7 +166,7 @@ public struct Key: Sendable {
     /// Creates a typed fork-specific or custom QMK keycode.
     public static func qmk(
         _ keycode: QMKKeycode,
-        legend: StaticString? = nil
+        legend: Legend? = nil
     ) -> Key {
         Key(keycode: keycode, legend: legend)
     }

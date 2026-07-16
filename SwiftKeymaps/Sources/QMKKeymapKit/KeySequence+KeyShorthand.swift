@@ -127,7 +127,7 @@ extension KeySequence where Self == Key {
 
     public static func qmk(
         _ keycode: QMKKeycode,
-        legend: StaticString? = nil
+        legend: Legend? = nil
     ) -> Key {
         Key.qmk(keycode, legend: legend)
     }

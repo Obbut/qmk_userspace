@@ -3,6 +3,25 @@ public enum StaticStringContent {
     /// Produces a deterministic nonzero protocol content identifier.
     public static func identifier(_ value: StaticString) -> UInt16 {
         let hash = fingerprint(value)
+        return foldedIdentifier(hash)
+    }
+
+    /// Produces a deterministic identifier from a label and optional secondary value.
+    public static func identifier(
+        _ value: StaticString,
+        secondary: StaticString?
+    ) -> UInt16 {
+        guard let secondary else { return identifier(value) }
+        var hash = fingerprint(value)
+        hash = (hash ^ 0xFF) &* 16_777_619
+        for index in 0..<secondary.utf8CodeUnitCount {
+            hash ^= UInt32(secondary.utf8Start[index])
+            hash &*= 16_777_619
+        }
+        return foldedIdentifier(hash)
+    }
+
+    private static func foldedIdentifier(_ hash: UInt32) -> UInt16 {
         let folded = UInt16(truncatingIfNeeded: hash ^ (hash >> 16))
         return folded == 0 ? 1 : folded
     }

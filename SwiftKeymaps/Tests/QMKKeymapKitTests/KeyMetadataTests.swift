@@ -6,6 +6,24 @@ import Testing
 @Suite
 struct KeyMetadataTests {
     @Test
+    func legendsUseExplicitIconsWithoutInferringFromLabels() {
+        let plain: Legend = "Battery"
+        let illustrated = Legend("Battery", icon: .battery)
+        let custom = Legend("Profile", icon: .init("person-badge"))
+
+        #expect(StaticStringContent.string(plain.label) == "Battery")
+        #expect(plain.icon == nil)
+        #expect(illustrated.icon == .battery)
+        #expect(illustrated != plain)
+        #expect(illustrated.contentID != plain.contentID)
+        #expect(StaticStringContent.string(custom.icon!.name) == "person-badge")
+
+        let erased = AnyLegend(id: illustrated.contentID, legend: illustrated)
+        #expect(erased.label == "Battery")
+        #expect(erased.symbolName == "battery")
+    }
+
+    @Test
     func staticSequenceComponentsResolveWithoutArrays() {
         let usesFirstBranch = true
         @KeyRowBuilder func makeSequence() -> some KeySequence {
@@ -76,7 +94,9 @@ struct KeyMetadataTests {
         }
 
         #expect(
-            keymap.layers[0].keys[0].legend.map(StaticStringContent.string) == "Confirm"
+            keymap.layers[0].keys[0].legend.map {
+                StaticStringContent.string($0.label)
+            } == "Confirm"
         )
         #expect(keymap.layers[0].keys[0].appearance.color == .rgb(1, 2, 3))
         #expect(keymap.layers[0].keys[1].appearance.color == .rgb(255, 0, 0))
