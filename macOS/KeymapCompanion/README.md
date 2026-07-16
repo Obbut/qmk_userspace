@@ -2,7 +2,7 @@
 
 Keymap Companion is a native SwiftUI utility for all four Obbut keyboards in
 this repository. It discovers QMK Raw HID devices, downloads the
-compiled keymap, resolves shared semantics and styles, follows layer
+compiled keymap, resolves shared legends and styles, follows layer
 changes in realtime, and renders the result with the same
 `QMKKeymapRenderer` used by the Xcode keymap previews.
 
@@ -57,7 +57,7 @@ the same metadata-resolved document model.
 the host apps and once with Embedded Swift for firmware. Swift owns packet
 layout, transfer pagination, fingerprints, and state. The small QMK C shim
 exposes ABI facts such as matrix entries, timers, Raw HID, and RGB persistence;
-it contains no authored keymap or protocol semantics.
+it contains no authored keymap or protocol legends.
 
 All Raw HID reports are 32 bytes and begin with `KMAP` plus version `4`.
 Metadata reports identify the layout and generated metadata fingerprints; chunk reports

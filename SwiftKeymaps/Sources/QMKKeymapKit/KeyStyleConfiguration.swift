@@ -3,16 +3,10 @@ public struct KeyStyleConfiguration: Sendable {
     /// The QMK action being styled.
     public let keycode: QMKKeycode
 
-    /// Optional semantic metadata attached to the action.
-    public let semantic: KeySemantic?
-
     /// Creates style input for one key action.
     ///
-    /// - Parameters:
-    ///   - keycode: The QMK action being styled.
-    ///   - semantic: Optional semantic metadata attached to the action.
-    public init(keycode: QMKKeycode, semantic: KeySemantic?) {
+    /// - Parameter keycode: The QMK action being styled.
+    public init(keycode: QMKKeycode) {
         self.keycode = keycode
-        self.semantic = semantic
     }
 }

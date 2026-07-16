@@ -9,14 +9,14 @@ func windowsSupportsEveryCatalogKeyboard() {
 
         #expect(!definition.positionedKeys.isEmpty)
         #expect(!definition.supportedLayers.isEmpty)
-        #expect(definition.semanticsMatch)
+        #expect(definition.legendsMatch)
         #expect(definition.stylesMatch)
     }
 }
 
-/// Verifies shared Obbut metadata resolves pointer semantics for Windows.
+/// Verifies shared Obbut metadata resolves pointer legends for Windows.
 @Test
-func windowsResolvesPointerSemanticLabels() throws {
+func windowsResolvesPointerLegendLabels() throws {
     let definition = KeymapDefinition.makePreview(for: .kyria)
     let pointer = try #require(
         definition.supportedLayers.first { $0.displayName == "Pointer" }

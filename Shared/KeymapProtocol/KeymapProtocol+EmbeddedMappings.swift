@@ -36,7 +36,7 @@
                 let entry = keymap_protocol_platform_get_entry(index)
                 hash = KeymapProtocol.fingerprint(
                     afterAddingKeycode: entry.keycode,
-                    semanticID: entry.semantic_id,
+                    legendID: entry.legend_id,
                     styleID: entry.style_id,
                     to: hash
                 )

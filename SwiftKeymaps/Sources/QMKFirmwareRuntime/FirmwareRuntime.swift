@@ -25,8 +25,8 @@ public struct FirmwareRuntime<Firmware: QMKFirmware>: Sendable {
         StaticStringContent.fingerprint(Firmware.layout.id)
     }
 
-    public var semanticFingerprint: UInt32 {
-        context.semanticFingerprint
+    public var legendFingerprint: UInt32 {
+        context.legendFingerprint
     }
 
     public var styleFingerprint: UInt32 {
@@ -110,8 +110,8 @@ public struct FirmwareRuntime<Firmware: QMKFirmware>: Sendable {
         key(layer: layer, row: row, column: column)?.keycode.rawValue ?? 0
     }
 
-    public func semanticID(layer: UInt8, row: UInt8, column: UInt8) -> UInt16 {
-        key(layer: layer, row: row, column: column)?.semantic?.contentID ?? 0
+    public func legendID(layer: UInt8, row: UInt8, column: UInt8) -> UInt16 {
+        key(layer: layer, row: row, column: column)?.legendID ?? 0
     }
 
     public func styleID(layer: UInt8, row: UInt8, column: UInt8) -> UInt16 {
@@ -132,8 +132,8 @@ public struct FirmwareRuntime<Firmware: QMKFirmware>: Sendable {
         encoderKey(layer: layer, encoder: encoder, direction: direction)?.keycode.rawValue ?? 0
     }
 
-    public func encoderSemanticID(layer: UInt8, encoder: UInt8, direction: UInt8) -> UInt16 {
-        encoderKey(layer: layer, encoder: encoder, direction: direction)?.semantic?.contentID ?? 0
+    public func encoderLegendID(layer: UInt8, encoder: UInt8, direction: UInt8) -> UInt16 {
+        encoderKey(layer: layer, encoder: encoder, direction: direction)?.legendID ?? 0
     }
 
     public func encoderStyleID(layer: UInt8, encoder: UInt8, direction: UInt8) -> UInt16 {
@@ -161,39 +161,39 @@ public struct FirmwareRuntime<Firmware: QMKFirmware>: Sendable {
         return direction == 0 ? mapping.counterclockwise : mapping.clockwise
     }
 
-    /// Calculates the semantic and style fingerprints reported by this firmware.
+    /// Calculates the legend and style fingerprints reported by this firmware.
     ///
     /// - Returns: Fingerprints derived in the same order as embedded lookup traversal.
-    public static func metadataFingerprints() -> (semantic: UInt32, style: UInt32) {
+    public static func metadataFingerprints() -> (legend: UInt32, style: UInt32) {
         FirmwareRuntime().calculatedMetadataFingerprints()
     }
 
     fileprivate mutating func updateMetadataFingerprints() {
         let fingerprints = calculatedMetadataFingerprints()
-        context.semanticFingerprint = fingerprints.semantic
+        context.legendFingerprint = fingerprints.legend
         context.styleFingerprint = fingerprints.style
     }
 
-    fileprivate func calculatedMetadataFingerprints() -> (semantic: UInt32, style: UInt32) {
-        var semanticHash: UInt32 = 2_166_136_261
+    fileprivate func calculatedMetadataFingerprints() -> (legend: UInt32, style: UInt32) {
+        var legendHash: UInt32 = 2_166_136_261
         var styleHash: UInt32 = 2_166_136_261
         for layer in 0..<layerCount {
             for keyIndex in 0..<Firmware.layout.keyCount {
                 guard let key = Firmware.keymap.key(at: keyIndex, onLayer: Int(layer)) else {
                     continue
                 }
-                semanticHash = Self.add(key.semantic?.contentID ?? 0, to: semanticHash)
+                legendHash = Self.add(key.legendID, to: legendHash)
                 styleHash = Self.add(key.appearance.contentID, to: styleHash)
             }
             for encoder in 0..<encoderCount {
                 for direction in UInt8(0)..<2 {
                     let key = encoderKey(layer: layer, encoder: encoder, direction: direction)
-                    semanticHash = Self.add(key?.semantic?.contentID ?? 0, to: semanticHash)
+                    legendHash = Self.add(key?.legendID ?? 0, to: legendHash)
                     styleHash = Self.add(key?.appearance.contentID ?? 0, to: styleHash)
                 }
             }
         }
-        return (semanticHash, styleHash)
+        return (legendHash, styleHash)
     }
 
     fileprivate static func add(_ value: UInt16, to hash: UInt32) -> UInt32 {

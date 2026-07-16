@@ -15,7 +15,7 @@ public enum KeymapProtocol {
     /// The sole supported wire-format version.
     public static let version: UInt8 = 4
 
-    /// The byte count of keycode, semantic ID, and style ID.
+    /// The byte count of keycode, legend ID, and style ID.
     static let keymapEntrySize = 6
 
     /// The first byte occupied by entries in a keymap chunk.
@@ -149,14 +149,14 @@ public enum KeymapProtocol {
     /// Returns a fingerprint containing one additional keymap entry.
     static func fingerprint(
         afterAddingKeycode keycode: UInt16,
-        semanticID: UInt16,
+        legendID: UInt16,
         styleID: UInt16,
         to initialFingerprint: UInt32
     ) -> UInt32 {
         var hash = fingerprint(afterAdding: UInt8(truncatingIfNeeded: keycode), to: initialFingerprint)
         hash = fingerprint(afterAdding: UInt8(truncatingIfNeeded: keycode >> 8), to: hash)
-        hash = fingerprint(afterAdding: UInt8(truncatingIfNeeded: semanticID), to: hash)
-        hash = fingerprint(afterAdding: UInt8(truncatingIfNeeded: semanticID >> 8), to: hash)
+        hash = fingerprint(afterAdding: UInt8(truncatingIfNeeded: legendID), to: hash)
+        hash = fingerprint(afterAdding: UInt8(truncatingIfNeeded: legendID >> 8), to: hash)
         hash = fingerprint(afterAdding: UInt8(truncatingIfNeeded: styleID), to: hash)
         return fingerprint(afterAdding: UInt8(truncatingIfNeeded: styleID >> 8), to: hash)
     }

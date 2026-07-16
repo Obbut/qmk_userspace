@@ -101,15 +101,17 @@ fileprivate struct FirmwareLegendResolver {
     let firmware: AnyFirmware
 
     func legend(for key: AnyFirmwareKey, layers: [KeymapRenderLayer]) -> KeymapRenderLegend {
-        let semantic = key.semanticID.flatMap { id in firmware.semantics.first { $0.id == id } }
+        let explicitLegend = key.legendID.flatMap { id in
+            firmware.legends.first { $0.id == id }
+        }
         let style = firmware.styles.first { $0.id == key.styleID }
         let label =
             key.legend
-            ?? semantic?.legend
+            ?? explicitLegend?.label
             ?? HostLegend.label(for: key, layers: layers)
         return KeymapRenderLegend(
             label: label,
-            symbolName: semantic?.symbolName,
+            symbolName: explicitLegend?.symbolName,
             style: style.map {
                 KeymapRenderStyle(
                     red: $0.color.red,

@@ -139,7 +139,7 @@ keymap_protocol_platform_snapshot_t keymap_protocol_platform_get_snapshot(void) 
         .layer_state_mask             = (uint32_t)layer_state,
         .default_layer_state_mask     = (uint32_t)default_layer_state,
         .layout_id                    = qmk_swift_layout_id(),
-        .semantic_fingerprint          = qmk_swift_semantic_fingerprint(),
+        .legend_fingerprint            = qmk_swift_legend_fingerprint(),
         .style_fingerprint             = qmk_swift_style_fingerprint(),
         .layer_count                  = qmk_swift_layer_count(),
         .matrix_row_count             = MATRIX_ROWS,
@@ -171,7 +171,7 @@ keymap_protocol_platform_entry_t keymap_protocol_platform_get_entry(uint16_t ind
         uint8_t row = position / MATRIX_COLS;
         uint8_t column = position % MATRIX_COLS;
         entry.keycode = qmk_swift_keycode_at(layer, row, column);
-        entry.semantic_id = qmk_swift_semantic_id_at(layer, row, column);
+        entry.legend_id = qmk_swift_legend_id_at(layer, row, column);
         entry.style_id = qmk_swift_style_id_at(layer, row, column);
         return entry;
     }
@@ -183,7 +183,7 @@ keymap_protocol_platform_entry_t keymap_protocol_platform_get_entry(uint16_t ind
     uint8_t encoder = (encoder_offset / 2) % encoder_count;
     uint8_t direction = encoder_offset % 2;
     entry.keycode = qmk_swift_encoder_keycode_at(layer, encoder, direction);
-    entry.semantic_id = qmk_swift_encoder_semantic_id_at(layer, encoder, direction);
+    entry.legend_id = qmk_swift_encoder_legend_id_at(layer, encoder, direction);
     entry.style_id = qmk_swift_encoder_style_id_at(layer, encoder, direction);
     return entry;
 }

@@ -47,11 +47,11 @@ def lookup_calls(fixture: dict[str, object]) -> list[list[object]]:
         ["qmk_swift_encoder_count", 0, 0, 0, encoder_count, 0xFF],
         ["qmk_swift_layout_id", 0, 0, 0, int(fixture["layoutID"]), 0xFFFFFFFF],
         [
-            "qmk_swift_semantic_fingerprint",
+            "qmk_swift_legend_fingerprint",
             0,
             0,
             0,
-            int(fixture["semanticFingerprint"]),
+            int(fixture["legendFingerprint"]),
             0xFFFFFFFF,
         ],
         [
@@ -66,7 +66,7 @@ def lookup_calls(fixture: dict[str, object]) -> list[list[object]]:
 
     matrix_lookups = (
         ("qmk_swift_keycode_at", "keycodes", 0xFFFF),
-        ("qmk_swift_semantic_id_at", "semanticIDs", 0xFFFF),
+        ("qmk_swift_legend_id_at", "legendIDs", 0xFFFF),
         ("qmk_swift_style_id_at", "styleIDs", 0xFFFF),
         ("qmk_swift_style_color_at", "styleColors", 0xFFFFFFFF),
     )
@@ -143,13 +143,13 @@ def append_uint32(target: list[int], value: int) -> None:
 
 def protocol_entries(fixture: dict[str, object]) -> list[tuple[int, int, int]]:
     """Return protocol-ordered matrix and encoder entries from a host fixture."""
-    matrix = list(zip(fixture["keycodes"], fixture["semanticIDs"], fixture["styleIDs"]))
+    matrix = list(zip(fixture["keycodes"], fixture["legendIDs"], fixture["styleIDs"]))
     encoders = list(zip(
         fixture["encoderKeycodes"],
-        fixture["encoderSemanticIDs"],
+        fixture["encoderLegendIDs"],
         fixture["encoderStyleIDs"],
     ))
-    return [(int(keycode), int(semantic), int(style)) for keycode, semantic, style in matrix + encoders]
+    return [(int(keycode), int(legend), int(style)) for keycode, legend, style in matrix + encoders]
 
 
 def keymap_fingerprint(fixture: dict[str, object], entries: list[tuple[int, int, int]]) -> int:
@@ -188,7 +188,7 @@ def protocol_responses(fixture: dict[str, object]) -> list[list[int]]:
     ))
     append_uint16(metadata, len(entries))
     append_uint32(metadata, keymap_fingerprint(fixture, entries))
-    append_uint32(metadata, int(fixture["semanticFingerprint"]))
+    append_uint32(metadata, int(fixture["legendFingerprint"]))
     append_uint32(metadata, int(fixture["styleFingerprint"]))
     metadata.extend((2, 0))
 

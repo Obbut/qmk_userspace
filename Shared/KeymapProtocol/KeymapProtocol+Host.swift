@@ -141,7 +141,7 @@
                     entryByteCount: entrySize,
                     entriesPerChunk: chunkEntryCount,
                     fingerprint: uint32(from: report, at: 18),
-                    semanticFingerprint: uint32(from: report, at: 22),
+                    legendFingerprint: uint32(from: report, at: 22),
                     styleFingerprint: uint32(from: report, at: 26),
                     entryCount: entryCount,
                     encoderCount: encoderCount
@@ -175,7 +175,7 @@
                     entries.append(
                         FirmwareKeymapEntry(
                             keycode: uint16(from: report, at: offset),
-                            semanticID: SemanticID(rawValue: uint16(from: report, at: offset + 2)),
+                            legendID: LegendID(rawValue: uint16(from: report, at: offset + 2)),
                             styleID: StyleID(rawValue: uint16(from: report, at: offset + 4))
                         )
                     )

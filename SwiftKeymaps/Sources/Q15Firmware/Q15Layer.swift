@@ -1,6 +1,6 @@
 import QMKKeymapKit
 
-/// Q15-specific layer identifiers; semantics remain owned by `ObbutKeymaps`.
+/// Q15-specific layer identifiers; legends remain owned by `ObbutKeymaps`.
 public enum Q15Layer: UInt8, FirmwareLayerID {
     /// The macOS typing layer.
     case macBase

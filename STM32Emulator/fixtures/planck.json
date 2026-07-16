@@ -3,7 +3,7 @@
   "encoderKeycodes" : [
 
   ],
-  "encoderSemanticIDs" : [
+  "encoderLegendIDs" : [
 
   ],
   "encoderStyleIDs" : [
@@ -253,11 +253,8 @@
   ],
   "layerCount" : 5,
   "layoutID" : 332324059,
-  "matrixColumns" : 6,
-  "matrixRows" : 8,
-  "outputName" : "zsa_planck_ez_glow_obbut",
-  "semanticFingerprint" : 109266606,
-  "semanticIDs" : [
+  "legendFingerprint" : 2981523831,
+  "legendIDs" : [
     0,
     0,
     0,
@@ -276,7 +273,7 @@
     0,
     0,
     0,
-    17341,
+    17995,
     0,
     0,
     0,
@@ -300,10 +297,12 @@
     0,
     0,
     0,
+    23158,
+    5591,
     0,
+    37818,
     0,
     0,
-    9682,
     0,
     0,
     0,
@@ -346,10 +345,8 @@
     0,
     0,
     0,
-    0,
-    0,
-    0,
-    0,
+    23158,
+    5591,
     0,
     0,
     0,
@@ -499,6 +496,9 @@
     0,
     0
   ],
+  "matrixColumns" : 6,
+  "matrixRows" : 8,
+  "outputName" : "zsa_planck_ez_glow_obbut",
   "styleColors" : [
     0,
     0,
@@ -985,4 +985,3 @@
     0
   ]
 }
-

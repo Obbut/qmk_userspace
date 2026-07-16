@@ -57,7 +57,7 @@ extension KeymapProtocol {
         matrixRowCount: UInt8,
         matrixColumnCount: UInt8,
         fingerprint: UInt32,
-        semanticFingerprint: UInt32,
+        legendFingerprint: UInt32,
         styleFingerprint: UInt32,
         entryCount: UInt16,
         encoderCount: UInt8
@@ -72,7 +72,7 @@ extension KeymapProtocol {
         bytes[15] = encoderCount
         writeUInt16(entryCount, to: bytes, at: 16)
         writeUInt32(fingerprint, to: bytes, at: 18)
-        writeUInt32(semanticFingerprint, to: bytes, at: 22)
+        writeUInt32(legendFingerprint, to: bytes, at: 22)
         writeUInt32(styleFingerprint, to: bytes, at: 26)
         bytes[30] = encoderDirectionCount
         return true
@@ -103,7 +103,7 @@ extension KeymapProtocol {
     @discardableResult
     public static func encodeKeymapEntry(
         keycode: UInt16,
-        semanticID: UInt16,
+        legendID: UInt16,
         styleID: UInt16,
         at entryIndex: UInt8,
         to bytes: UnsafeMutableBufferPointer<UInt8>
@@ -114,7 +114,7 @@ extension KeymapProtocol {
         else { return false }
         let offset = keymapChunkOffset + Int(entryIndex) * keymapEntrySize
         writeUInt16(keycode, to: bytes, at: offset)
-        writeUInt16(semanticID, to: bytes, at: offset + 2)
+        writeUInt16(legendID, to: bytes, at: offset + 2)
         writeUInt16(styleID, to: bytes, at: offset + 4)
         return true
     }

@@ -40,7 +40,7 @@ func allCatalogKeyboardsProduceRendererDocuments() {
         #expect(definition.positionedKeys.count == firmware.layout.keys.count)
         #expect(definition.supportedLayers.count == firmware.layers.count)
         #expect(definition.encoders.count == firmware.layout.encoders.count)
-        #expect(definition.semanticsMatch)
+        #expect(definition.legendsMatch)
         #expect(definition.stylesMatch)
     }
 }
@@ -49,11 +49,11 @@ func allCatalogKeyboardsProduceRendererDocuments() {
 @Test
 func generatedMetadataUsesDeterministicWireIdentifiers() {
     for firmware in ObbutKeyboardCatalog.all {
-        let semanticIDs = firmware.semantics.map(\.id)
+        let legendIDs = firmware.legends.map(\.id)
         let styleIDs = firmware.styles.map(\.id)
 
-        #expect(semanticIDs.allSatisfy { $0 != 0 })
-        #expect(Set(semanticIDs).count == semanticIDs.count)
+        #expect(legendIDs.allSatisfy { $0 != 0 })
+        #expect(Set(legendIDs).count == legendIDs.count)
         #expect(styleIDs.first == 0)
         #expect(styleIDs.dropFirst().allSatisfy { $0 != 0 })
         #expect(Set(styleIDs).count == styleIDs.count)
@@ -64,17 +64,17 @@ func generatedMetadataUsesDeterministicWireIdentifiers() {
 @Test
 func metadataMismatchDoesNotDiscardKeymap() throws {
     let keymap = TestKeymaps.makeKyria(
-        semanticFingerprint: 0xDEAD_BEEF,
+        legendFingerprint: 0xDEAD_BEEF,
         styleFingerprint: 0xFEED_FACE,
-        semanticID: SemanticID(rawValue: 999),
+        legendID: LegendID(rawValue: 999),
         styleID: StyleID(rawValue: 999)
     )
     let definition = try #require(KeymapDefinition(firmwareKeymap: keymap))
 
-    #expect(!definition.semanticsMatch)
+    #expect(!definition.legendsMatch)
     #expect(!definition.stylesMatch)
     let legend = try #require(definition.positionedKeys.first?.key.legends.first)
-    #expect(legend.label == "Semantic #999")
+    #expect(legend.label == "Legend #999")
     #expect(!legend.style.isKnown)
 }
 
@@ -121,7 +121,7 @@ func transferSessionPublishesZeroEncoderKeymap() {
     )
     fingerprint = KeymapProtocol.fingerprint(
         afterAddingKeycode: keycode,
-        semanticID: 0,
+        legendID: 0,
         styleID: 0,
         to: fingerprint
     )
@@ -136,7 +136,7 @@ func transferSessionPublishesZeroEncoderKeymap() {
                 matrixRowCount: 1,
                 matrixColumnCount: 1,
                 fingerprint: fingerprint,
-                semanticFingerprint: 11,
+                legendFingerprint: 11,
                 styleFingerprint: 22,
                 entryCount: 1,
                 encoderCount: 0
@@ -157,7 +157,7 @@ func transferSessionPublishesZeroEncoderKeymap() {
         #expect(
             KeymapProtocol.encodeKeymapEntry(
                 keycode: keycode,
-                semanticID: 0,
+                legendID: 0,
                 styleID: 0,
                 at: 0,
                 to: bytes

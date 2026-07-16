@@ -86,7 +86,7 @@ typedef struct {
     uint32_t layer_state_mask;
     uint32_t default_layer_state_mask;
     uint32_t layout_id;
-    uint32_t semantic_fingerprint;
+    uint32_t legend_fingerprint;
     uint32_t style_fingerprint;
     uint8_t layer_count;
     uint8_t matrix_row_count;
@@ -103,7 +103,7 @@ typedef struct {
 
 typedef struct {
     uint16_t keycode;
-    uint16_t semantic_id;
+    uint16_t legend_id;
     uint16_t style_id;
 } keymap_protocol_platform_entry_t;
 
@@ -126,16 +126,16 @@ uint8_t qmk_swift_raw_hid_receive(uint8_t *data, uint8_t length);
 void qmk_swift_receive_split_state(uint8_t rgb_preview_mode, uint8_t pointer_drag_lock_active);
 void qmk_swift_rgb_settings_applied(void);
 uint16_t qmk_swift_keycode_at(uint8_t layer, uint8_t row, uint8_t column);
-uint16_t qmk_swift_semantic_id_at(uint8_t layer, uint8_t row, uint8_t column);
+uint16_t qmk_swift_legend_id_at(uint8_t layer, uint8_t row, uint8_t column);
 uint16_t qmk_swift_style_id_at(uint8_t layer, uint8_t row, uint8_t column);
 uint32_t qmk_swift_style_color_at(uint8_t layer, uint8_t row, uint8_t column);
 uint16_t qmk_swift_encoder_keycode_at(uint8_t layer, uint8_t encoder, uint8_t direction);
-uint16_t qmk_swift_encoder_semantic_id_at(uint8_t layer, uint8_t encoder, uint8_t direction);
+uint16_t qmk_swift_encoder_legend_id_at(uint8_t layer, uint8_t encoder, uint8_t direction);
 uint16_t qmk_swift_encoder_style_id_at(uint8_t layer, uint8_t encoder, uint8_t direction);
 uint8_t qmk_swift_layer_count(void);
 uint8_t qmk_swift_encoder_count(void);
 uint32_t qmk_swift_layout_id(void);
-uint32_t qmk_swift_semantic_fingerprint(void);
+uint32_t qmk_swift_legend_fingerprint(void);
 uint32_t qmk_swift_style_fingerprint(void);
 
 void obbut_platform_register_split_sync(void);
@@ -160,6 +160,6 @@ uint8_t obbut_platform_matrix_column_count(void);
 uint8_t obbut_platform_matrix_led_index(uint8_t row, uint8_t column);
 void obbut_platform_rgb_set_color(uint8_t led, uint8_t red, uint8_t green, uint8_t blue);
 uint16_t obbut_platform_swift_keycode(uint8_t layer, uint8_t row, uint8_t column);
-uint16_t obbut_platform_swift_semantic_id(uint8_t layer, uint8_t row, uint8_t column);
+uint16_t obbut_platform_swift_legend_id(uint8_t layer, uint8_t row, uint8_t column);
 uint16_t obbut_platform_swift_style_id(uint8_t layer, uint8_t row, uint8_t column);
 uint32_t obbut_platform_swift_style_color(uint8_t layer, uint8_t row, uint8_t column);

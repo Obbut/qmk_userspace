@@ -81,7 +81,7 @@ func metadataReportRoundTripsProtocolFour() throws {
             matrixRowCount: 2,
             matrixColumnCount: 3,
             fingerprint: 0xCAFE_BABE,
-            semanticFingerprint: 0x1234_5678,
+            legendFingerprint: 0x1234_5678,
             styleFingerprint: 0x8765_4321,
             entryCount: 16,
             encoderCount: 1
@@ -97,7 +97,7 @@ func metadataReportRoundTripsProtocolFour() throws {
     #expect(metadata.entryCount == 16)
     #expect(metadata.encoderCount == 1)
     #expect(metadata.fingerprint == 0xCAFE_BABE)
-    #expect(metadata.semanticFingerprint == 0x1234_5678)
+    #expect(metadata.legendFingerprint == 0x1234_5678)
     #expect(metadata.styleFingerprint == 0x8765_4321)
 }
 
@@ -115,7 +115,7 @@ func metadataAcceptsArbitraryEncoderCount() throws {
             matrixRowCount: 1,
             matrixColumnCount: 1,
             fingerprint: 1,
-            semanticFingerprint: 2,
+            legendFingerprint: 2,
             styleFingerprint: 3,
             entryCount: entryCount,
             encoderCount: encoderCount
@@ -128,7 +128,7 @@ func metadataAcceptsArbitraryEncoderCount() throws {
     #expect(report.entryCount == Int(entryCount))
 }
 
-/// Verifies chunks carry 16-bit opaque semantic and style identifiers.
+/// Verifies chunks carry 16-bit opaque legend and style identifiers.
 @Test
 func keymapChunkRoundTripsGeneratedMetadataIdentifiers() throws {
     var packet = [UInt8](repeating: 0, count: KeymapProtocol.reportSize)
@@ -145,7 +145,7 @@ func keymapChunkRoundTripsGeneratedMetadataIdentifiers() throws {
         #expect(
             KeymapProtocol.encodeKeymapEntry(
                 keycode: 0x5220,
-                semanticID: 0x1234,
+                legendID: 0x1234,
                 styleID: 0x5678,
                 at: 0,
                 to: bytes
@@ -154,7 +154,7 @@ func keymapChunkRoundTripsGeneratedMetadataIdentifiers() throws {
         #expect(
             KeymapProtocol.encodeKeymapEntry(
                 keycode: 0x7E02,
-                semanticID: 0x9ABC,
+                legendID: 0x9ABC,
                 styleID: 0xDEF0,
                 at: 1,
                 to: bytes
@@ -170,12 +170,12 @@ func keymapChunkRoundTripsGeneratedMetadataIdentifiers() throws {
         chunk.entries == [
             FirmwareKeymapEntry(
                 keycode: 0x5220,
-                semanticID: .init(rawValue: 0x1234),
+                legendID: .init(rawValue: 0x1234),
                 styleID: .init(rawValue: 0x5678)
             ),
             FirmwareKeymapEntry(
                 keycode: 0x7E02,
-                semanticID: .init(rawValue: 0x9ABC),
+                legendID: .init(rawValue: 0x9ABC),
                 styleID: .init(rawValue: 0xDEF0)
             ),
         ]

@@ -7,7 +7,7 @@ public struct FirmwareContext: Sendable {
     public var unstyledLayerMask: UInt32 = 1
     public var preservesBaseRGBOnLayer: UInt8 = 1
     public var showsOperatingSystemIndicator = true
-    public var semanticFingerprint: UInt32 = 0
+    public var legendFingerprint: UInt32 = 0
     public var styleFingerprint: UInt32 = 0
 
     public init() {}

@@ -8,12 +8,12 @@ This repo contains QMK keymaps for four keyboards:
 
 ## Swift source of truth
 
-Never author a keymap, semantic, style, or firmware state machine in C.
+Never author a keymap, legend, style, or firmware state machine in C.
 The module hierarchy is:
 
 1. `SwiftKeymaps/Sources/QMKKeymapKit` and `QMKFirmwareRuntime`: embedded-safe
    framework with no Obbut-specific vocabulary.
-2. `SwiftKeymaps/Sources/ObbutKeymaps`: shared Obbut semantics, styles,
+2. `SwiftKeymaps/Sources/ObbutKeymaps`: shared Obbut legends, styles,
    shared layers, actions, configuration, lighting, OS behavior, split state,
    companion support, and pointer engine.
 3. The four individual `*Firmware` modules: board composition and

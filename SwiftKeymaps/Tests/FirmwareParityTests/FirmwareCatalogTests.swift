@@ -137,7 +137,7 @@ func testPlanckDefaultLayerUsesKeyboardGlyphs() throws {
     XCTAssertTrue(Set([";", "'", "⇧", ",", ".", "/", "⌃", "⌥", "⌘"]).isSubset(of: labels))
 }
 
-/// Pins every matrix action, semantic, style, and encoder mapping.
+/// Pins every matrix action, legend, style, and encoder mapping.
 func testAllKeymapsMatchGoldenFingerprints() {
     let fingerprints = Dictionary(
         uniqueKeysWithValues: ObbutKeyboardCatalog.all.map {
@@ -148,10 +148,10 @@ func testAllKeymapsMatchGoldenFingerprints() {
     XCTAssertEqual(
         fingerprints,
         [
-            "kyria_rev4_obbut": 1_883_100_667,
-            "elora_rev2_obbut": 1_440_087_964,
-            "keychron_q15_max_ansi_encoder_obbut": 1_016_172_256,
-            "zsa_planck_ez_glow_obbut": 2_308_720_423,
+            "kyria_rev4_obbut": 169_969_552,
+            "elora_rev2_obbut": 55_270_707,
+            "keychron_q15_max_ansi_encoder_obbut": 707_253_804,
+            "zsa_planck_ez_glow_obbut": 2_365_134_474,
         ]
     )
 }
@@ -177,7 +177,7 @@ private func keymapFingerprint(_ firmware: AnyFirmware) -> UInt32 {
     for layer in firmware.layers {
         append("layer:\(layer.id.rawValue):\(layer.name)")
         for key in layer.keys {
-            append("\(key.keycode):\(key.semanticID ?? 0):\(key.styleID)")
+            append("\(key.keycode):\(key.legendID ?? 0):\(key.styleID)")
         }
     }
     for encoder in firmware.encoders {
@@ -185,11 +185,11 @@ private func keymapFingerprint(_ firmware: AnyFirmware) -> UInt32 {
         for mapping in encoder.mappings {
             append(
                 "\(mapping.layer.rawValue):\(mapping.counterclockwise.keycode):"
-                    + "\(mapping.counterclockwise.semanticID ?? 0):"
+                    + "\(mapping.counterclockwise.legendID ?? 0):"
                     + "\(mapping.counterclockwise.styleID)"
             )
             append(
-                "\(mapping.clockwise.keycode):\(mapping.clockwise.semanticID ?? 0):"
+                "\(mapping.clockwise.keycode):\(mapping.clockwise.legendID ?? 0):"
                     + "\(mapping.clockwise.styleID)"
             )
         }
@@ -204,7 +204,7 @@ private func assertMetadataFingerprintsMatch<Firmware: QMKFirmware>(_ firmware: 
 where Firmware.Layout: HostFirmwareLayout {
     let host = AnyFirmware(firmware)
     let embedded = FirmwareRuntime<Firmware>.metadataFingerprints()
-    XCTAssertEqual(host.semanticFingerprint, embedded.semantic)
+    XCTAssertEqual(host.legendFingerprint, embedded.legend)
     XCTAssertEqual(host.styleFingerprint, embedded.style)
 }
 

@@ -68,8 +68,8 @@ public struct ObbutLayerLighting: FirmwareFeature, Sendable {
                 let styleID = obbut_platform_swift_style_id(layer, row, column)
                 if context.pointerFeatureActive,
                     layer == 5,
-                    obbut_platform_swift_semantic_id(layer, row, column)
-                        == KeySemantic.pointerDragLock.contentID,
+                    obbut_platform_swift_keycode(layer, row, column)
+                        == QMKKeycode.pointerDragLock.rawValue,
                     !context.pointerDragLockActive
                 {
                     obbut_platform_rgb_set_color(led, 255, 128, 0)

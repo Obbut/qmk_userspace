@@ -6,13 +6,13 @@ extension Key {
     public static var screenshot: Key {
         Key.four
             .withModifiers(.leftCommand, .leftControl, .leftShift)
-            .semantic(.screenshot)
+            .labeled("Screenshot")
     }
 
     /// The Aerospace modifier chord.
     public static var aerospace: Key {
         Key.chord(.leftControl, .leftCommand, .rightOption)
-            .semantic(.aerospace)
+            .labeled("Aerospace")
     }
 
     /// Escape on tap and the Aerospace modifier set on hold.
@@ -22,15 +22,14 @@ extension Key {
             .leftCommand,
             .rightOption,
             key: .escape
-        ).semantic(.aerospace)
+        ).labeled("Aerospace")
     }
 
     /// Selects Bluetooth host one.
     public static var bluetoothHost1: Key {
         Key.qmk(
             .keychronBluetoothHost1,
-            legend: "Bluetooth 1",
-            semantic: .bluetoothHost1
+            legend: "Bluetooth 1"
         ).style(.wireless)
     }
 
@@ -38,8 +37,7 @@ extension Key {
     public static var bluetoothHost2: Key {
         Key.qmk(
             .keychronBluetoothHost2,
-            legend: "Bluetooth 2",
-            semantic: .bluetoothHost2
+            legend: "Bluetooth 2"
         ).style(.wireless)
     }
 
@@ -47,8 +45,7 @@ extension Key {
     public static var bluetoothHost3: Key {
         Key.qmk(
             .keychronBluetoothHost3,
-            legend: "Bluetooth 3",
-            semantic: .bluetoothHost3
+            legend: "Bluetooth 3"
         ).style(.wireless)
     }
 
@@ -56,8 +53,7 @@ extension Key {
     public static var wireless24GHz: Key {
         Key.qmk(
             .keychronWireless24GHz,
-            legend: "2.4 GHz",
-            semantic: .wireless24GHz
+            legend: "2.4 GHz"
         ).style(.wireless)
     }
 
@@ -65,51 +61,44 @@ extension Key {
     public static var batteryLevel: Key {
         Key.qmk(
             .keychronBatteryLevel,
-            legend: "Battery",
-            semantic: .batteryLevel
+            legend: "Battery"
         ).style(.number)
     }
 
     /// The primary pointer button.
     public static let pointerLeftClick = Key.qmk(
         .pointerButton1,
-        legend: "Left Click",
-        semantic: .pointerLeftClick
+        legend: "Left Click"
     ).style(.pointer)
 
     /// The secondary pointer button.
     public static let pointerRightClick = Key.qmk(
         .pointerButton2,
-        legend: "Right Click",
-        semantic: .pointerRightClick
+        legend: "Right Click"
     ).style(.pointer)
 
     /// The middle pointer button.
     public static let pointerMiddleClick = Key.qmk(
         .pointerButton3,
-        legend: "Middle Click",
-        semantic: .pointerMiddleClick
+        legend: "Middle Click"
     ).style(.pointer)
 
     /// Browser backward navigation.
     public static let browserBack = Key.qmk(
         .browserBack,
-        legend: "Browser Back",
-        semantic: .browserBack
+        legend: "Browser Back"
     ).style(.gaming)
 
     /// Browser forward navigation.
     public static let browserForward = Key.qmk(
         .browserForward,
-        legend: "Browser Forward",
-        semantic: .browserForward
+        legend: "Browser Forward"
     ).style(.gaming)
 
     /// Momentary drag scrolling.
     public static let pointerScroll = pointerAction(
         .pointerScroll,
         legend: "Scroll",
-        semantic: .pointerScroll,
         style: .symbol
     )
 
@@ -117,7 +106,6 @@ extension Key {
     public static let pointerSniper = pointerAction(
         .pointerSniper,
         legend: "Sniper",
-        semantic: .pointerSniper,
         style: .symbol
     )
 
@@ -125,7 +113,6 @@ extension Key {
     public static let pointerDragLock = pointerAction(
         .pointerDragLock,
         legend: "Drag Lock",
-        semantic: .pointerDragLock,
         style: .bootloader
     )
 
@@ -133,7 +120,6 @@ extension Key {
     public static let pointerSensitivityDown = pointerAction(
         .pointerSensitivityDown,
         legend: "Pointer −",
-        semantic: .pointerSensitivityDown,
         style: .decrease
     )
 
@@ -141,7 +127,6 @@ extension Key {
     public static let pointerSensitivityUp = pointerAction(
         .pointerSensitivityUp,
         legend: "Pointer +",
-        semantic: .pointerSensitivityUp,
         style: .increase
     )
 
@@ -149,7 +134,6 @@ extension Key {
     public static let pointerScrollSpeedDown = pointerAction(
         .pointerScrollSpeedDown,
         legend: "Scroll −",
-        semantic: .pointerScrollSpeedDown,
         style: .decrease
     )
 
@@ -157,7 +141,6 @@ extension Key {
     public static let pointerScrollSpeedUp = pointerAction(
         .pointerScrollSpeedUp,
         legend: "Scroll +",
-        semantic: .pointerScrollSpeedUp,
         style: .increase
     )
 
@@ -165,10 +148,9 @@ extension Key {
     fileprivate static func pointerAction(
         _ keycode: QMKKeycode,
         legend: StaticString,
-        semantic: KeySemantic,
         style: SolidKeyStyle
     ) -> Key {
-        .qmk(keycode, legend: legend, semantic: semantic)
+        .qmk(keycode, legend: legend)
             .style(style)
     }
 }

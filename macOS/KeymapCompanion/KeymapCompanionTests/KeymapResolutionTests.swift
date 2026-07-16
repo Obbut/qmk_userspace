@@ -16,7 +16,7 @@ func everyFirmwareProducesACompleteRenderDefinition() {
         #expect(definition.positionedKeys.count == expectedKeyCount)
         #expect(Set(definition.positionedKeys.map(\.id)).count == expectedKeyCount)
         #expect(!definition.supportedLayers.isEmpty)
-        #expect(definition.semanticsMatch)
+        #expect(definition.legendsMatch)
         #expect(definition.stylesMatch)
     }
 }
@@ -36,9 +36,9 @@ func transparentMappingsResolveThroughActiveLayers() throws {
     )
 }
 
-/// Verifies the Kyria pointer layer resolves shared semantic presentation.
+/// Verifies the Kyria pointer layer resolves shared legend presentation.
 @Test
-func pointerSemanticsProduceReadableLegends() throws {
+func pointerLegendsProduceReadableLegends() throws {
     let definition = KeymapDefinition.makePreview(for: .kyria)
     let pointer = try #require(
         definition.supportedLayers.first { $0.displayName == "Pointer" }

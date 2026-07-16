@@ -18,8 +18,8 @@ public struct FirmwareKeymap: Equatable, Sendable {
     /// The firmware-provided FNV-1a fingerprint.
     public let fingerprint: UInt32
 
-    /// The firmware's generated semantic-metadata fingerprint.
-    public let semanticFingerprint: UInt32
+    /// The firmware's generated legend-metadata fingerprint.
+    public let legendFingerprint: UInt32
 
     /// The firmware's generated style-metadata fingerprint.
     public let styleFingerprint: UInt32
@@ -36,7 +36,7 @@ public struct FirmwareKeymap: Equatable, Sendable {
     ///   - matrixColumnCount: The number of columns in each matrix row.
     ///   - encoderCount: The number of physical encoders.
     ///   - fingerprint: The firmware-provided FNV-1a fingerprint.
-    ///   - semanticFingerprint: The firmware semantic-metadata fingerprint.
+    ///   - legendFingerprint: The firmware legend-metadata fingerprint.
     ///   - styleFingerprint: The firmware style-metadata fingerprint.
     ///   - entries: The layer-major matrix and encoder entries.
     public init(
@@ -46,7 +46,7 @@ public struct FirmwareKeymap: Equatable, Sendable {
         matrixColumnCount: Int,
         encoderCount: Int,
         fingerprint: UInt32,
-        semanticFingerprint: UInt32,
+        legendFingerprint: UInt32,
         styleFingerprint: UInt32,
         entries: [FirmwareKeymapEntry]
     ) {
@@ -56,7 +56,7 @@ public struct FirmwareKeymap: Equatable, Sendable {
         self.matrixColumnCount = matrixColumnCount
         self.encoderCount = encoderCount
         self.fingerprint = fingerprint
-        self.semanticFingerprint = semanticFingerprint
+        self.legendFingerprint = legendFingerprint
         self.styleFingerprint = styleFingerprint
         self.entries = entries
     }
@@ -143,7 +143,7 @@ public struct FirmwareKeymap: Equatable, Sendable {
         for entry in entries {
             hash = KeymapProtocol.fingerprint(
                 afterAddingKeycode: entry.keycode,
-                semanticID: entry.semanticID.rawValue,
+                legendID: entry.legendID.rawValue,
                 styleID: entry.styleID.rawValue,
                 to: hash
             )

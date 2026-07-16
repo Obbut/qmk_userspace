@@ -21,8 +21,8 @@ public struct KeymapMetadataReport: Equatable, Sendable {
     /// The firmware-computed keymap fingerprint.
     public let fingerprint: UInt32
 
-    /// The fingerprint of semantic metadata generated for the firmware.
-    public let semanticFingerprint: UInt32
+    /// The fingerprint of legend metadata generated for the firmware.
+    public let legendFingerprint: UInt32
 
     /// The fingerprint of style metadata generated for the firmware.
     public let styleFingerprint: UInt32
@@ -43,7 +43,7 @@ public struct KeymapMetadataReport: Equatable, Sendable {
     ///   - entryByteCount: The byte count of one encoded keymap entry.
     ///   - entriesPerChunk: The maximum number of entries in one chunk report.
     ///   - fingerprint: The firmware-computed keymap fingerprint.
-    ///   - semanticFingerprint: The firmware semantic-metadata fingerprint.
+    ///   - legendFingerprint: The firmware legend-metadata fingerprint.
     ///   - styleFingerprint: The firmware style-metadata fingerprint.
     ///   - entryCount: The complete number of matrix and encoder entries.
     ///   - encoderCount: The number of physical encoders represented after matrix entries.
@@ -55,7 +55,7 @@ public struct KeymapMetadataReport: Equatable, Sendable {
         entryByteCount: Int,
         entriesPerChunk: Int,
         fingerprint: UInt32,
-        semanticFingerprint: UInt32,
+        legendFingerprint: UInt32,
         styleFingerprint: UInt32,
         entryCount: Int,
         encoderCount: Int
@@ -67,7 +67,7 @@ public struct KeymapMetadataReport: Equatable, Sendable {
         self.entryByteCount = entryByteCount
         self.entriesPerChunk = entriesPerChunk
         self.fingerprint = fingerprint
-        self.semanticFingerprint = semanticFingerprint
+        self.legendFingerprint = legendFingerprint
         self.styleFingerprint = styleFingerprint
         self.entryCount = entryCount
         self.encoderCount = encoderCount

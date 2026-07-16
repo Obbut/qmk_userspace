@@ -9,7 +9,7 @@ Personal QMK firmware for four keyboards:
 
 ## Swift-first architecture
 
-Swift is the only authored source of truth for keymaps, semantics, styles,
+Swift is the only authored source of truth for keymaps, legends, styles,
 firmware configuration, companion metadata, previews, and generated diagrams.
 The host compiler writes ignored QMK ABI artifacts before each build.
 
@@ -28,7 +28,7 @@ macOS + Windows companions and Xcode previews
 ```
 
 `QMKKeymapKit` has no Obbut-specific vocabulary. `ObbutKeymaps` owns the shared
-Obbut semantics, named styles, and behavior. Individual firmware modules select
+Obbut legends, named styles, and behavior. Individual firmware modules select
 board composition and hardware policy only.
 
 See [SwiftKeymaps/README.md](SwiftKeymaps/README.md) for the authored API,

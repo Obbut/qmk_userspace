@@ -2,57 +2,49 @@ import QMKKeymapKit
 
 /// Deterministic wire metadata collected from the keys referenced by one firmware.
 struct GeneratedKeyMetadata: Sendable {
-    /// Semantics in generated wire-ID order.
-    let semantics: [AnySemantic]
+    /// Legends in generated wire-ID order.
+    let legends: [AnyLegend]
 
     /// Appearances in generated wire-ID order, including standard style zero.
     let styles: [AnyStyle]
 
-    /// The fingerprint covering every referenced semantic.
-    let semanticFingerprint: UInt32
+    /// The fingerprint covering every referenced legend.
+    let legendFingerprint: UInt32
 
     /// The fingerprint covering every resolved appearance.
     let styleFingerprint: UInt32
 
-    fileprivate let semanticIDs: [String: UInt16]
+    fileprivate let legendIDs: [String: UInt16]
     fileprivate let styleIDs: [KeyAppearance: UInt16]
 
     /// Collects and validates metadata from every matrix and encoder action.
     ///
     /// - Parameter keys: Every action reachable from the firmware keymap.
     init(keys: [Key]) {
-        var semanticValuesByID: [String: KeySemantic] = [:]
-        for semantic in keys.compactMap(\.semantic) {
-            let stableID = StaticStringContent.string(semantic.id)
-            if let existing = semanticValuesByID[stableID] {
-                precondition(
-                    existing == semantic,
-                    "Semantic \(semantic.id) has conflicting presentation metadata."
-                )
-            } else {
-                semanticValuesByID[stableID] = semantic
-            }
+        var legendValuesByLabel: [String: StaticString] = [:]
+        for legend in keys.compactMap(\.legend) {
+            legendValuesByLabel[StaticStringContent.string(legend)] = legend
         }
 
-        let semanticValues = semanticValuesByID.values.sorted {
-            StaticStringContent.string($0.id) < StaticStringContent.string($1.id)
+        let legendValues = legendValuesByLabel.values.sorted {
+            StaticStringContent.string($0) < StaticStringContent.string($1)
         }
         precondition(
-            semanticValues.count <= Int(UInt16.max),
-            "Firmware metadata supports at most \(UInt16.max) semantics."
+            legendValues.count <= Int(UInt16.max),
+            "Firmware metadata supports at most \(UInt16.max) legends."
         )
-        let semanticPairs = semanticValues.map { semantic in
-            (StaticStringContent.string(semantic.id), semantic.contentID, semantic)
+        let legendPairs = legendValues.map { legend in
+            (StaticStringContent.string(legend), StaticStringContent.identifier(legend), legend)
         }
         precondition(
-            Set(semanticPairs.map(\.1)).count == semanticPairs.count,
-            "Semantic protocol content identifiers must not collide."
+            Set(legendPairs.map(\.1)).count == legendPairs.count,
+            "Legend protocol content identifiers must not collide."
         )
-        semanticIDs = Dictionary(
-            uniqueKeysWithValues: semanticPairs.map { ($0.0, $0.1) }
+        legendIDs = Dictionary(
+            uniqueKeysWithValues: legendPairs.map { ($0.0, $0.1) }
         )
-        semantics = semanticPairs.map { AnySemantic(id: $0.1, semantic: $0.2) }
-        semanticFingerprint = KeymapMetadataFingerprint.semantics(semanticValues)
+        legends = legendPairs.map { AnyLegend(id: $0.1, legend: $0.2) }
+        legendFingerprint = KeymapMetadataFingerprint.legends(legendValues)
 
         let customAppearances = Set(keys.map(\.appearance))
             .subtracting([.standard])
@@ -77,11 +69,11 @@ struct GeneratedKeyMetadata: Sendable {
         styleFingerprint = KeymapMetadataFingerprint.styles(appearances)
     }
 
-    /// Returns the generated semantic wire identifier for a key.
-    func semanticID(for key: Key) -> UInt16? {
-        guard let semantic = key.semantic else { return nil }
-        guard let id = semanticIDs[StaticStringContent.string(semantic.id)] else {
-            preconditionFailure("Every key semantic must be collected before erasure.")
+    /// Returns the generated legend wire identifier for a key.
+    func legendID(for key: Key) -> UInt16? {
+        guard let legend = key.legend else { return nil }
+        guard let id = legendIDs[StaticStringContent.string(legend)] else {
+            preconditionFailure("Every key legend must be collected before erasure.")
         }
         return id
     }

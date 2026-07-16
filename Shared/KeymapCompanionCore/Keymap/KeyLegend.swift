@@ -3,7 +3,7 @@ public struct KeyLegend: Equatable, Sendable {
     /// The compact text shown when the renderer has no native symbol.
     public let label: String
 
-    /// The optional semantic symbol for a native renderer.
+    /// The optional legend symbol for a native renderer.
     public let symbol: KeySymbol?
 
     /// The appearance supplied by firmware.
@@ -13,7 +13,7 @@ public struct KeyLegend: Equatable, Sendable {
     ///
     /// - Parameters:
     ///   - label: The compact fallback text.
-    ///   - symbol: The optional semantic symbol for a native renderer.
+    ///   - symbol: The optional legend symbol for a native renderer.
     ///   - style: The appearance supplied by firmware.
     init(
         label: String,

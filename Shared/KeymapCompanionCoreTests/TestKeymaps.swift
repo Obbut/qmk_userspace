@@ -5,9 +5,9 @@ import ObbutKeyboardCatalog
 enum TestKeymaps {
     /// Creates a valid Kyria keymap with configurable generated metadata.
     static func makeKyria(
-        semanticFingerprint: UInt32? = nil,
+        legendFingerprint: UInt32? = nil,
         styleFingerprint: UInt32? = nil,
-        semanticID: SemanticID = .none,
+        legendID: LegendID = .none,
         styleID: StyleID = .standard
     ) -> FirmwareKeymap {
         guard let firmware = ObbutKeyboardCatalog.firmware(named: "kyria") else {
@@ -24,14 +24,14 @@ enum TestKeymaps {
             matrixColumnCount: firmware.layout.matrixColumnCount,
             encoderCount: firmware.layout.encoders.count,
             fingerprint: 0,
-            semanticFingerprint: semanticFingerprint
-                ?? firmware.semanticFingerprint,
+            legendFingerprint: legendFingerprint
+                ?? firmware.legendFingerprint,
             styleFingerprint: styleFingerprint
                 ?? firmware.styleFingerprint,
             entries: Array(
                 repeating: FirmwareKeymapEntry(
                     keycode: 0,
-                    semanticID: semanticID,
+                    legendID: legendID,
                     styleID: styleID
                 ),
                 count: matrixEntryCount + encoderEntryCount

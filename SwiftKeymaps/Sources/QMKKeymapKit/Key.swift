@@ -1,26 +1,24 @@
-/// A QMK action with optional semantic and visual metadata.
+/// A QMK action with optional legend and visual metadata.
 public struct Key: Sendable {
     /// The keycode emitted at the QMK ABI boundary.
     public let keycode: QMKKeycode
 
 #if hasFeature(Embedded)
-    /// The compact semantic identifier retained by firmware builds.
+    /// The compact legend identifier retained by firmware builds.
     @usableFromInline
-    internal let embeddedSemanticID: UInt16
+    internal let embeddedLegendID: UInt16
 
     /// Renderer legends are host presentation data and are not retained in firmware.
     public var legend: StaticString? { nil }
 
-    /// Reconstructs the compact semantic value used by executable firmware behavior.
-    public var semantic: KeySemantic? {
-        embeddedSemanticID == 0 ? nil : KeySemantic(contentID: embeddedSemanticID)
-    }
+    /// The deterministic identifier for the explicit legend.
+    public var legendID: UInt16 { embeddedLegendID }
 #else
     /// An optional explicit renderer legend.
     public let legend: StaticString?
 
-    /// Optional stable meaning used by renderers and custom behavior.
-    public let semantic: KeySemantic?
+    /// The deterministic identifier for the explicit legend.
+    public var legendID: UInt16 { legend.map(StaticStringContent.identifier) ?? 0 }
 #endif
 
     /// The resolved appearance used by renderers and firmware lighting.
@@ -31,45 +29,54 @@ public struct Key: Sendable {
     /// - Parameters:
     ///   - keycode: The exact QMK ABI value.
     ///   - legend: An optional explicit renderer legend.
-    ///   - semantic: Optional stable meaning for the action.
     ///   - appearance: The resolved visual appearance.
     public init(
         keycode: QMKKeycode,
         legend: StaticString? = nil,
-        semantic: KeySemantic? = nil,
         appearance: KeyAppearance = .standard
     ) {
         self.keycode = keycode
 #if hasFeature(Embedded)
-        _ = legend
-        embeddedSemanticID = semantic?.contentID ?? 0
+        embeddedLegendID = legend.map(StaticStringContent.identifier) ?? 0
 #else
         self.legend = legend
-        self.semantic = semantic
 #endif
         self.appearance = appearance
     }
 
-    /// Returns this key with semantic metadata.
-    public func semantic(_ semantic: KeySemantic) -> Key {
-        Key(
-            keycode: keycode,
-            legend: legend,
-            semantic: semantic,
-            appearance: appearance
-        )
+#if hasFeature(Embedded)
+    /// Creates a transformed firmware key while preserving its compiled legend identifier.
+    @usableFromInline
+    internal init(
+        keycode: QMKKeycode,
+        legendID: UInt16,
+        appearance: KeyAppearance
+    ) {
+        self.keycode = keycode
+        embeddedLegendID = legendID
+        self.appearance = appearance
     }
+#endif
 
     /// Returns this key using a reusable visual style.
     public func style<Style: KeyStyle>(_ style: Style) -> Key {
+#if hasFeature(Embedded)
+        Key(
+            keycode: keycode,
+            legendID: legendID,
+            appearance: style.makeAppearance(
+                configuration: KeyStyleConfiguration(keycode: keycode)
+            )
+        )
+#else
         Key(
             keycode: keycode,
             legend: legend,
-            semantic: semantic,
             appearance: style.makeAppearance(
-                configuration: KeyStyleConfiguration(keycode: keycode, semantic: semantic)
+                configuration: KeyStyleConfiguration(keycode: keycode)
             )
         )
+#endif
     }
 
     /// Returns this key with an explicit renderer legend.
@@ -77,7 +84,6 @@ public struct Key: Sendable {
         Key(
             keycode: keycode,
             legend: legend,
-            semantic: semantic,
             appearance: appearance
         )
     }
@@ -160,21 +166,29 @@ public struct Key: Sendable {
     /// Creates a typed fork-specific or custom QMK keycode.
     public static func qmk(
         _ keycode: QMKKeycode,
-        legend: StaticString? = nil,
-        semantic: KeySemantic? = nil
+        legend: StaticString? = nil
     ) -> Key {
-        Key(keycode: keycode, legend: legend, semantic: semantic)
+        Key(keycode: keycode, legend: legend)
     }
 
     fileprivate func withModifierMask(_ mask: UInt16) -> Key {
+#if hasFeature(Embedded)
+        Key(
+            keycode: QMKKeycode(
+                rawValue: ((mask & 0x1F) << 8) | (keycode.rawValue & 0x00FF)
+            ),
+            legendID: legendID,
+            appearance: appearance
+        )
+#else
         Key(
             keycode: QMKKeycode(
                 rawValue: ((mask & 0x1F) << 8) | (keycode.rawValue & 0x00FF)
             ),
             legend: legend,
-            semantic: semantic,
             appearance: appearance
         )
+#endif
     }
 
     fileprivate static func modifiedModifierKey(base: Modifier, wrappers: UInt16) -> Key {

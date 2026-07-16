@@ -3,8 +3,8 @@ public struct FirmwareKeymapEntry: Equatable, Sendable {
     /// The compiled QMK keycode.
     public let keycode: UInt16
 
-    /// The generated semantic identifier.
-    public let semanticID: SemanticID
+    /// The generated legend identifier.
+    public let legendID: LegendID
 
     /// The generated style identifier.
     public let styleID: StyleID
@@ -13,11 +13,11 @@ public struct FirmwareKeymapEntry: Equatable, Sendable {
     ///
     /// - Parameters:
     ///   - keycode: The compiled QMK keycode.
-    ///   - semanticID: The generated semantic identifier.
+    ///   - legendID: The generated legend identifier.
     ///   - styleID: The generated style identifier.
-    public init(keycode: UInt16, semanticID: SemanticID, styleID: StyleID) {
+    public init(keycode: UInt16, legendID: LegendID, styleID: StyleID) {
         self.keycode = keycode
-        self.semanticID = semanticID
+        self.legendID = legendID
         self.styleID = styleID
     }
 }

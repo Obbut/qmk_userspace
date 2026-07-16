@@ -21,62 +21,24 @@ struct ObbutMetadataTests {
 
     @Test
     func protocolContentIdentifiersAreNonzeroAndUnique() {
-        let semanticIDs = Self.semantics.map(\.contentID)
+        let legendIDs = Self.keys.map(\.legendID)
         let appearances = Set(Self.styles.map {
             $0.makeAppearance(
-                configuration: KeyStyleConfiguration(
-                    keycode: QMKKeycode(rawValue: 0),
-                    semantic: nil
-                )
+                configuration: KeyStyleConfiguration(keycode: QMKKeycode(rawValue: 0))
             )
         })
         let styleIDs = appearances.map(\.contentID)
 
-        #expect(semanticIDs.allSatisfy { $0 != 0 })
-        #expect(Set(semanticIDs).count == semanticIDs.count)
+        #expect(legendIDs.allSatisfy { $0 != 0 })
+        #expect(Set(legendIDs).count == legendIDs.count)
         #expect(styleIDs.allSatisfy { $0 != 0 })
         #expect(Set(styleIDs).count == styleIDs.count)
-    }
-
-    /// Verifies semantic identifiers remain unique and namespaced without registration.
-    @Test
-    func semanticIdentifiersAreStable() {
-        let identifiers = Self.semantics.map { String(describing: $0.id) }
-
-        #expect(Set(identifiers).count == identifiers.count)
-        #expect(identifiers.allSatisfy { $0.hasPrefix("com.obbut.") })
-        #expect(
-            identifiers == [
-                "com.obbut.screenshot",
-                "com.obbut.aerospace",
-                "com.obbut.pointer.left-click",
-                "com.obbut.pointer.right-click",
-                "com.obbut.pointer.middle-click",
-                "com.obbut.browser.back",
-                "com.obbut.browser.forward",
-                "com.obbut.pointer.scroll",
-                "com.obbut.pointer.sniper",
-                "com.obbut.pointer.drag-lock",
-                "com.obbut.pointer.sensitivity-down",
-                "com.obbut.pointer.sensitivity-up",
-                "com.obbut.pointer.scroll-speed-down",
-                "com.obbut.pointer.scroll-speed-up",
-                "com.obbut.bluetooth.host-1",
-                "com.obbut.bluetooth.host-2",
-                "com.obbut.bluetooth.host-3",
-                "com.obbut.wireless.2-4-ghz",
-                "com.obbut.battery-level",
-            ]
-        )
     }
 
     /// Verifies Obbut's named styles retain their intended portable colors.
     @Test
     func namedStyleColorsAreStable() {
-        let configuration = KeyStyleConfiguration(
-            keycode: QMKKeycode(rawValue: 0x0004),
-            semantic: nil
-        )
+        let configuration = KeyStyleConfiguration(keycode: QMKKeycode(rawValue: 0x0004))
         let colors = Self.styles.map {
             $0.makeAppearance(configuration: configuration).color
         }
@@ -98,7 +60,7 @@ struct ObbutMetadataTests {
         #expect(colors == expectedColors)
     }
 
-    fileprivate static let semantics: [KeySemantic] = [
+    fileprivate static let keys: [Key] = [
         .screenshot,
         .aerospace,
         .pointerLeftClick,

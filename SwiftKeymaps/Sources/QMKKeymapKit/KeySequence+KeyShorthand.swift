@@ -127,9 +127,8 @@ extension KeySequence where Self == Key {
 
     public static func qmk(
         _ keycode: QMKKeycode,
-        legend: StaticString? = nil,
-        semantic: KeySemantic? = nil
+        legend: StaticString? = nil
     ) -> Key {
-        Key.qmk(keycode, legend: legend, semantic: semantic)
+        Key.qmk(keycode, legend: legend)
     }
 }

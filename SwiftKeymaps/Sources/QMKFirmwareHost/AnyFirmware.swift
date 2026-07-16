@@ -18,8 +18,8 @@ public struct AnyFirmware: Sendable {
     /// The resolved encoder declarations.
     public let encoders: [AnyFirmwareEncoder]
 
-    /// The fingerprint of automatically collected semantic metadata.
-    public let semanticFingerprint: UInt32
+    /// The fingerprint of automatically collected legends.
+    public let legendFingerprint: UInt32
 
     /// The fingerprint of automatically collected style appearances.
     public let styleFingerprint: UInt32
@@ -27,8 +27,8 @@ public struct AnyFirmware: Sendable {
     /// The stable 32-bit layout identifier carried by protocol v4.
     public let layoutID: UInt32
 
-    /// Referenced semantics paired with generated wire identifiers.
-    public let semantics: [AnySemantic]
+    /// Referenced legends paired with generated wire identifiers.
+    public let legends: [AnyLegend]
 
     /// Referenced appearances paired with generated wire identifiers.
     public let styles: [AnyStyle]
@@ -55,10 +55,10 @@ public struct AnyFirmware: Sendable {
         layout = keymap.layout
         layers = keymap.layers.map { AnyFirmwareLayer($0, metadata: metadata) }
         encoders = keymap.encoders.map { AnyFirmwareEncoder($0, metadata: metadata) }
-        semanticFingerprint = fingerprints.semantic
+        legendFingerprint = fingerprints.legend
         styleFingerprint = fingerprints.style
         layoutID = KeymapMetadataFingerprint.identifier(keymap.layout.id)
-        semantics = metadata.semantics
+        legends = metadata.legends
         styles = metadata.styles
     }
 }

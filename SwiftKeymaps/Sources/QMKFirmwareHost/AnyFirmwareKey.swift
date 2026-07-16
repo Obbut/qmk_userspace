@@ -8,8 +8,8 @@ public struct AnyFirmwareKey: Equatable, Sendable {
     /// The optional explicit legend.
     public let legend: String?
 
-    /// The generated semantic wire identifier.
-    public let semanticID: UInt16?
+    /// The generated legend wire identifier.
+    public let legendID: UInt16?
 
     /// The generated style wire identifier.
     public let styleID: UInt16
@@ -22,7 +22,7 @@ public struct AnyFirmwareKey: Equatable, Sendable {
     init(_ key: Key, metadata: GeneratedKeyMetadata) {
         keycode = key.keycode.rawValue
         legend = key.legend.map(StaticStringContent.string)
-        semanticID = metadata.semanticID(for: key)
+        legendID = metadata.legendID(for: key)
         styleID = metadata.styleID(for: key)
     }
 }

@@ -249,8 +249,8 @@ uint16_t obbut_platform_swift_keycode(uint8_t layer, uint8_t row, uint8_t column
     return qmk_swift_keycode_at(layer, row, column);
 }
 
-uint16_t obbut_platform_swift_semantic_id(uint8_t layer, uint8_t row, uint8_t column) {
-    return qmk_swift_semantic_id_at(layer, row, column);
+uint16_t obbut_platform_swift_legend_id(uint8_t layer, uint8_t row, uint8_t column) {
+    return qmk_swift_legend_id_at(layer, row, column);
 }
 
 uint16_t obbut_platform_swift_style_id(uint8_t layer, uint8_t row, uint8_t column) {

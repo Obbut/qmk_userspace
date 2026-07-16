@@ -13,7 +13,7 @@ extension KeymapCompanionCore.KeyLegend {
 
 /// SF Symbol names for platform-neutral key symbols.
 fileprivate extension KeymapCompanionCore.KeySymbol {
-    /// The SF Symbol name for this semantic symbol.
+    /// The SF Symbol name for this legend symbol.
     var systemImageName: String {
         switch self {
         case .returnKey: "return"

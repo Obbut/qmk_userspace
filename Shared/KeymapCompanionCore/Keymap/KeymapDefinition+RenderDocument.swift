@@ -62,7 +62,7 @@ fileprivate extension KeyLegend {
     }
 }
 
-/// Stable renderer symbol names for standard and semantic actions.
+/// Stable renderer symbol names for standard and legend actions.
 fileprivate extension KeySymbol {
     var rendererName: String {
         switch self {

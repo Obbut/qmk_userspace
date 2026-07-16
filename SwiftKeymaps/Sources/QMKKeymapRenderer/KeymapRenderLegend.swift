@@ -3,7 +3,7 @@ public struct KeymapRenderLegend: Equatable, Sendable {
     /// Compact fallback text.
     public let label: String
 
-    /// Optional renderer-neutral semantic symbol name.
+    /// Optional renderer-neutral legend symbol name.
     public let symbolName: String?
 
     /// Resolved key style.

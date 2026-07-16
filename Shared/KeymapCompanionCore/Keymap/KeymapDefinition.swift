@@ -23,8 +23,8 @@ public struct KeymapDefinition: Equatable, Sendable {
     /// Every physical encoder supplied by the layout descriptor.
     public let encoders: [KeymapEncoder]
 
-    /// Whether semantic IDs were resolved using identical generated metadata.
-    public let semanticsMatch: Bool
+    /// Whether legend IDs were resolved using identical generated metadata.
+    public let legendsMatch: Bool
 
     /// Whether style IDs were resolved using identical generated metadata.
     public let stylesMatch: Bool
@@ -87,7 +87,7 @@ public struct KeymapDefinition: Equatable, Sendable {
             matrixColumnCount: descriptor.matrixColumnCount,
             encoderCount: descriptor.encoders.count,
             fingerprint: 0,
-            semanticFingerprint: firmware.semanticFingerprint,
+            legendFingerprint: firmware.legendFingerprint,
             styleFingerprint: firmware.styleFingerprint,
             entries: entries
         )
@@ -130,13 +130,13 @@ public struct KeymapDefinition: Equatable, Sendable {
             return nil
         }
 
-        let semanticsMatch =
-            firmwareKeymap.semanticFingerprint == firmware.semanticFingerprint
+        let legendsMatch =
+            firmwareKeymap.legendFingerprint == firmware.legendFingerprint
         let stylesMatch =
             firmwareKeymap.styleFingerprint == firmware.styleFingerprint
         let resolver = KeyMetadataResolver(
             firmware: firmware,
-            semanticsMatch: semanticsMatch,
+            legendsMatch: legendsMatch,
             stylesMatch: stylesMatch
         )
 
@@ -241,7 +241,7 @@ public struct KeymapDefinition: Equatable, Sendable {
         supportedLayers = layers
         self.positionedKeys = positionedKeys
         self.encoders = encoders
-        self.semanticsMatch = semanticsMatch
+        self.legendsMatch = legendsMatch
         self.stylesMatch = stylesMatch
     }
 
@@ -258,8 +258,8 @@ public struct KeymapDefinition: Equatable, Sendable {
             legends: entries.map {
                 QMKKeycodeLegend.legend(
                     for: $0,
-                    semanticLegend: resolver.semanticLegend(for: $0.semanticID),
-                    semanticSymbolName: resolver.semanticSymbolName(for: $0.semanticID),
+                    explicitLegend: resolver.legend(for: $0.legendID),
+                    legendSymbolName: resolver.legendSymbolName(for: $0.legendID),
                     style: resolver.style(for: $0.styleID),
                     layers: layers
                 )
@@ -286,22 +286,22 @@ fileprivate struct KeyMetadataResolver {
     /// The matching host-side firmware definition.
     let firmware: AnyFirmware
 
-    /// Whether semantic values may be interpreted safely.
-    let semanticsMatch: Bool
+    /// Whether legend values may be interpreted safely.
+    let legendsMatch: Bool
 
     /// Whether style values may be interpreted safely.
     let stylesMatch: Bool
 
-    /// Returns the matching semantic legend.
-    func semanticLegend(for id: SemanticID) -> String? {
-        guard id != .none, semanticsMatch else { return nil }
-        return firmware.semantics.first { $0.id == id.rawValue }?.legend
+    /// Returns the matching explicit legend.
+    func legend(for id: LegendID) -> String? {
+        guard id != .none, legendsMatch else { return nil }
+        return firmware.legends.first { $0.id == id.rawValue }?.label
     }
 
-    /// Returns the matching renderer-neutral semantic symbol.
-    func semanticSymbolName(for id: SemanticID) -> String? {
-        guard id != .none, semanticsMatch else { return nil }
-        return firmware.semantics.first { $0.id == id.rawValue }?.symbolName
+    /// Returns the native symbol inferred from the matching legend.
+    func legendSymbolName(for id: LegendID) -> String? {
+        guard id != .none, legendsMatch else { return nil }
+        return firmware.legends.first { $0.id == id.rawValue }?.symbolName
     }
 
     /// Returns resolved style presentation or a visible unknown-style fallback.
@@ -331,7 +331,7 @@ fileprivate struct KeyMetadataResolver {
 fileprivate extension FirmwareKeymapEntry {
     static let unassigned = FirmwareKeymapEntry(
         keycode: 0,
-        semanticID: .none,
+        legendID: .none,
         styleID: .standard
     )
 }
@@ -341,7 +341,7 @@ fileprivate extension AnyFirmwareKey {
     var previewEntry: FirmwareKeymapEntry {
         FirmwareKeymapEntry(
             keycode: keycode,
-            semanticID: SemanticID(rawValue: semanticID ?? 0),
+            legendID: LegendID(rawValue: legendID ?? 0),
             styleID: StyleID(rawValue: styleID)
         )
     }

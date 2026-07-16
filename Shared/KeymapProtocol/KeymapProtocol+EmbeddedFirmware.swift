@@ -166,7 +166,7 @@
                     matrixRowCount: snapshot.matrix_row_count,
                     matrixColumnCount: snapshot.matrix_column_count,
                     fingerprint: fingerprint,
-                    semanticFingerprint: snapshot.semantic_fingerprint,
+                    legendFingerprint: snapshot.legend_fingerprint,
                     styleFingerprint: snapshot.style_fingerprint,
                     entryCount: entryCount,
                     encoderCount: snapshot.encoder_count
@@ -199,7 +199,7 @@
                     let entry = keymap_protocol_platform_get_entry(startIndex + UInt16(chunkIndex))
                     guard KeymapProtocol.encodeKeymapEntry(
                         keycode: entry.keycode,
-                        semanticID: entry.semantic_id,
+                        legendID: entry.legend_id,
                         styleID: entry.style_id,
                         at: chunkIndex,
                         to: bytes

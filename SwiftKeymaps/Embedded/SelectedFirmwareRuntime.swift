@@ -108,8 +108,8 @@ func qmk_swift_keycode_at(_ layer: UInt8, _ row: UInt8, _ column: UInt8) -> UInt
 }
 
 @c @implementation
-func qmk_swift_semantic_id_at(_ layer: UInt8, _ row: UInt8, _ column: UInt8) -> UInt16 {
-    selectedFirmwareRuntime.semanticID(layer: layer, row: row, column: column)
+func qmk_swift_legend_id_at(_ layer: UInt8, _ row: UInt8, _ column: UInt8) -> UInt16 {
+    selectedFirmwareRuntime.legendID(layer: layer, row: row, column: column)
 }
 
 @c @implementation
@@ -136,12 +136,12 @@ func qmk_swift_encoder_keycode_at(
 }
 
 @c @implementation
-func qmk_swift_encoder_semantic_id_at(
+func qmk_swift_encoder_legend_id_at(
     _ layer: UInt8,
     _ encoder: UInt8,
     _ direction: UInt8
 ) -> UInt16 {
-    selectedFirmwareRuntime.encoderSemanticID(
+    selectedFirmwareRuntime.encoderLegendID(
         layer: layer,
         encoder: encoder,
         direction: direction
@@ -177,8 +177,8 @@ func qmk_swift_layout_id() -> UInt32 {
 }
 
 @c @implementation
-func qmk_swift_semantic_fingerprint() -> UInt32 {
-    selectedFirmwareRuntime.semanticFingerprint
+func qmk_swift_legend_fingerprint() -> UInt32 {
+    selectedFirmwareRuntime.legendFingerprint
 }
 
 @c @implementation

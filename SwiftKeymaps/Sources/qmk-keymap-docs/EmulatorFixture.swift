@@ -20,8 +20,8 @@ struct EmulatorFixture: Encodable {
     /// The protocol-v4 layout identifier.
     private let layoutID: UInt32
 
-    /// The protocol-v4 semantic metadata fingerprint.
-    private let semanticFingerprint: UInt32
+    /// The protocol-v4 legend metadata fingerprint.
+    private let legendFingerprint: UInt32
 
     /// The protocol-v4 style metadata fingerprint.
     private let styleFingerprint: UInt32
@@ -29,8 +29,8 @@ struct EmulatorFixture: Encodable {
     /// Layer-major, row-major, column-major keycode values.
     private let keycodes: [UInt16]
 
-    /// Layer-major, row-major, column-major semantic identifiers.
-    private let semanticIDs: [UInt16]
+    /// Layer-major, row-major, column-major legend identifiers.
+    private let legendIDs: [UInt16]
 
     /// Layer-major, row-major, column-major style identifiers.
     private let styleIDs: [UInt16]
@@ -41,8 +41,8 @@ struct EmulatorFixture: Encodable {
     /// Layer-major, encoder-major, counterclockwise-then-clockwise keycodes.
     private let encoderKeycodes: [UInt16]
 
-    /// Layer-major, encoder-major, counterclockwise-then-clockwise semantic identifiers.
-    private let encoderSemanticIDs: [UInt16]
+    /// Layer-major, encoder-major, counterclockwise-then-clockwise legend identifiers.
+    private let encoderLegendIDs: [UInt16]
 
     /// Layer-major, encoder-major, counterclockwise-then-clockwise style identifiers.
     private let encoderStyleIDs: [UInt16]
@@ -57,12 +57,12 @@ struct EmulatorFixture: Encodable {
         matrixColumns = firmware.layout.matrixColumnCount
         encoderCount = firmware.encoders.count
         layoutID = firmware.layoutID
-        semanticFingerprint = firmware.semanticFingerprint
+        legendFingerprint = firmware.legendFingerprint
         styleFingerprint = firmware.styleFingerprint
 
         let matrixKeys = Self.matrixKeys(firmware: firmware)
         keycodes = matrixKeys.map { $0?.keycode ?? 0 }
-        semanticIDs = matrixKeys.map { $0?.semanticID ?? 0 }
+        legendIDs = matrixKeys.map { $0?.legendID ?? 0 }
         styleIDs = matrixKeys.map { $0?.styleID ?? 0 }
         styleColors = matrixKeys.map { key in
             guard let key, key.styleID != 0,
@@ -77,7 +77,7 @@ struct EmulatorFixture: Encodable {
 
         let encoderKeys = Self.encoderKeys(firmware: firmware)
         encoderKeycodes = encoderKeys.map { $0?.keycode ?? 0 }
-        encoderSemanticIDs = encoderKeys.map { $0?.semanticID ?? 0 }
+        encoderLegendIDs = encoderKeys.map { $0?.legendID ?? 0 }
         encoderStyleIDs = encoderKeys.map { $0?.styleID ?? 0 }
     }
 

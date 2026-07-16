@@ -34,7 +34,6 @@ struct KeymapDrawerEmitter {
     private func yamlEntry(for key: AnyFirmwareKey) -> String {
         let legend =
             key.legend
-            ?? key.semanticID.flatMap { id in firmware.semantics.first { $0.id == id }?.legend }
             ?? fallbackLegend(for: key.keycode)
         guard let styleName = styleName(for: key.styleID) else { return quoted(legend) }
         return "{t: \(quoted(legend)), type: \(quoted(styleName))}"

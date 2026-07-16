@@ -2,16 +2,14 @@ import QMKKeymapKit
 
 /// Stable FNV-1a fingerprints for generated key metadata and layout identifiers.
 public enum KeymapMetadataFingerprint {
-    /// Calculates a fingerprint for automatically collected semantics.
+    /// Calculates a fingerprint for automatically collected legends.
     ///
-    /// - Parameter semantics: Semantics in generated wire-ID order.
-    /// - Returns: A stable fingerprint covering identity and presentation.
-    public static func semantics(_ semantics: [KeySemantic]) -> UInt32 {
-        semantics.enumerated().reduce(seed) { hash, element in
-            var next = afterAdding(UInt16(element.offset + 1), to: hash)
-            next = afterAdding(element.element.id, to: next)
-            next = afterAdding(element.element.legend, to: next)
-            return afterAdding(element.element.symbol?.name ?? "", to: next)
+    /// - Parameter legends: Legends in generated wire-ID order.
+    /// - Returns: A stable fingerprint covering every label.
+    public static func legends(_ legends: [StaticString]) -> UInt32 {
+        legends.enumerated().reduce(seed) { hash, element in
+            let next = afterAdding(UInt16(element.offset + 1), to: hash)
+            return afterAdding(element.element, to: next)
         }
     }
 

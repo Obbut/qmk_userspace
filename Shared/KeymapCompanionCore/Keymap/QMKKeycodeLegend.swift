@@ -1,29 +1,27 @@
 import Foundation
 
-/// A converter from compiled QMK keycodes and firmware semantics to compact legends.
+/// A converter from compiled QMK keycodes and explicit labels to compact legends.
 enum QMKKeycodeLegend {
     /// Returns the renderer legend for a firmware keymap entry.
     ///
     /// - Parameters:
     ///   - entry: The firmware keymap entry to describe.
-    ///   - semanticLegend: The semantic legend, when resolved.
-    ///   - semanticSymbolName: The semantic symbol name, when resolved.
+    ///   - explicitLegend: The explicit legend, when resolved.
+    ///   - legendSymbolName: The native symbol inferred from the explicit legend.
     ///   - style: The resolved key style.
     ///   - layers: The firmware-defined layers used for layer-action legends.
     ///
     /// - Returns: A compact renderer legend.
     static func legend(
         for entry: FirmwareKeymapEntry,
-        semanticLegend: String?,
-        semanticSymbolName: String?,
+        explicitLegend: String?,
+        legendSymbolName: String?,
         style: ResolvedKeyStyle,
         layers: [KeymapLayer]
     ) -> KeyLegend {
         KeyLegend(
-            label: label(for: entry, semanticLegend: semanticLegend, layers: layers),
-            symbol: entry.semanticID == .none
-                ? symbol(for: entry.keycode)
-                : semanticSymbol(named: semanticSymbolName),
+            label: label(for: entry, explicitLegend: explicitLegend, layers: layers),
+            symbol: symbol(for: entry.keycode) ?? legendSymbol(named: legendSymbolName),
             style: style
         )
     }
@@ -32,17 +30,17 @@ enum QMKKeycodeLegend {
     ///
     /// - Parameters:
     ///   - entry: The firmware keymap entry to describe.
-    ///   - semanticLegend: The resolved semantic legend.
+    ///   - explicitLegend: The resolved explicit legend.
     ///   - layers: The firmware-defined layers.
     ///
     /// - Returns: Compact fallback text.
     private static func label(
         for entry: FirmwareKeymapEntry,
-        semanticLegend: String?,
+        explicitLegend: String?,
         layers: [KeymapLayer]
     ) -> String {
-        if entry.semanticID != .none {
-            return semanticLegend ?? "Semantic #\(entry.semanticID.rawValue)"
+        if entry.legendID != .none {
+            return explicitLegend ?? "Legend #\(entry.legendID.rawValue)"
         }
 
         let keycode = entry.keycode
@@ -128,11 +126,11 @@ enum QMKKeycodeLegend {
         }
     }
 
-    /// Returns the semantic symbol for a compiled QMK keycode.
+    /// Returns the native symbol for a compiled QMK keycode.
     ///
     /// - Parameter keycode: The compiled QMK keycode.
     ///
-    /// - Returns: A semantic symbol, or `nil` when native iconography is unsuitable.
+    /// - Returns: A symbol, or `nil` when native iconography is unsuitable.
     private static func symbol(for keycode: UInt16) -> KeySymbol? {
         switch keycode {
         case 0x0028: .returnKey
@@ -190,11 +188,8 @@ enum QMKKeycodeLegend {
         return layers.first { $0.rawValue == rawValue }?.legendName
     }
 
-    /// Maps a renderer-neutral symbol name to native presentation semantics.
-    ///
-    /// - Parameter name: The symbol name supplied by semantic metadata.
-    /// - Returns: A platform-neutral symbol, or `nil` for an unknown name.
-    private static func semanticSymbol(named name: String?) -> KeySymbol? {
+    /// Maps a renderer-neutral legend symbol name to native presentation.
+    private static func legendSymbol(named name: String?) -> KeySymbol? {
         switch name {
         case "camera": .camera
         case "window-management": .windowManagement
