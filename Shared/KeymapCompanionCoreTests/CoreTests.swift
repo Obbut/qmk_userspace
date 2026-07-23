@@ -4,14 +4,14 @@ import ObbutKeymaps
 import Testing
 @testable import KeymapCompanionCore
 
-/// Verifies host requests accept only the protocol-v4 envelope.
+/// Verifies host requests accept only the protocol-v5 envelope.
 @Test
-func protocolRequestsUseVersionFourEnvelope() {
+func protocolRequestsUseVersionFiveEnvelope() {
     let request = KeymapProtocol.makeKeymapMetadataRequest()
 
     #expect(request.count == KeymapProtocol.reportSize)
     #expect(Array(request.prefix(4)) == Array("KMAP".utf8))
-    #expect(request[4] == 4)
+    #expect(request[4] == 5)
     #expect(request[5] == 3)
 
     let crashRequest = KeymapProtocol.makeCrashReportRequest()
@@ -27,7 +27,7 @@ func protocolRequestsUseVersionFourEnvelope() {
 func bootloaderRequestIsDeliberateAndAcknowledged() {
     let request = KeymapProtocol.makeBootloaderRequest()
     #expect(request.count == KeymapProtocol.reportSize)
-    #expect(Array(request.prefix(6)) == [0x4B, 0x4D, 0x41, 0x50, 4, 8])
+    #expect(Array(request.prefix(6)) == [0x4B, 0x4D, 0x41, 0x50, 5, 8])
     #expect(Array(request[6..<10]) == Array("DFU!".utf8))
 
     var acknowledgement = [UInt8](repeating: 0, count: KeymapProtocol.reportSize)
@@ -179,7 +179,7 @@ func normalizedRGBControlsClampToFirmwareRanges() {
     #expect(abs(settings.normalizedSpeed - 0.75) < 0.002)
 }
 
-/// Verifies protocol v4 transfers support a keymap with no encoders.
+/// Verifies protocol v5 transfers support a keymap with no encoders.
 @Test
 func transferSessionPublishesZeroEncoderKeymap() {
     let layoutID = UInt32(0x1234_5678)
@@ -254,6 +254,51 @@ func transferSessionPublishesZeroEncoderKeymap() {
     #expect(completion.last == .write(report: KeymapProtocol.makeStateRequest()))
 }
 
+/// Verifies a layer-HUD trigger round-trips its complete keyboard state snapshot.
+@Test
+func layerHUDTriggerRoundTripsProtocolFive() throws {
+    var packet = [UInt8](repeating: 0, count: KeymapProtocol.reportSize)
+    let encoded = packet.withUnsafeMutableBufferPointer {
+        KeymapProtocol.encodeLayerHUDTrigger(
+            to: $0,
+            layoutID: LayoutID.kyria.rawValue,
+            layerStateMask: 1 << 2,
+            defaultLayerStateMask: 1
+        )
+    }
+    let trigger = try #require(KeymapProtocol.layerHUDTrigger(from: packet))
+
+    #expect(encoded)
+    #expect(packet[4] == 5)
+    #expect(packet[5] == 13)
+    #expect(trigger.layoutID == .kyria)
+    #expect(trigger.layerStateMask == 1 << 2)
+    #expect(trigger.defaultLayerStateMask == 1)
+    #expect(trigger.effectiveLayerMask == 5)
+
+    packet[4] = 4
+    #expect(KeymapProtocol.layerHUDTrigger(from: packet) == nil)
+}
+
+/// Verifies the transfer session discards triggers before keymap and state validation.
+@Test
+func transferSessionRejectsPrematureLayerHUDTrigger() {
+    var packet = [UInt8](repeating: 0, count: KeymapProtocol.reportSize)
+    packet.withUnsafeMutableBufferPointer {
+        #expect(
+            KeymapProtocol.encodeLayerHUDTrigger(
+                to: $0,
+                layoutID: LayoutID.kyria.rawValue,
+                layerStateMask: 1 << 2,
+                defaultLayerStateMask: 1
+            )
+        )
+    }
+    var session = KeymapTransferSession()
+
+    #expect(session.receive(packet).isEmpty)
+}
+
 /// Verifies the observable model uses its injected hardware implementation.
 @MainActor
 @Test
@@ -291,4 +336,76 @@ func observableModelUsesInjectedHardwareClient() async throws {
     #expect(hardware.restartCount == 1)
     model.shutdown()
     #expect(hardware.stopCount == 1)
+}
+
+/// Verifies only a current firmware trigger can reveal the shared HUD model.
+@MainActor
+@Test
+func observableModelRequiresCurrentFirmwareHUDTrigger() async throws {
+    let hardware = RecordingHardwareClient()
+    let hud = LayerHUDModel(transitionDelay: .milliseconds(20))
+    let model = KeymapCompanionModel.makeLive(hardware: hardware, layerHUD: hud)
+    let keymap = TestKeymaps.makeKyria()
+    let definition = try #require(KeymapDefinition(firmwareKeymap: keymap))
+    let lower = try #require(
+        definition.supportedLayers.first { $0.displayName == "Lower" }
+    )
+    let lowerMask = UInt32(1) << UInt32(lower.rawValue)
+
+    hardware.emit(.keymap(keymap))
+    hardware.emit(
+        .state(
+            KeyboardStateReport(
+                layoutID: .kyria,
+                layerStateMask: lowerMask,
+                defaultLayerStateMask: 1,
+                sequence: 1,
+                capabilities: KeymapProtocol.layerStateCapability
+                    | KeymapProtocol.keymapReadCapability,
+                rgbSettings: nil
+            )
+        )
+    )
+    try await Task.sleep(for: .milliseconds(80))
+    #expect(hud.presentation == nil)
+
+    hardware.emit(
+        .layerHUDTrigger(
+            LayerHUDTrigger(
+                layoutID: .kyria,
+                layerStateMask: UInt32(1) << 3,
+                defaultLayerStateMask: 1
+            )
+        )
+    )
+    #expect(hud.presentation == nil)
+
+    hardware.emit(
+        .layerHUDTrigger(
+            LayerHUDTrigger(
+                layoutID: .kyria,
+                layerStateMask: lowerMask,
+                defaultLayerStateMask: 1
+            )
+        )
+    )
+    #expect(hud.presentation?.layer == lower)
+
+    hardware.emit(
+        .state(
+            KeyboardStateReport(
+                layoutID: .kyria,
+                layerStateMask: 0,
+                defaultLayerStateMask: 1,
+                sequence: 2,
+                capabilities: KeymapProtocol.layerStateCapability
+                    | KeymapProtocol.keymapReadCapability,
+                rgbSettings: nil
+            )
+        )
+    )
+    #expect(hud.presentation?.layer == definition.supportedLayers.first)
+    try await Task.sleep(for: .milliseconds(80))
+    #expect(hud.presentation == nil)
+    model.shutdown()
 }

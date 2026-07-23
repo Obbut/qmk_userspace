@@ -40,7 +40,7 @@ callback bridges.
 The repository includes native companion apps that visualize all four firmware
 definitions, follow a connected keyboard's layer changes in realtime, and
 control supported keyboard lighting. Platform UI remains native while the
-protocol-v4-only model, dynamic geometry, metadata resolution, and production
+protocol-v5-only model, dynamic geometry, metadata resolution, and production
 renderer are shared Swift code.
 
 - [Keymap Companion for macOS](macOS/KeymapCompanion/README.md) uses SwiftUI and its Canvas renderer.
@@ -286,7 +286,7 @@ F-keys, RGB controls, and bootloader.
 
 ## Build Commands
 
-All firmware builds use Docker. Every board compiles the same Swift protocol-v4
+All firmware builds use Docker. Every board compiles the same Swift protocol-v5
 runtime and its selected Swift firmware modules.
 
 ### Kyria Rev4

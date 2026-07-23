@@ -10,6 +10,9 @@ public struct FirmwareContext: Sendable {
     public var legendFingerprint: UInt32 = 0
     public var styleFingerprint: UInt32 = 0
 
+    /// The keymap-authored bit mask of layers eligible to reveal the companion HUD.
+    public var hudLayerMask: UInt32 = 0
+
     public init() {}
 
     public var highestLayer: UInt8 {

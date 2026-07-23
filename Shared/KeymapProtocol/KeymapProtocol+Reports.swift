@@ -1,7 +1,7 @@
-// Protocol-v4 Raw HID report encoders.
+// Protocol-v5 Raw HID report encoders.
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-/// Firmware-side protocol-v4 report encoders.
+/// Firmware-side protocol-v5 report encoders.
 extension KeymapProtocol {
     /// Encodes the complete retained crash record into the 26-byte payload.
     @discardableResult
@@ -65,6 +65,28 @@ extension KeymapProtocol {
             bytes[31] = rgbSpeed
         }
         writeUInt32(capabilities, to: bytes, at: 22)
+        return true
+    }
+
+    /// Encodes a firmware-authorized layer-HUD presentation trigger.
+    ///
+    /// - Parameters:
+    ///   - bytes: Storage for exactly one Raw HID report.
+    ///   - layoutID: The keyboard layout that produced the trigger.
+    ///   - layerStateMask: The current nonpersistent QMK layer-state mask.
+    ///   - defaultLayerStateMask: The current persistent QMK default-layer-state mask.
+    /// - Returns: Whether the supplied storage has the required size.
+    @discardableResult
+    public static func encodeLayerHUDTrigger(
+        to bytes: UnsafeMutableBufferPointer<UInt8>,
+        layoutID: UInt32,
+        layerStateMask: UInt32,
+        defaultLayerStateMask: UInt32
+    ) -> Bool {
+        guard initializeReport(bytes, as: .layerHUDTrigger) else { return false }
+        writeUInt32(layoutID, to: bytes, at: 6)
+        writeUInt32(layerStateMask, to: bytes, at: 10)
+        writeUInt32(defaultLayerStateMask, to: bytes, at: 14)
         return true
     }
 

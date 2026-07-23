@@ -4,7 +4,7 @@
   "name": "Lower Raise Function and QWERTY layers",
   "host": "default",
   "steps": [
-    { "action": "raw-hid", "hex": "4b4d415004010000000000000000000000000000000000000000000000000000" },
+    { "action": "raw-hid", "hex": "4b4d415005010000000000000000000000000000000000000000000000000000" },
     { "assert": "layer", "active": [], "defaults": [0] },
     { "action": "press", "key": "R24", "settleMs": 60 },
     { "assert": "layer", "active": [2] },

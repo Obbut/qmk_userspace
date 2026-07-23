@@ -6,7 +6,7 @@ compiled keymap, resolves shared legends and styles, follows layer
 changes in realtime, and renders the result with the same
 `QMKKeymapRenderer` used by the Xcode keymap previews.
 
-The app uses protocol v4 only. There is intentionally no legacy decoder or
+The app uses protocol v5 only. There is intentionally no legacy decoder or
 compatibility mode. The protocol carries a stable layout ID, keymap and metadata
 fingerprints, arbitrary layers, arbitrary matrix placements, and zero or more
 encoders. Unknown generated IDs remain visible as diagnostics while ordinary QMK
@@ -59,10 +59,15 @@ layout, transfer pagination, fingerprints, and state. The small QMK C shim
 exposes ABI facts such as matrix entries, timers, Raw HID, and RGB persistence;
 it contains no authored keymap or protocol legends.
 
-All Raw HID reports are 32 bytes and begin with `KMAP` plus version `4`.
+All Raw HID reports are 32 bytes and begin with `KMAP` plus version `5`.
 Metadata reports identify the layout and generated metadata fingerprints; chunk reports
 stream variable-sized layer, matrix, and encoder entries. Corrupt or reordered
 transfers are rejected by the fingerprint check.
+
+The keyboard owns the layer-HUD reveal timer. An eligible layer must remain
+active for three seconds without a key-down before firmware sends the explicit
+presentation trigger. The companion owns the three-second dismissal after the
+layer is released.
 
 ## Firmware
 

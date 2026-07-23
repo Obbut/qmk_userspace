@@ -37,5 +37,8 @@ extension KeymapProtocol {
 
         /// A host acknowledgement that durable crash persistence succeeded.
         case clearCrashReport = 12
+
+        /// Firmware notification that an eligible layer has remained idle long enough.
+        case layerHUDTrigger = 13
     }
 }

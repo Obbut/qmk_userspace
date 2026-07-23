@@ -151,6 +151,17 @@ final class KeyboardHIDMonitor: KeyboardHardwareClient {
         eventHandler(.state(report))
     }
 
+    /// Accepts a firmware-authorized layer-HUD trigger from the active session.
+    ///
+    /// - Parameters:
+    ///   - trigger: The validated layer-HUD trigger.
+    ///   - session: The endpoint that delivered it.
+    func receive(_ trigger: LayerHUDTrigger, from session: HIDDeviceSession) {
+        let id = ObjectIdentifier(session.device)
+        guard activeSessionID == id else { return }
+        eventHandler(.layerHUDTrigger(trigger))
+    }
+
     /// Accepts a complete keymap from one open session.
     ///
     /// - Parameters:

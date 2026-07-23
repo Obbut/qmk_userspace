@@ -17,13 +17,13 @@ struct EmulatorFixture: Encodable {
     /// The number of declared encoders.
     private let encoderCount: Int
 
-    /// The protocol-v4 layout identifier.
+    /// The protocol-v5 layout identifier.
     private let layoutID: UInt32
 
-    /// The protocol-v4 legend metadata fingerprint.
+    /// The protocol-v5 legend metadata fingerprint.
     private let legendFingerprint: UInt32
 
-    /// The protocol-v4 style metadata fingerprint.
+    /// The protocol-v5 style metadata fingerprint.
     private let styleFingerprint: UInt32
 
     /// Layer-major, row-major, column-major keycode values.

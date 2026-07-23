@@ -115,6 +115,9 @@ struct CompanionState: Equatable, Sendable {
             }
             connectionStatus = .connected
 
+        case .layerHUDTrigger:
+            break
+
         case .disconnected:
             connectionStatus = .disconnected
             capabilities = 0

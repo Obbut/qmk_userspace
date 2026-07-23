@@ -78,12 +78,20 @@ func testAllFirmwareDefinitionsAreComplete() {
 }
 
 /// Verifies host catalog compatibility fingerprints use the embedded traversal algorithm.
-func testHostAndEmbeddedMetadataFingerprintsMatch() {
-    assertMetadataFingerprintsMatch(KyriaFirmware.self)
-    assertMetadataFingerprintsMatch(EloraFirmware.self)
-    assertMetadataFingerprintsMatch(Q15Firmware.self)
-    assertMetadataFingerprintsMatch(PlanckFirmware.self)
-}
+    func testHostAndEmbeddedMetadataFingerprintsMatch() {
+        assertMetadataFingerprintsMatch(KyriaFirmware.self)
+        assertMetadataFingerprintsMatch(EloraFirmware.self)
+        assertMetadataFingerprintsMatch(Q15Firmware.self)
+        assertMetadataFingerprintsMatch(PlanckFirmware.self)
+    }
+
+    /// Verifies the embedded runtime derives HUD eligibility from authored layer metadata.
+    func testEmbeddedRuntimeDerivesHUDLayerMasks() {
+        assertHUDLayerMaskMatches(KyriaFirmware.self)
+        assertHUDLayerMaskMatches(EloraFirmware.self)
+        assertHUDLayerMaskMatches(Q15Firmware.self)
+        assertHUDLayerMaskMatches(PlanckFirmware.self)
+    }
 
 /// Pins the two-unit Planck spacebar between its adjacent bottom-row keys.
 func testPlanckSpacebarGeometryIsContiguous() throws {
@@ -206,6 +214,20 @@ where Firmware.Layout: HostFirmwareLayout {
     let embedded = FirmwareRuntime<Firmware>.metadataFingerprints()
     XCTAssertEqual(host.legendFingerprint, embedded.legend)
     XCTAssertEqual(host.styleFingerprint, embedded.style)
+}
+
+/// Compares one erased host firmware's HUD metadata with its runtime context mask.
+///
+/// - Parameter firmware: The concrete firmware type shared by host and embedded builds.
+private func assertHUDLayerMaskMatches<Firmware: QMKFirmware>(_ firmware: Firmware.Type)
+where Firmware.Layout: HostFirmwareLayout {
+    let expectedMask = AnyFirmware(firmware).layers.reduce(into: UInt32.zero) { mask, layer in
+        guard layer.showsHUD else { return }
+        mask |= UInt32(1) << UInt32(layer.id.rawValue)
+    }
+    var runtime = FirmwareRuntime<Firmware>()
+    runtime.postInitialize()
+    XCTAssertEqual(runtime.context.hudLayerMask, expectedMask)
 }
 
 /// A concise golden representation of one firmware's structural ABI.

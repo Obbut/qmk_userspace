@@ -10,7 +10,7 @@ public struct KeyAppearance: Equatable, Hashable, Sendable {
         self.color = color
     }
 
-    /// Deterministic protocol-v4 style identifier, reserving zero for standard.
+    /// Deterministic protocol-v5 style identifier, reserving zero for standard.
     public var contentID: UInt16 {
         guard self != .standard else { return 0 }
         var hash: UInt32 = 2_166_136_261

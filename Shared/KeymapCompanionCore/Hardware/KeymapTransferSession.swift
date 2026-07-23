@@ -29,7 +29,7 @@ public struct KeymapTransferSession: Sendable {
         ]
     }
 
-    /// Routes one input report through state decoding and keymap pagination.
+    /// Routes one input report through state decoding, HUD validation, and keymap pagination.
     ///
     /// - Parameter bytes: One complete Raw HID input report.
     ///
@@ -48,6 +48,17 @@ public struct KeymapTransferSession: Sendable {
             latestReport = state
             guard latestKeymap?.layoutID == state.layoutID else { return [] }
             return [.state(state)]
+        }
+        if let trigger = KeymapProtocol.layerHUDTrigger(from: bytes) {
+            guard latestKeymap?.layoutID == trigger.layoutID,
+                let latestReport,
+                latestReport.layoutID == trigger.layoutID,
+                latestReport.layerStateMask == trigger.layerStateMask,
+                latestReport.defaultLayerStateMask == trigger.defaultLayerStateMask
+            else {
+                return []
+            }
+            return [.layerHUDTrigger(trigger)]
         }
         return []
     }
@@ -133,7 +144,7 @@ public struct KeymapTransferSession: Sendable {
     /// - Returns: A chunk request or a size-validation failure.
     private func keymapChunkRequest(startingAt startIndex: Int) -> [KeymapSessionAction] {
         guard let encodedIndex = UInt16(exactly: startIndex) else {
-            return [.failed(message: "Firmware keymap is too large for protocol v4.")]
+            return [.failed(message: "Firmware keymap is too large for protocol v5.")]
         }
         return [.write(report: KeymapProtocol.makeKeymapChunkRequest(startingAt: encodedIndex))]
     }

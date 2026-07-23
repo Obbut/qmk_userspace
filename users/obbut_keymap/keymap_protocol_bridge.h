@@ -63,7 +63,7 @@ enum obbut_crash_flags {
     OBBUT_CRASH_FLAG_DEEP_DIAGNOSTICS = 1 << 4,
 };
 
-// Exactly 26 bytes: this is the complete protocol-v4 crash payload.
+// Exactly 26 bytes: this is the complete protocol-v5 crash payload.
 typedef struct __attribute__((packed)) {
     uint8_t reason;
     uint8_t phase;
@@ -195,6 +195,7 @@ void obbut_platform_register_split_sync(void);
 uint8_t obbut_platform_sync_split_state(uint8_t rgb_preview_mode, uint8_t drag_lock_active);
 uint8_t obbut_platform_is_keyboard_master(void);
 uint32_t obbut_platform_timer_read32(void);
+uint32_t obbut_platform_layer_state(void);
 uint8_t obbut_platform_is_windows(void);
 void obbut_platform_layer_invert(uint8_t layer);
 void obbut_platform_send_keycode(uint16_t keycode, uint8_t pressed);

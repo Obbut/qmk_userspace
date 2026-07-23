@@ -145,7 +145,7 @@ public protocol FirmwareFeature: Sendable {
 
 The feature builder preserves declaration order. The selected runtime owns the
 concrete feature-state tuple and forwards QMK callbacks directly to it. Raw HID
-protocol v4, RGB policy, Windows overrides, split synchronization, pointing
+protocol v5, RGB policy, Windows overrides, split synchronization, pointing
 state, Planck hardware behavior, and Keychron common behavior all execute from
 the declared Swift features.
 
@@ -160,7 +160,7 @@ selector.
 The shared make rules compile, in order:
 
 1. `QMKKeymapKit` as Embedded Swift.
-2. `QMKFirmwareRuntime` and protocol v4 as Embedded Swift.
+2. `QMKFirmwareRuntime` and protocol v5 as Embedded Swift.
 3. `ObbutKeymaps` as Embedded Swift.
 4. Every ordinary source in the selected firmware module, including the
    `@QMKFirmware` declaration itself.

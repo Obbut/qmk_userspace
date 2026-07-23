@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #if !hasFeature(Embedded)
-    /// Host-side validation and decoding for protocol-v4 reports.
+    /// Host-side validation and decoding for protocol-v5 reports.
     extension KeymapProtocol {
         /// Creates a request for the keyboard's current state.
         ///
@@ -108,6 +108,23 @@
                     sequence: uint32(from: report, at: 18),
                     capabilities: capabilities,
                     rgbSettings: rgbSettings
+                )
+            }
+        }
+
+        /// Returns a firmware-authorized layer-HUD trigger decoded from Raw HID.
+        ///
+        /// - Parameter bytes: A complete Raw HID input report.
+        /// - Returns: A validated layer-HUD trigger, or `nil` for another packet type.
+        public static func layerHUDTrigger(from bytes: [UInt8]) -> LayerHUDTrigger? {
+            bytes.withUnsafeBufferPointer { report in
+                guard hasValidHeader(in: report, messageType: .layerHUDTrigger) else {
+                    return nil
+                }
+                return LayerHUDTrigger(
+                    layoutID: LayoutID(rawValue: uint32(from: report, at: 6)),
+                    layerStateMask: uint32(from: report, at: 10),
+                    defaultLayerStateMask: uint32(from: report, at: 14)
                 )
             }
         }

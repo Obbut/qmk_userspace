@@ -144,6 +144,8 @@ final class WindowsHIDSession: @unchecked Sendable {
                 eventHandler(.keymap(keymap))
             case let .state(report):
                 eventHandler(.state(report))
+            case let .layerHUDTrigger(trigger):
+                eventHandler(.layerHUDTrigger(trigger))
             case let .crashReport(report):
                 do {
                     try CrashReportLog.persist(report)

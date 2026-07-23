@@ -9,6 +9,9 @@ public enum KeymapSessionAction: Equatable, Sendable {
     /// Validated keyboard state ready for publication after its matching keymap.
     case state(KeyboardStateReport)
 
+    /// A firmware-authorized layer-HUD trigger matching the current keyboard state.
+    case layerHUDTrigger(LayerHUDTrigger)
+
     /// A retained firmware crash that must be persisted before acknowledgement.
     case crashReport(CrashReport)
 

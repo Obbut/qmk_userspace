@@ -2,24 +2,24 @@ import AppKit
 import Testing
 @testable import KeymapCompanion
 
-/// Verifies requests use the sole protocol-v4 Raw HID envelope.
+/// Verifies requests use the sole protocol-v5 Raw HID envelope.
 @Test
-func metadataRequestUsesProtocolFourEnvelope() {
+func metadataRequestUsesProtocolFiveEnvelope() {
     let request = KeymapProtocol.makeKeymapMetadataRequest()
 
     #expect(request.count == 32)
     #expect(Array(request[0..<4]) == Array("KMAP".utf8))
-    #expect(request[4] == 4)
+    #expect(request[4] == 5)
     #expect(request[5] == 3)
     #expect(request.dropFirst(6).allSatisfy { $0 == 0 })
 }
 
-/// Verifies any protocol version other than v4 is rejected.
+/// Verifies any protocol version other than v5 is rejected.
 @Test
-func rejectsEveryNonV4ProtocolEnvelope() {
+func rejectsEveryNonV5ProtocolEnvelope() {
     var packet = [UInt8](repeating: 0, count: 32)
     packet.replaceSubrange(0..<4, with: Array("KMAP".utf8))
-    packet[4] = 3
+    packet[4] = 4
     packet[5] = 2
 
     #expect(KeymapProtocol.stateReport(from: packet) == nil)
@@ -39,7 +39,7 @@ func keymapChunkRequestIncludesStartIndex() {
 
 /// Verifies state reports round-trip opaque layout IDs and RGB settings.
 @Test
-func stateReportRoundTripsProtocolFour() throws {
+func stateReportRoundTripsProtocolFive() throws {
     var packet = [UInt8](repeating: 0, count: KeymapProtocol.reportSize)
     let encoded = packet.withUnsafeMutableBufferPointer {
         KeymapProtocol.encodeStateReport(
@@ -71,7 +71,7 @@ func stateReportRoundTripsProtocolFour() throws {
 
 /// Verifies metadata carries arbitrary layout, layer, encoder, and fingerprint data.
 @Test
-func metadataReportRoundTripsProtocolFour() throws {
+func metadataReportRoundTripsProtocolFive() throws {
     var packet = [UInt8](repeating: 0, count: KeymapProtocol.reportSize)
     let encoded = packet.withUnsafeMutableBufferPointer {
         KeymapProtocol.encodeKeymapMetadataReport(
@@ -101,7 +101,7 @@ func metadataReportRoundTripsProtocolFour() throws {
     #expect(metadata.styleFingerprint == 0x8765_4321)
 }
 
-/// Verifies protocol v4 does not impose a fixed keyboard encoder shape.
+/// Verifies protocol v5 does not impose a fixed keyboard encoder shape.
 @Test
 func metadataAcceptsArbitraryEncoderCount() throws {
     let encoderCount = UInt8(12)
@@ -195,7 +195,7 @@ func rgbSettingsRequestUsesExplicitValues() {
     )
     let request = KeymapProtocol.makeRGBSettingsRequest(applying: settings)
 
-    #expect(request[4] == 4)
+    #expect(request[4] == 5)
     #expect(request[5] == 7)
     #expect(Array(request[6...11]) == [1, RGBEffect.hueWave.rawValue, 91, 203, 107, 149])
 }

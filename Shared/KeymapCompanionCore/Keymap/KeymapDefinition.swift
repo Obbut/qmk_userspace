@@ -5,7 +5,7 @@ import QMKKeymapKit
 
 /// Renderer input for one catalog-backed keyboard layout.
 public struct KeymapDefinition: Equatable, Sendable {
-    /// The stable protocol-v4 layout identifier.
+    /// The stable protocol-v5 layout identifier.
     public let layoutID: LayoutID
 
     /// The keyboard name supplied by its layout descriptor.

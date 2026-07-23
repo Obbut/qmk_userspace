@@ -1,11 +1,32 @@
 import QMKFirmwareRuntime
 
-/// Protocol-v4 Keymap Companion firmware support.
+/// Protocol-v5 Keymap Companion firmware support.
 public struct ObbutKeymapCompanion: FirmwareFeature, Sendable {
     public typealias State = EmptyFeatureState
     public static let initialState = EmptyFeatureState()
 
     public init() {}
+
+    public static func postInitialize(
+        state: inout EmptyFeatureState,
+        context: inout FirmwareContext
+    ) {
+        guard context.isKeyboardMaster else { return }
+        FirmwareProtocolBridge.configureLayerHUD(
+            eligibleLayerMask: context.hudLayerMask
+        )
+    }
+
+    public static func processRecord(
+        _ event: KeyEvent,
+        state: inout EmptyFeatureState,
+        context: inout FirmwareContext
+    ) -> KeyEventDisposition {
+        if event.isPressed, context.isKeyboardMaster {
+            FirmwareProtocolBridge.recordKeyDown(at: context.timestamp)
+        }
+        return .continueProcessing
+    }
 
     public static func housekeeping(
         state: inout EmptyFeatureState,
@@ -36,7 +57,7 @@ public struct ObbutKeymapCompanion: FirmwareFeature, Sendable {
             data[1] == 0x4D,
             data[2] == 0x41,
             data[3] == 0x50,
-            data[4] == 4
+            data[4] == FirmwareProtocolBridge.protocolVersion
         else {
             return false
         }

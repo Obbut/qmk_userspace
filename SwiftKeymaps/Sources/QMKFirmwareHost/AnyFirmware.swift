@@ -24,7 +24,7 @@ public struct AnyFirmware: Sendable {
     /// The fingerprint of automatically collected style appearances.
     public let styleFingerprint: UInt32
 
-    /// The stable 32-bit layout identifier carried by protocol v4.
+    /// The stable 32-bit layout identifier carried by protocol v5.
     public let layoutID: UInt32
 
     /// Referenced legends paired with generated wire identifiers.

@@ -6,6 +6,9 @@ public enum KeyboardMonitorEvent: Equatable, Sendable {
     /// A validated realtime keyboard-state report arrived.
     case state(KeyboardStateReport)
 
+    /// Firmware authorized presentation of the HUD for the current layer state.
+    case layerHUDTrigger(LayerHUDTrigger)
+
     /// A complete, fingerprint-validated firmware keymap arrived.
     case keymap(FirmwareKeymap)
 

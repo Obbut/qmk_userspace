@@ -138,6 +138,10 @@ uint32_t obbut_platform_timer_read32(void) {
     return timer_read32();
 }
 
+uint32_t obbut_platform_layer_state(void) {
+    return (uint32_t)layer_state;
+}
+
 uint8_t obbut_platform_is_windows(void) {
 #if defined(OS_DETECTION_ENABLE)
     return detected_host_os() == OS_WINDOWS ? 1 : 0;

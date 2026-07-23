@@ -118,6 +118,8 @@ final class WindowsHIDMonitor: @unchecked Sendable {
         switch event {
         case .keymap, .state:
             activePath = path
+        case .layerHUDTrigger:
+            guard activePath == path else { return }
         case .failed:
             break
         case .searching, .disconnected:

@@ -153,7 +153,7 @@ def protocol_entries(fixture: dict[str, object]) -> list[tuple[int, int, int]]:
 
 
 def keymap_fingerprint(fixture: dict[str, object], entries: list[tuple[int, int, int]]) -> int:
-    """Calculate the protocol-v4 keymap fingerprint independently on the host."""
+    """Calculate the protocol-v5 keymap fingerprint independently on the host."""
     seed: list[int] = []
     append_uint32(seed, int(fixture["layoutID"]))
     seed.extend((
@@ -176,7 +176,7 @@ def keymap_fingerprint(fixture: dict[str, object], entries: list[tuple[int, int,
 def protocol_responses(fixture: dict[str, object]) -> list[list[int]]:
     """Build expected metadata plus first and last keymap-chunk responses."""
     entries = protocol_entries(fixture)
-    metadata = [0x4B, 0x4D, 0x41, 0x50, 4, 4]
+    metadata = [0x4B, 0x4D, 0x41, 0x50, 5, 4]
     append_uint32(metadata, int(fixture["layoutID"]))
     metadata.extend((
         int(fixture["layerCount"]),
@@ -195,7 +195,7 @@ def protocol_responses(fixture: dict[str, object]) -> list[list[int]]:
     def chunk(start: int) -> list[int]:
         """Encode one expected keymap chunk starting at an entry index."""
         selected = entries[start:start + 2]
-        response = [0x4B, 0x4D, 0x41, 0x50, 4, 6]
+        response = [0x4B, 0x4D, 0x41, 0x50, 5, 6]
         append_uint32(response, int(fixture["layoutID"]))
         append_uint16(response, start)
         append_uint16(response, len(entries))
@@ -212,7 +212,7 @@ def protocol_responses(fixture: dict[str, object]) -> list[list[int]]:
 def protocol_request(message_type: int, start_index: int = 0) -> list[int]:
     """Return one zero-padded protocol request."""
     request = [0] * 32
-    request[:6] = [0x4B, 0x4D, 0x41, 0x50, 4, message_type]
+    request[:6] = [0x4B, 0x4D, 0x41, 0x50, 5, message_type]
     request[6] = start_index & 0xFF
     request[7] = (start_index >> 8) & 0xFF
     return request

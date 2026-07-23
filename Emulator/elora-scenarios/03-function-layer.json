@@ -3,7 +3,7 @@
   "board": "elora-rev2",
   "name": "Elora Function layer",
   "steps": [
-    { "action": "raw-hid", "hex": "4b4d415004010000000000000000000000000000000000000000000000000000" },
+    { "action": "raw-hid", "hex": "4b4d415005010000000000000000000000000000000000000000000000000000" },
     { "assert": "layer", "active": [], "defaults": [0] },
     { "action": "press", "key": "right:r3c0", "settleMs": 60 },
     { "assert": "layer", "active": [4] },

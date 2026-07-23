@@ -1,4 +1,4 @@
-// QMK services consumed by the Embedded Swift protocol-v4 runtime.
+// QMK services consumed by the Embedded Swift protocol-v5 runtime.
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include QMK_KEYBOARD_H
@@ -8,7 +8,7 @@
 __attribute__((weak)) void obbut_keymap_rgb_settings_applied(void) {}
 
 #if defined(RGB_MATRIX_ENABLE)
-// QMK's effect enum is build-dependent. Protocol v4 carries stable IDs and
+// QMK's effect enum is build-dependent. Protocol v5 carries stable IDs and
 // this table contains only the effects enabled by the selected keyboard fork.
 typedef struct {
     uint8_t protocol_effect;

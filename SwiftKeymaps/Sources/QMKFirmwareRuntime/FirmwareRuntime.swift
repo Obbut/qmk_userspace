@@ -35,6 +35,7 @@ public struct FirmwareRuntime<Firmware: QMKFirmware>: Sendable {
 
     public mutating func postInitialize() {
         updateMetadataFingerprints()
+        updateHUDLayerMask()
         Firmware.FeatureBody.postInitialize(state: &featureState, context: &context)
     }
 
@@ -78,7 +79,12 @@ public struct FirmwareRuntime<Firmware: QMKFirmware>: Sendable {
     }
 
     public mutating func rgbMatrixIndicators(lowerBound: UInt8, upperBound: UInt8) -> Bool {
-        Firmware.FeatureBody.rgbMatrixIndicators(
+#if hasFeature(Embedded)
+        // QMK's split transport assigns layer_state directly on the slave and
+        // therefore does not call layer_state_set_user there.
+        context.layerState = obbut_platform_layer_state()
+#endif
+        return Firmware.FeatureBody.rgbMatrixIndicators(
             RGBIndicatorRange(lowerBound: lowerBound, upperBound: upperBound),
             state: &featureState,
             context: &context
@@ -172,6 +178,21 @@ public struct FirmwareRuntime<Firmware: QMKFirmware>: Sendable {
         let fingerprints = calculatedMetadataFingerprints()
         context.legendFingerprint = fingerprints.legend
         context.styleFingerprint = fingerprints.style
+    }
+
+    /// Records the keymap-authored HUD eligibility mask in shared feature context.
+    fileprivate mutating func updateHUDLayerMask() {
+        var mask: UInt32 = 0
+        for ordinal in 0..<layerCount {
+            guard let metadata = Firmware.keymap.layer(at: Int(ordinal)),
+                metadata.showsHUD,
+                metadata.id.rawValue < 32
+            else {
+                continue
+            }
+            mask |= UInt32(1) << UInt32(metadata.id.rawValue)
+        }
+        context.hudLayerMask = mask
     }
 
     fileprivate func calculatedMetadataFingerprints() -> (legend: UInt32, style: UInt32) {

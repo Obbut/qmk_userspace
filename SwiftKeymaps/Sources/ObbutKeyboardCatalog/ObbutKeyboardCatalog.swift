@@ -33,7 +33,7 @@ public enum ObbutKeyboardCatalog {
         }
     }
 
-    /// Finds firmware by the stable protocol-v4 layout identifier.
+    /// Finds firmware by the stable protocol-v5 layout identifier.
     ///
     /// - Parameter layoutID: The opaque identifier reported by firmware.
     /// - Returns: The matching firmware definition, if this catalog contains it.

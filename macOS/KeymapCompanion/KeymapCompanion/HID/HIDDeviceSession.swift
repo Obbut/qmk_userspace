@@ -104,6 +104,8 @@ final class HIDDeviceSession {
                 monitor?.receive(keymap, from: self)
             case let .state(report):
                 monitor?.receive(report, from: self)
+            case let .layerHUDTrigger(trigger):
+                monitor?.receive(trigger, from: self)
             case let .crashReport(report):
                 do {
                     try CrashReportLog.persist(report)

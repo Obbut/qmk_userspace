@@ -3,7 +3,7 @@
   "board": "kyria-rev4",
   "name": "Cirque absolute movement",
   "steps": [
-    { "action": "raw-hid", "hex": "4b4d415004010000000000000000000000000000000000000000000000000000" },
+    { "action": "raw-hid", "hex": "4b4d415005010000000000000000000000000000000000000000000000000000" },
     { "assert": "layer", "active": [], "defaults": [0] },
     { "action": "pointer", "x": 1000, "y": 700, "pressure": 32, "settleMs": 100 },
     { "assert": "layer", "active": [5] },
@@ -14,7 +14,7 @@
     { "action": "pointer", "x": 1200, "y": 600, "pressure": 32, "settleMs": 100 },
     { "action": "pointer", "x": 0, "y": 0, "pressure": 0, "settleMs": 100 },
     { "action": "wait", "milliseconds": 800 },
-    { "action": "raw-hid", "hex": "4b4d415004010000000000000000000000000000000000000000000000000000" },
+    { "action": "raw-hid", "hex": "4b4d415005010000000000000000000000000000000000000000000000000000" },
     { "assert": "layer", "active": [], "defaults": [0] },
     { "assert": "diagnostics-clean" }
   ]

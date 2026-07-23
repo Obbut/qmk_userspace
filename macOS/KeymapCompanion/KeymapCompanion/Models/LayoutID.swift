@@ -1,7 +1,7 @@
 import Foundation
 import KeymapCompanionCore
 
-/// A stable protocol-v4 keyboard layout identifier.
+/// A stable protocol-v5 keyboard layout identifier.
 typealias LayoutID = KeymapCompanionCore.LayoutID
 
 /// macOS-localized presentation for catalog layout identifiers.

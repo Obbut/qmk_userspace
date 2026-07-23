@@ -1,4 +1,4 @@
-// Sends protocol v4's confirmed bootloader request over the QMK Raw HID endpoint.
+// Sends protocol v5's confirmed bootloader request over the QMK Raw HID endpoint.
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 import CoreFoundation
@@ -61,7 +61,7 @@ IOHIDDeviceRegisterInputReportCallback(
         let receiver = Unmanaged<ReportReceiver>.fromOpaque(context).takeUnretainedValue()
         let bytes = UnsafeBufferPointer(start: report, count: reportLength)
         receiver.acknowledged = Array(bytes[0..<10])
-            == [0x4B, 0x4D, 0x41, 0x50, 4, 9, 0x44, 0x46, 0x55, 0x21]
+            == [0x4B, 0x4D, 0x41, 0x50, 5, 9, 0x44, 0x46, 0x55, 0x21]
         if receiver.acknowledged {
             CFRunLoopStop(CFRunLoopGetMain())
         }
@@ -73,7 +73,7 @@ IOHIDDeviceScheduleWithRunLoop(device, CFRunLoopGetMain(), CFRunLoopMode.default
 var request = [UInt8](repeating: 0, count: 32)
 request.replaceSubrange(
     0..<10,
-    with: [0x4B, 0x4D, 0x41, 0x50, 4, 8, 0x44, 0x46, 0x55, 0x21]
+    with: [0x4B, 0x4D, 0x41, 0x50, 5, 8, 0x44, 0x46, 0x55, 0x21]
 )
 let result = request.withUnsafeBufferPointer { bytes in
     IOHIDDeviceSetReport(

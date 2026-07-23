@@ -56,8 +56,9 @@ per-monitor-v2 DPI manifest for sharp rendering at non-100% display scaling.
 - The tray menu can reopen the window, reconnect Raw HID, or exit the app.
 - The compact **Lighting** header action opens RGB controls in a native flyout;
   lighting controls do not occupy the main keymap view.
-- The layer HUD appears after a layer has remained active for three seconds and
-  stays out of the way while the main window is active.
+- The layer HUD appears after an eligible layer has remained active for three
+  seconds without a key-down. Firmware owns that reveal timer; each key press
+  restarts it. The HUD stays out of the way while the main window is active.
 - Lighting changes are coalesced before being written to firmware. Incoming
   acknowledgements update existing controls without rebuilding the window.
 

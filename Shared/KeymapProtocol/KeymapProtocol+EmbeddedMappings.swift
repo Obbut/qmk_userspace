@@ -1,8 +1,8 @@
-// Embedded keymap calculations for protocol v4.
+// Embedded keymap calculations for protocol v5.
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #if hasFeature(Embedded)
-    /// Protocol-v4 calculations over the narrow generated-keymap C boundary.
+    /// Protocol-v5 calculations over the narrow generated-keymap C boundary.
     extension KeymapProtocolFirmware {
         /// Calculates the total matrix and encoder entry count.
         static func entryCount(

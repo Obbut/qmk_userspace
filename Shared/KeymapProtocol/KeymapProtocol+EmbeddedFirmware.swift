@@ -1,8 +1,8 @@
-// Firmware-side protocol-v4 engine.
+// Firmware-side protocol-v5 engine.
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #if hasFeature(Embedded)
-    /// The allocation-free protocol-v4 runtime serialized on QMK's event loop.
+    /// The allocation-free protocol-v5 runtime serialized on QMK's event loop.
     enum KeymapProtocolFirmware {
         /// The minimum delay between unsolicited reports.
         fileprivate static let minimumSendInterval: UInt32 = 5
@@ -49,6 +49,23 @@
         /// The last reported RGB speed.
         nonisolated(unsafe) fileprivate static var lastRGBSpeed = UInt8.max
 
+        /// Firmware-owned inactivity timing for the current eligible layer.
+        nonisolated(unsafe) fileprivate static var layerHUDTimer = LayerHUDTriggerTimer()
+
+        /// Configures HUD eligibility derived from the selected firmware keymap.
+        ///
+        /// - Parameter eligibleLayerMask: Layers permitted to trigger HUD presentation.
+        static func configureLayerHUD(eligibleLayerMask: UInt32) {
+            layerHUDTimer.configure(eligibleLayerMask: eligibleLayerMask)
+        }
+
+        /// Restarts an armed layer-HUD reveal delay for one key-down.
+        ///
+        /// - Parameter timestamp: The current wraparound QMK millisecond timestamp.
+        static func recordKeyDown(at timestamp: UInt32) {
+            layerHUDTimer.recordKeyDown(at: timestamp)
+        }
+
         /// Handles one complete Raw HID report supplied by QMK.
         static func receive(_ data: UnsafePointer<UInt8>, length: UInt8) {
             let bytes = UnsafeBufferPointer(start: data, count: Int(length))
@@ -75,7 +92,8 @@
                 applyRGBSettings(from: bytes)
             case .enterBootloader:
                 acceptBootloaderRequest(from: bytes)
-            case .state, .keymapMetadata, .keymapChunk, .bootloaderAcknowledgement, .crashReport:
+            case .state, .keymapMetadata, .keymapChunk, .bootloaderAcknowledgement,
+                .crashReport, .layerHUDTrigger:
                 break
             }
         }
@@ -83,6 +101,10 @@
         /// Sends state when observable QMK state changes.
         static func performHousekeeping() {
             let snapshot = keymap_protocol_platform_get_snapshot()
+            layerHUDTimer.observe(
+                layerStateMask: snapshot.layer_state_mask,
+                at: snapshot.timestamp
+            )
             if isBootloaderResetPending,
                 snapshot.timestamp &- bootloaderRequestTimestamp >= KeymapProtocol.bootloaderResetDelay
             {
@@ -91,10 +113,16 @@
                 return
             }
             guard isConnected else { return }
-            guard hasStateChanged(snapshot),
-                snapshot.timestamp &- lastSendTimestamp >= minimumSendInterval
-            else { return }
-            sendState(using: snapshot)
+            guard snapshot.timestamp &- lastSendTimestamp >= minimumSendInterval else {
+                return
+            }
+            if hasStateChanged(snapshot) {
+                sendState(using: snapshot)
+                return
+            }
+            if layerHUDTimer.takeTriggerIfReady(at: snapshot.timestamp) {
+                sendLayerHUDTrigger(using: snapshot)
+            }
         }
 
         /// Acknowledges an exact confirmation token and defers reset to housekeeping.
@@ -154,6 +182,26 @@
             guard encoded else { return }
             send(&report)
             recordSentState(snapshot)
+        }
+
+        /// Encodes and sends one firmware-authorized layer-HUD trigger.
+        ///
+        /// - Parameter snapshot: The current platform state at the reveal deadline.
+        fileprivate static func sendLayerHUDTrigger(
+            using snapshot: keymap_protocol_platform_snapshot_t
+        ) {
+            var report: [32 of UInt8] = .init(repeating: 0)
+            let encoded = withUnsafeMutableBytes(of: &report) { rawBytes in
+                KeymapProtocol.encodeLayerHUDTrigger(
+                    to: rawBytes.bindMemory(to: UInt8.self),
+                    layoutID: snapshot.layout_id,
+                    layerStateMask: snapshot.layer_state_mask,
+                    defaultLayerStateMask: snapshot.default_layer_state_mask
+                )
+            }
+            guard encoded else { return }
+            send(&report)
+            lastSendTimestamp = snapshot.timestamp
         }
 
         /// Encodes and sends dimensions and fingerprints.

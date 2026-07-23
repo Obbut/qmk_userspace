@@ -3,6 +3,9 @@ import type { RGBColor } from './kyria/rgb.js';
 import type { USBReport } from './kyria/usb-host.js';
 import type { Scenario, ScenarioStep } from './scenario.js';
 
+const MINIMUM_STEP_EVENT_BUDGET = 50_000_000;
+const EVENTS_PER_MILLISECOND_BUDGET = 125_000;
+
 export interface ScenarioResult {
   readonly name: string;
   readonly simulatedMilliseconds: number;
@@ -60,7 +63,7 @@ export class ScenarioRunner {
           this.board.scheduler.runFor(step.settleMs ?? 12);
           return;
         case 'wait':
-          this.board.scheduler.runFor(step.milliseconds, 150_000_000);
+          this.board.scheduler.runFor(step.milliseconds, this.eventBudget(step.milliseconds));
           return;
         case 'rotate':
           this.board.encoder.rotate(step.direction, step.detents ?? 1, this.board.scheduler);
@@ -120,7 +123,7 @@ export class ScenarioRunner {
           (report) => this.isProtocolReport(report, step.messageType)
             && (step.layoutID === undefined || this.uint32(report.data, 6) === step.layoutID),
           step.timeoutMs ?? 100,
-          `protocol-v4 message ${step.messageType}`,
+          `protocol-v5 message ${step.messageType}`,
         );
         return;
       }
@@ -147,7 +150,7 @@ export class ScenarioRunner {
       }
       case 'no-report': {
         const before = this.board.usb.reports.length;
-        this.board.scheduler.runFor(step.durationMs);
+        this.board.scheduler.runFor(step.durationMs, this.eventBudget(step.durationMs));
         if (this.board.usb.reports.length !== before) {
           throw new Error(`Expected no USB report for ${step.durationMs} ms`);
         }
@@ -183,6 +186,7 @@ export class ScenarioRunner {
         this.board.scheduler.runUntil(
           () => Boolean((match = this.findReport(predicate))),
           this.board.clock.nanos + timeoutMs * 1_000_000,
+          this.eventBudget(timeoutMs),
         );
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
@@ -210,6 +214,13 @@ export class ScenarioRunner {
       && Math.abs(actual.blue - expected.blue) <= tolerance;
   }
 
+  private eventBudget(milliseconds: number): number {
+    return Math.max(
+      MINIMUM_STEP_EVENT_BUDGET,
+      Math.ceil(milliseconds * EVENTS_PER_MILLISECOND_BUDGET),
+    );
+  }
+
   private hex(value: string): Uint8Array {
     if (!/^(?:[0-9a-fA-F]{2})*$/.test(value)) throw new Error(`Invalid hexadecimal byte string: ${value}`);
     return Uint8Array.from(Buffer.from(value, 'hex'));
@@ -223,7 +234,7 @@ export class ScenarioRunner {
     const data = report.data;
     return data.length === 32
       && data[0] === 0x4b && data[1] === 0x4d && data[2] === 0x41 && data[3] === 0x50
-      && data[4] === 4 && data[5] === messageType;
+      && data[4] === 5 && data[5] === messageType;
   }
 
   private uint32(data: Uint8Array, offset: number): number {

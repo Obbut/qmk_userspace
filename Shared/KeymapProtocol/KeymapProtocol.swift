@@ -1,7 +1,11 @@
 // Shared Raw HID protocol for QMK firmware and Keymap Companion.
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-/// The protocol-v4-only wire definition shared by firmware and companion apps.
+#if !hasFeature(Embedded)
+import QMKFirmwareRuntime
+#endif
+
+/// The protocol-v5-only wire definition shared by firmware and companion apps.
 public enum KeymapProtocol {
     /// QMK's default Raw HID usage page.
     public static let usagePage = 0xFF60
@@ -13,7 +17,7 @@ public enum KeymapProtocol {
     public static let reportSize = 32
 
     /// The sole supported wire-format version.
-    public static let version: UInt8 = 4
+    public static let version = FirmwareProtocolBridge.protocolVersion
 
     /// The byte count of keycode, legend ID, and style ID.
     static let keymapEntrySize = 6
@@ -62,7 +66,7 @@ public enum KeymapProtocol {
     /// - Parameters:
     ///   - bytes: The bytes to validate.
     ///   - messageType: The expected message identifier.
-    /// - Returns: Whether the report matches protocol v4 and the message type.
+    /// - Returns: Whether the report matches protocol v5 and the message type.
     static func hasValidHeader(
         in bytes: UnsafeBufferPointer<UInt8>,
         messageType: MessageType

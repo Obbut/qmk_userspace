@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "board": "kyria-rev4",
+  "name": "Layer HUD reveal waits for keyboard inactivity",
+  "steps": [
+    { "action": "raw-hid", "hex": "4b4d415005010000000000000000000000000000000000000000000000000000" },
+    { "assert": "layer", "active": [], "defaults": [0] },
+    { "action": "press", "key": "R24", "settleMs": 60 },
+    { "assert": "layer", "active": [2] },
+    { "action": "wait", "milliseconds": 1500 },
+    { "action": "tap", "key": "R07" },
+    { "assert": "no-report", "durationMs": 2500 },
+    { "assert": "raw-hid", "messageType": 13, "layoutID": 3308001859, "timeoutMs": 600 },
+    { "action": "release", "key": "R24" },
+    { "assert": "layer", "active": [] },
+    { "assert": "diagnostics-clean" }
+  ]
+}

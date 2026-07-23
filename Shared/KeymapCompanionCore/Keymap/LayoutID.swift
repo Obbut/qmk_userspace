@@ -1,7 +1,7 @@
 import Foundation
 import ObbutKeyboardCatalog
 
-/// An opaque, stable protocol-v4 keyboard layout identifier.
+/// An opaque, stable protocol-v5 keyboard layout identifier.
 public struct LayoutID: Equatable, Hashable, RawRepresentable, Sendable {
     /// The 32-bit wire value generated from the layout's stable string identifier.
     public let rawValue: UInt32

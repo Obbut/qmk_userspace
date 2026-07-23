@@ -39,7 +39,7 @@ public final class KeymapCompanionModel {
         }
     }
 
-    /// Delayed HUD state consumed by each platform's native overlay controller.
+    /// Trigger-driven HUD state consumed by each platform's native overlay controller.
     public let layerHUD: LayerHUDModel
 
     /// The injected platform hardware implementation.
@@ -199,6 +199,24 @@ public final class KeymapCompanionModel {
             layerHUD.update(
                 activeLayer: state.activeLayer,
                 activeLayerMask: state.effectiveLayerMask
+            )
+
+        case let .layerHUDTrigger(trigger):
+            keymapMayHaveChanged = false
+            guard keymapDefinition?.layoutID == trigger.layoutID,
+                state.layoutID == trigger.layoutID,
+                state.layerStateMask == trigger.layerStateMask,
+                state.defaultLayerStateMask == trigger.defaultLayerStateMask
+            else {
+                return
+            }
+            let activeLayer = keymapDefinition?.highestActiveLayer(
+                in: trigger.effectiveLayerMask
+            ) ?? .base
+            guard activeLayer.isHUDLayer else { return }
+            layerHUD.present(
+                activeLayer: activeLayer,
+                activeLayerMask: trigger.effectiveLayerMask
             )
         }
         synchronizeObservableState(includeKeymapDefinition: keymapMayHaveChanged)
