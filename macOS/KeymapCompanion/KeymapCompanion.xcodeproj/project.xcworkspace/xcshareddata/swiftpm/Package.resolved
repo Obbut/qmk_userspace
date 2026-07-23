@@ -1,5 +1,5 @@
 {
-  "originHash" : "f8f7433cfdc8e0bf950c2f33fc95072e9d56fce383215e8a29cb6675a6c0811f",
+  "originHash" : "bf1641468e704461f25c2773faeb1438e5bce357ffb6fa4dccbcdf10f17d76b4",
   "pins" : [
     {
       "identity" : "combine-schedulers",
@@ -42,8 +42,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swiftlang/swift-syntax",
       "state" : {
-        "revision" : "79e4b74a295b6eb74a8b585e3a39d29e70c1dbd1",
-        "version" : "603.0.2"
+        "revision" : "2b59c0c741e9184ab057fd22950b491076d42e91",
+        "version" : "603.0.0"
       }
     },
     {
