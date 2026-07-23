@@ -24,26 +24,24 @@ struct KeyboardBoardView: View {
 
     var body: some View {
         let activeLayer = definition.highestActiveLayer(in: activeLayerMask)
-        Group {
-            if scalesToFit {
+        if scalesToFit {
+            renderer(activeLayerID: activeLayer.rawValue)
+                .padding(8)
+        } else {
+            ScrollView([.horizontal, .vertical]) {
                 renderer(activeLayerID: activeLayer.rawValue)
+                    .frame(
+                        width: definition.geometry.canvasWidth,
+                        height: definition.geometry.canvasHeight
+                    )
                     .padding(20)
-            } else {
-                ScrollView([.horizontal, .vertical]) {
-                    renderer(activeLayerID: activeLayer.rawValue)
-                        .frame(
-                            width: definition.geometry.canvasWidth,
-                            height: definition.geometry.canvasHeight
-                        )
-                        .padding(20)
-                }
             }
-        }
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .strokeBorder(Color.primary.opacity(0.08))
+            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .strokeBorder(Color.primary.opacity(0.08))
+            }
         }
     }
 

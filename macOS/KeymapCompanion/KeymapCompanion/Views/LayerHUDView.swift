@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// A compact glass keymap card hosted inside the nonactivating HUD panel.
+/// A single-surface glass keymap card hosted inside the nonactivating HUD panel.
 struct LayerHUDView: View {
     /// The downloaded physical keymap to render.
     let definition: KeymapDefinition
@@ -10,7 +10,7 @@ struct LayerHUDView: View {
 
     /// The layer heading and scale-to-fit keyboard diagram.
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(alignment: .leading, spacing: 4) {
             LayerHUDHeader(layer: presentation.layer)
 
             KeyboardBoardView(
@@ -19,54 +19,65 @@ struct LayerHUDView: View {
                 scalesToFit: true
             )
         }
-        .padding(18)
+        .padding(.horizontal, 22)
+        .padding(.top, 16)
+        .padding(.bottom, 18)
         .background(
-            .ultraThinMaterial,
-            in: RoundedRectangle(cornerRadius: 24, style: .continuous)
+            .regularMaterial,
+            in: RoundedRectangle(cornerRadius: 22, style: .continuous)
         )
         .overlay {
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .strokeBorder(Color.primary.opacity(0.14))
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.22))
         }
+        .shadow(color: .black.opacity(0.18), radius: 16, y: 6)
+        .padding(8)
         .accessibilityElement(children: .contain)
     }
 }
 
-/// The compact active-layer heading above the HUD keyboard.
+/// The understated active-layer heading above the HUD keyboard.
 fileprivate struct LayerHUDHeader: View {
     /// The current layer represented below.
     let layer: KeymapLayer
 
-    /// A centered layer label that stays visually subordinate to the keymap.
+    /// A leading layer label that stays visually subordinate to the keymap.
     var body: some View {
         Label {
             Text(layer.localizedDisplayName)
         } icon: {
             Image(systemName: "square.3.layers.3d.top.filled")
+                .foregroundStyle(Color.accentColor)
         }
-        .font(.headline)
+        .font(.system(size: 15, weight: .semibold, design: .rounded))
         .foregroundStyle(.primary)
-        .padding(.horizontal, 14)
-        .padding(.vertical, 7)
-        .background(Color.accentColor.opacity(0.16), in: Capsule())
-        .overlay {
-            Capsule()
-                .strokeBorder(Color.accentColor.opacity(0.36))
-        }
+        .padding(.leading, 4)
     }
 }
 
 #if DEBUG
-    #Preview("Lower Layer HUD") {
+    #Preview("Glass Keys") {
         let definition = KeymapDefinition.makePreview(for: .elora)
+        let layer = definition.supportedLayers[3]
         LayerHUDView(
             definition: definition,
             presentation: LayerHUDPresentation(
-                layer: definition.supportedLayers[2],
-                activeLayerMask: 0b0_0101
+                layer: layer,
+                activeLayerMask: UInt32(1) << UInt32(layer.rawValue)
             )
         )
         .frame(width: 900, height: 420)
-        .background(Color.gray.opacity(0.25))
+        .background(
+            LinearGradient(
+                colors: [
+                    Color(red: 0.18, green: 0.30, blue: 0.55),
+                    Color(red: 0.52, green: 0.24, blue: 0.58),
+                    Color(red: 0.92, green: 0.53, blue: 0.30),
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .preferredColorScheme(.light)
     }
 #endif

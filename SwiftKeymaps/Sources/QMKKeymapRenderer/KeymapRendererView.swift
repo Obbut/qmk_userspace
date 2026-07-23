@@ -17,6 +17,7 @@ public struct KeymapRendererView: View {
         self.selectedLayerID = selectedLayerID
     }
 
+    /// The scaled glass keyboard diagram for the selected layer.
     public var body: some View {
         KeyboardDiagramView(document: document, selectedLayerID: selectedLayerID)
             .aspectRatio(document.canvasWidth / document.canvasHeight, contentMode: .fit)

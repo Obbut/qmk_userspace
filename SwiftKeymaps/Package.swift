@@ -6,7 +6,7 @@ import CompilerPluginSupport
 let package = Package(
     name: "SwiftQMKKeymaps",
     platforms: [
-        .macOS(.v15)
+        .macOS(.v26)
     ],
     products: [
         .library(name: "QMKKeymapKit", targets: ["QMKKeymapKit"]),
