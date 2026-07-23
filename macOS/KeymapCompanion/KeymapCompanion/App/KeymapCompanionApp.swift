@@ -1,3 +1,5 @@
+import Dependencies
+import Foundation
 import KeymapCompanionCore
 import SwiftUI
 
@@ -12,8 +14,17 @@ struct KeymapCompanionApp: App {
 
     /// Creates shared state and its process-lifetime overlay controller together.
     init() {
-        let hardware = KeyboardHIDMonitor()
-        let model = AppModel.makeLive(hardware: hardware)
+        let environment = ProcessInfo.processInfo.environment
+        let model: AppModel
+        if environment["XCTestConfigurationFilePath"] != nil {
+            model = withDependencies {
+                $0.keyboardHardware = KeyboardHardwareClientKey.testValue
+            } operation: {
+                AppModel.makeLive()
+            }
+        } else {
+            model = AppModel.makeLive()
+        }
         _model = State(initialValue: model)
         layerHUDController = LayerHUDController(model: model)
     }

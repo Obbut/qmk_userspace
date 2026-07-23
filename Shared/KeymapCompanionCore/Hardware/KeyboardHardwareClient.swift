@@ -31,12 +31,14 @@ public protocol KeyboardHardwareClient: AnyObject, Sendable {
 
 /// The dependency key is declared with the interface so platform targets can
 /// inject live implementations without the shared package importing OS APIs.
-fileprivate enum KeyboardHardwareClientKey: TestDependencyKey {
-    /// The inert client used by previews.
-    static let previewValue: any KeyboardHardwareClient = InertKeyboardHardwareClient()
+public enum KeyboardHardwareClientKey: TestDependencyKey {
+    /// The unavailable client used by previews.
+    public static let previewValue: any KeyboardHardwareClient =
+        UnavailableKeyboardHardwareClient()
 
-    /// The inert client used unless a test overrides the dependency.
-    static let testValue: any KeyboardHardwareClient = InertKeyboardHardwareClient()
+    /// The unavailable client used unless a test overrides the dependency.
+    public static let testValue: any KeyboardHardwareClient =
+        UnavailableKeyboardHardwareClient()
 }
 
 /// DependencyValues access to the platform keyboard hardware client.
@@ -48,8 +50,8 @@ public extension DependencyValues {
     }
 }
 
-/// A no-op hardware implementation for previews and unconfigured tests.
-fileprivate final class InertKeyboardHardwareClient: KeyboardHardwareClient, @unchecked Sendable {
+/// A no-op hardware implementation that makes physical devices unavailable.
+fileprivate final class UnavailableKeyboardHardwareClient: KeyboardHardwareClient, @unchecked Sendable {
     /// Ignores an event receiver.
     ///
     /// - Parameter handler: The unused receiver.

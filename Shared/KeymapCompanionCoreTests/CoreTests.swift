@@ -1,4 +1,5 @@
 import Foundation
+import Dependencies
 import ObbutKeyboardCatalog
 import ObbutKeymaps
 import Testing
@@ -304,7 +305,11 @@ func transferSessionRejectsPrematureLayerHUDTrigger() {
 @Test
 func observableModelUsesInjectedHardwareClient() async throws {
     let hardware = RecordingHardwareClient()
-    let model = KeymapCompanionModel.makeLive(hardware: hardware)
+    let model = withDependencies {
+        $0.keyboardHardware = hardware
+    } operation: {
+        KeymapCompanionModel.makeLive()
+    }
 
     #expect(hardware.startCount == 1)
     hardware.emit(.keymap(TestKeymaps.makeKyria()))
@@ -344,7 +349,11 @@ func observableModelUsesInjectedHardwareClient() async throws {
 func observableModelRequiresCurrentFirmwareHUDTrigger() async throws {
     let hardware = RecordingHardwareClient()
     let hud = LayerHUDModel(transitionDelay: .milliseconds(20))
-    let model = KeymapCompanionModel.makeLive(hardware: hardware, layerHUD: hud)
+    let model = withDependencies {
+        $0.keyboardHardware = hardware
+    } operation: {
+        KeymapCompanionModel.makeLive(layerHUD: hud)
+    }
     let keymap = TestKeymaps.makeKyria()
     let definition = try #require(KeymapDefinition(firmwareKeymap: keymap))
     let lower = try #require(

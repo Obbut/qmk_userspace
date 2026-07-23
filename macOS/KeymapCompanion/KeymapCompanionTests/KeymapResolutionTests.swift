@@ -1,5 +1,13 @@
+import KeymapCompanionCore
 import Testing
 @testable import KeymapCompanion
+
+/// Verifies the registered SwiftUI preview dependency is not the physical macOS HID monitor.
+@Test
+func previewDependencyDoesNotUsePhysicalKeyboardHardware() {
+    let client = KeyboardHardwareClientKey.previewValue
+    #expect(!(client is KeyboardHIDMonitor))
+}
 
 /// Verifies all four firmware modules produce production renderer input.
 @Test

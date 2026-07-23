@@ -28,13 +28,13 @@ struct KeyboardDiagramView: View {
                 KeymapKeyCell(
                     legend: legend,
                     width: 50 * key.placement.width * scale,
-                    height: 50 * key.placement.height * scale
+                    height: 50 * key.placement.height * scale,
+                    rotationDegrees: key.placement.rotationDegrees
                 )
-                    .rotationEffect(.degrees(key.placement.rotationDegrees))
-                    .position(
-                        x: key.placement.centerX * scale,
-                        y: key.placement.centerY * scale
-                    )
+                .position(
+                    x: key.placement.centerX * scale,
+                    y: key.placement.centerY * scale
+                )
             }
 
             ForEach(document.encoders) { encoder in
@@ -65,38 +65,29 @@ fileprivate struct KeymapKeyCell: View {
 
     let height: CGFloat
 
+    let rotationDegrees: Double
+
     var body: some View {
-        let shape = RoundedRectangle(cornerRadius: 8, style: .continuous)
-        Group {
-            if !legend.isTransparent, !legend.label.isEmpty {
-                GlassEffectContainer(spacing: 0) {
-                    shape
-                        .fill(legend.style.color.opacity(0.08))
-                        .frame(width: width, height: height)
-                        .glassEffect(
-                            .regular.tint(legend.style.color.opacity(0.34)),
-                            in: shape
-                        )
-                        .overlay {
-                            shape.strokeBorder(legend.style.keyBorderColor, lineWidth: 1)
-                        }
-                }
-            } else {
-                shape
-                    .fill(
-                        legend.style.color.opacity(legend.isTransparent ? 0.16 : 0.72)
-                    )
-                    .frame(width: width, height: height)
-                    .overlay {
-                        shape.strokeBorder(
-                            legend.isTransparent
-                                ? Color.primary.opacity(0.08)
-                                : legend.style.keyBorderColor,
-                            lineWidth: 1
-                        )
-                    }
+        let shape = RotatedRoundedRectangle(
+            contentWidth: width,
+            contentHeight: height,
+            cornerRadius: 8,
+            rotationDegrees: rotationDegrees
+        )
+        let isSubdued = legend.isTransparent || legend.label.isEmpty
+        shape
+            .fill(legend.style.color.opacity(isSubdued ? 0.04 : 0.08))
+            .frame(width: rotatedWidth, height: rotatedHeight)
+            .glassEffect(
+                .regular.tint(legend.style.color.opacity(isSubdued ? 0.14 : 0.34)),
+                in: shape
+            )
+            .overlay {
+                shape.stroke(
+                    isSubdued ? Color.primary.opacity(0.10) : legend.style.keyBorderColor,
+                    lineWidth: 1
+                )
             }
-        }
         .overlay {
             Text(legend.label)
                 .font(.system(size: 10, weight: .semibold, design: .rounded))
@@ -109,7 +100,46 @@ fileprivate struct KeymapKeyCell: View {
                 .minimumScaleFactor(0.55)
                 .multilineTextAlignment(.center)
                 .padding(3)
+                .frame(width: width, height: height)
+                .rotationEffect(.degrees(rotationDegrees))
         }
+    }
+
+    private var rotatedWidth: CGFloat {
+        let radians = rotationDegrees * .pi / 180
+        return abs(width * cos(radians)) + abs(height * sin(radians))
+    }
+
+    private var rotatedHeight: CGFloat {
+        let radians = rotationDegrees * .pi / 180
+        return abs(width * sin(radians)) + abs(height * cos(radians))
+    }
+}
+
+/// Draws a rotated keycap path without transforming the finished glass surface.
+private struct RotatedRoundedRectangle: Shape {
+    let contentWidth: CGFloat
+    let contentHeight: CGFloat
+    let cornerRadius: CGFloat
+    let rotationDegrees: Double
+
+    func path(in rect: CGRect) -> Path {
+        let contentRect = CGRect(
+            x: rect.midX - contentWidth / 2,
+            y: rect.midY - contentHeight / 2,
+            width: contentWidth,
+            height: contentHeight
+        )
+        let radians = rotationDegrees * .pi / 180
+        let transform = CGAffineTransform(translationX: rect.midX, y: rect.midY)
+            .rotated(by: radians)
+            .translatedBy(x: -rect.midX, y: -rect.midY)
+        return Path(
+            roundedRect: contentRect,
+            cornerRadius: cornerRadius,
+            style: .continuous
+        )
+        .applying(transform)
     }
 }
 

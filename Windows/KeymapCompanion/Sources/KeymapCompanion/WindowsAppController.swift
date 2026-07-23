@@ -1,4 +1,5 @@
 import CWindowsShell
+import Dependencies
 import Dispatch
 import KeymapCompanionCore
 import Observation
@@ -78,7 +79,11 @@ final class WindowsAppController {
     /// Creates native Windows state around the shared observable model.
     init() {
         let hardware = WindowsKeyboardHardwareClient()
-        model = KeymapCompanionModel.makeLive(hardware: hardware)
+        model = withDependencies {
+            $0.keyboardHardware = hardware
+        } operation: {
+            KeymapCompanionModel.makeLive()
+        }
     }
 
     /// Builds, observes, and activates the primary window and tray icon.

@@ -68,21 +68,14 @@ public final class KeymapCompanionModel {
         hardware.start()
     }
 
-    /// Creates a live model with a platform hardware implementation.
+    /// Creates a live model using the hardware client in the current dependency context.
     ///
-    /// - Parameters:
-    ///   - hardware: The platform hardware implementation to inject.
-    ///   - layerHUD: The layer HUD state machine.
+    /// - Parameter layerHUD: The layer HUD state machine.
     /// - Returns: A model that has started hardware discovery.
     public static func makeLive(
-        hardware: any KeyboardHardwareClient,
         layerHUD: LayerHUDModel = LayerHUDModel()
     ) -> KeymapCompanionModel {
-        withDependencies {
-            $0.keyboardHardware = hardware
-        } operation: {
-            KeymapCompanionModel(layerHUD: layerHUD)
-        }
+        KeymapCompanionModel(layerHUD: layerHUD)
     }
 
     /// Creates a model from deterministic state without starting hardware access.

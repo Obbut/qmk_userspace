@@ -1,7 +1,13 @@
 import CoreFoundation
+import Dependencies
 import Foundation
 @preconcurrency import IOKit.hid
 import KeymapCompanionCore
+
+/// Supplies the macOS HID monitor only when dependencies resolve in a live context.
+extension KeyboardHardwareClientKey: @retroactive DependencyKey {
+    public static let liveValue: any KeyboardHardwareClient = KeyboardHIDMonitor()
+}
 
 /// A main-actor monitor for QMK Raw HID endpoints and state callbacks.
 @MainActor

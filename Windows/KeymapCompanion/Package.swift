@@ -34,6 +34,10 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "../../Shared"),
+        .package(
+            url: "https://github.com/pointfreeco/swift-dependencies",
+            exact: "1.12.0"
+        ),
         .package(path: "Dependencies/swift-uwp"),
         .package(path: "Dependencies/swift-windowsappsdk"),
         .package(path: "Dependencies/swift-windowsfoundation"),
@@ -73,6 +77,7 @@ let package = Package(
                 "CWindowsHID",
                 "CWindowsShell",
                 .product(name: "KeymapCompanionCore", package: "Shared"),
+                .product(name: "Dependencies", package: "swift-dependencies"),
                 .product(name: "UWP", package: "swift-uwp"),
                 .product(name: "WinAppSDK", package: "swift-windowsappsdk"),
                 .product(name: "WindowsFoundation", package: "swift-windowsfoundation"),
