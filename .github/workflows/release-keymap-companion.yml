@@ -1,0 +1,297 @@
+name: Release Keymap Companion
+
+on:
+  push:
+    tags:
+      - "keymap-companion-v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-keymap-companion-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Sign, notarize and publish
+    runs-on: macos-26
+    environment: macos-release
+    timeout-minutes: 60
+
+    env:
+      ARCHIVE_PATH: ${{ github.workspace }}/.release/KeymapCompanion.xcarchive
+      APP_PATH: ${{ github.workspace }}/.release/KeymapCompanion.xcarchive/Products/Applications/KeymapCompanion.app
+      DEVELOPER_TEAM_ID: K42J36T76B
+      SIGNING_IDENTITY: "Developer ID Application: Unbeatable Software B.V. (K42J36T76B)"
+
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate and extract version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          if [[ ! "$tag" =~ ^keymap-companion-v(0|[1-9][0-9]*)\.((0|[1-9][0-9]*))\.((0|[1-9][0-9]*))$ ]]; then
+            echo "Expected a tag such as keymap-companion-v1.0.0, got: $tag" >&2
+            exit 1
+          fi
+
+          version="${tag#keymap-companion-v}"
+          {
+            echo "tag=$tag"
+            echo "version=$version"
+            echo "archive=KeymapCompanion-${version}-macos-arm64.zip"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Run macOS tests
+        working-directory: macOS/KeymapCompanion
+        run: |
+          xcodebuild \
+            -project KeymapCompanion.xcodeproj \
+            -scheme KeymapCompanion \
+            -destination 'platform=macOS,arch=arm64' \
+            CODE_SIGNING_ALLOWED=NO \
+            test
+
+      - name: Test Swift keymap framework
+        run: swift test --package-path SwiftKeymaps
+
+      - name: Test shared protocol and companion model
+        run: swift test --package-path Shared
+
+      - name: Install signing certificate
+        env:
+          CERTIFICATE_P12: ${{ secrets.MACOS_DEVELOPER_ID_P12 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.MACOS_DEVELOPER_ID_P12_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          certificate_path="$RUNNER_TEMP/developer-id.p12"
+          keychain_path="$RUNNER_TEMP/release-signing.keychain-db"
+          keychain_password="$(openssl rand -base64 32)"
+
+          printf '%s' "$CERTIFICATE_P12" | base64 --decode > "$certificate_path"
+          security create-keychain -p "$keychain_password" "$keychain_path"
+          security set-keychain-settings -lut 21600 "$keychain_path"
+          security unlock-keychain -p "$keychain_password" "$keychain_path"
+          security import "$certificate_path" \
+            -k "$keychain_path" \
+            -P "$CERTIFICATE_PASSWORD" \
+            -T /usr/bin/codesign \
+            -T /usr/bin/security
+          security set-key-partition-list \
+            -S apple-tool:,apple: \
+            -s \
+            -k "$keychain_password" \
+            "$keychain_path"
+          security list-keychains -d user -s "$keychain_path"
+          rm -f "$certificate_path"
+
+      - name: Archive signed application
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$(dirname "$ARCHIVE_PATH")"
+          xcodebuild archive \
+            -project macOS/KeymapCompanion/KeymapCompanion.xcodeproj \
+            -scheme KeymapCompanion \
+            -configuration Release \
+            -destination 'generic/platform=macOS' \
+            -archivePath "$ARCHIVE_PATH" \
+            ARCHS=arm64 \
+            ONLY_ACTIVE_ARCH=NO \
+            MARKETING_VERSION="$VERSION" \
+            CURRENT_PROJECT_VERSION="${GITHUB_RUN_NUMBER}" \
+            DEVELOPMENT_TEAM="$DEVELOPER_TEAM_ID" \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="$SIGNING_IDENTITY" \
+            OTHER_CODE_SIGN_FLAGS="--timestamp"
+
+      - name: Verify application metadata and signature
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          executable="$APP_PATH/Contents/MacOS/KeymapCompanion"
+          info_plist="$APP_PATH/Contents/Info.plist"
+          entitlements="$RUNNER_TEMP/keymap-companion-entitlements.plist"
+
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$info_plist")" = "$VERSION"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$info_plist")" = "$GITHUB_RUN_NUMBER"
+          test "$(/usr/libexec/PlistBuddy -c 'Print :LSMinimumSystemVersion' "$info_plist")" = "26.0"
+          test "$(lipo -archs "$executable")" = "arm64"
+
+          codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+          signature="$(codesign -dvvv "$APP_PATH" 2>&1)"
+          grep -F "Authority=$SIGNING_IDENTITY" <<< "$signature"
+          grep -F "TeamIdentifier=$DEVELOPER_TEAM_ID" <<< "$signature"
+          grep -F "Timestamp=" <<< "$signature"
+
+          codesign -d --entitlements :- "$APP_PATH" > "$entitlements" 2>/dev/null || true
+          if value="$(/usr/libexec/PlistBuddy -c 'Print :com.apple.security.get-task-allow' "$entitlements" 2>/dev/null)"; then
+            test "$value" != "true"
+          fi
+
+      - name: Notarize application
+        env:
+          NOTARY_PRIVATE_KEY: ${{ secrets.APPLE_NOTARY_PRIVATE_KEY }}
+          NOTARY_KEY_ID: ${{ secrets.APPLE_NOTARY_KEY_ID }}
+          NOTARY_ISSUER_ID: ${{ secrets.APPLE_NOTARY_ISSUER_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          key_path="$RUNNER_TEMP/AuthKey_${NOTARY_KEY_ID}.p8"
+          submission_archive="$RUNNER_TEMP/KeymapCompanion-notarization.zip"
+          submission_result="$RUNNER_TEMP/notarization-result.json"
+
+          printf '%s' "$NOTARY_PRIVATE_KEY" > "$key_path"
+          chmod 600 "$key_path"
+          ditto -c -k --keepParent "$APP_PATH" "$submission_archive"
+          xcrun notarytool submit "$submission_archive" \
+            --key "$key_path" \
+            --key-id "$NOTARY_KEY_ID" \
+            --issuer "$NOTARY_ISSUER_ID" \
+            --wait \
+            --output-format json > "$submission_result"
+          jq -e '.status == "Accepted"' "$submission_result"
+
+          xcrun stapler staple "$APP_PATH"
+          xcrun stapler validate "$APP_PATH"
+          codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+          spctl --assess --type execute --verbose=2 "$APP_PATH"
+          rm -f "$key_path" "$submission_archive"
+
+      - name: Package release
+        id: package
+        env:
+          ARCHIVE_NAME: ${{ steps.version.outputs.archive }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          output="$GITHUB_WORKSPACE/.release/$ARCHIVE_NAME"
+          ditto -c -k --keepParent "$APP_PATH" "$output"
+          sha256="$(shasum -a 256 "$output" | awk '{print $1}')"
+          printf '%s  %s\n' "$sha256" "$ARCHIVE_NAME" > "${output}.sha256"
+          {
+            echo "path=$output"
+            echo "checksum_path=${output}.sha256"
+            echo "sha256=$sha256"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Prepare component release notes
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          notes="$RUNNER_TEMP/keymap-companion-release-notes.md"
+          previous_tag="$(
+            git tag --list 'keymap-companion-v*' --sort=-version:refname |
+              grep -Fvx "$TAG" |
+              head -n 1 || true
+          )"
+
+          {
+            echo "Keymap Companion $VERSION for Apple Silicon Macs running macOS 26 or newer."
+            echo
+            echo "Install with:"
+            echo
+            echo '```sh'
+            echo 'brew install --cask obbut/tap/keymap-companion'
+            echo '```'
+            echo
+            echo "## Changes"
+            if [[ -n "$previous_tag" ]]; then
+              git log \
+                --format='- %s (%h)' \
+                "$previous_tag..$TAG" \
+                -- macOS/KeymapCompanion Shared SwiftKeymaps
+            else
+              echo "- Initial signed and notarized Homebrew release."
+            fi
+          } > "$notes"
+
+      - name: Create or update GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+          VERSION: ${{ steps.version.outputs.version }}
+          ARCHIVE_PATH: ${{ steps.package.outputs.path }}
+          CHECKSUM_PATH: ${{ steps.package.outputs.checksum_path }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          notes="$RUNNER_TEMP/keymap-companion-release-notes.md"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$ARCHIVE_PATH" "$CHECKSUM_PATH" --clobber
+            gh release edit "$TAG" \
+              --title "Keymap Companion $VERSION" \
+              --notes-file "$notes" \
+              --latest=false
+          else
+            gh release create "$TAG" \
+              "$ARCHIVE_PATH" \
+              "$CHECKSUM_PATH" \
+              --verify-tag \
+              --title "Keymap Companion $VERSION" \
+              --notes-file "$notes" \
+              --latest=false
+          fi
+
+      - name: Update and validate Homebrew cask
+        id: tap
+        env:
+          HOMEBREW_TAP_DEPLOY_KEY: ${{ secrets.HOMEBREW_TAP_DEPLOY_KEY }}
+          SHA256: ${{ steps.package.outputs.sha256 }}
+          VERSION: ${{ steps.version.outputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          tap_key="$RUNNER_TEMP/homebrew-tap-deploy-key"
+          tap_directory="$RUNNER_TEMP/homebrew-tap"
+          printf '%s' "$HOMEBREW_TAP_DEPLOY_KEY" > "$tap_key"
+          chmod 600 "$tap_key"
+
+          export GIT_SSH_COMMAND="ssh -i $tap_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
+          git clone git@github.com:Obbut/homebrew-tap.git "$tap_directory"
+          ./Tools/render-keymap-companion-cask.sh \
+            "$VERSION" \
+            "$SHA256" \
+            "$tap_directory/Casks/keymap-companion.rb"
+          rm -f "$tap_directory/Casks/.gitkeep"
+
+          brew style "$tap_directory/Casks/keymap-companion.rb"
+          brew audit --cask --strict --online "$tap_directory/Casks/keymap-companion.rb"
+          brew install --cask "$tap_directory/Casks/keymap-companion.rb"
+          test -d /Applications/KeymapCompanion.app
+          codesign --verify --deep --strict --verbose=2 /Applications/KeymapCompanion.app
+          spctl --assess --type execute --verbose=2 /Applications/KeymapCompanion.app
+          brew uninstall --cask keymap-companion
+
+          git -C "$tap_directory" config user.name "github-actions[bot]"
+          git -C "$tap_directory" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git -C "$tap_directory" add Casks
+          if git -C "$tap_directory" diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git -C "$tap_directory" commit -m "Update keymap-companion to $VERSION"
+            git -C "$tap_directory" push origin main
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+          rm -f "$tap_key"
+
+      - name: Clean up release keychain
+        if: always()
+        shell: bash
+        run: |
+          security delete-keychain "$RUNNER_TEMP/release-signing.keychain-db" 2>/dev/null || true

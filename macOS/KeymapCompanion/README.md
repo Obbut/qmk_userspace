@@ -46,6 +46,51 @@ changes with `xcodegen generate --spec project.yml`.
 The app is intentionally not sandboxed because it opens QMK's vendor-defined
 IOHID interface directly. Hardened Runtime remains enabled.
 
+## Install with Homebrew
+
+Published signed and notarized releases install from the personal Obbut tap:
+
+```sh
+brew install --cask obbut/tap/keymap-companion
+```
+
+Homebrew upgrades the app through the normal update flow:
+
+```sh
+brew update
+brew upgrade --cask keymap-companion
+```
+
+### Publishing a release
+
+Keymap Companion releases use component-scoped semantic-version tags:
+
+```sh
+git tag keymap-companion-v1.1.0
+git push origin keymap-companion-v1.1.0
+```
+
+The `Release Keymap Companion` workflow tests the app, signs it with the
+Unbeatable Software Developer ID, notarizes and staples it, publishes a
+versioned ZIP and checksum, then validates and updates
+`Obbut/homebrew-tap`.
+
+The workflow uses the `macos-release` GitHub environment. Configure these
+environment secrets before publishing the first tag:
+
+- `MACOS_DEVELOPER_ID_P12`: base64-encoded Developer ID Application
+  certificate and private key exported as a PKCS#12 file.
+- `MACOS_DEVELOPER_ID_P12_PASSWORD`: password used for that export.
+- `APPLE_NOTARY_PRIVATE_KEY`: complete App Store Connect API private key in
+  `.p8` PEM format.
+- `APPLE_NOTARY_KEY_ID`: API key identifier.
+- `APPLE_NOTARY_ISSUER_ID`: API issuer identifier.
+- `HOMEBREW_TAP_DEPLOY_KEY`: SSH private key whose public key has write access
+  only to `Obbut/homebrew-tap`.
+
+The tag is the release version source of truth. Rerunning a release replaces
+the matching assets and only commits to the tap when the rendered cask changed.
+
 ## Shared implementation
 
 `Shared/KeymapCompanionCore` owns the `@MainActor @Observable` application
