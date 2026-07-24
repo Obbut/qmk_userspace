@@ -63,6 +63,13 @@ struct MenuBarView: View {
 
         Divider()
 
+        SettingsLink {
+            Label("Settings", systemImage: "gearshape")
+        }
+        .keyboardShortcut(",")
+
+        Divider()
+
         Button("Quit Keymap Companion", systemImage: "power") {
             NSApplication.shared.terminate(nil)
         }

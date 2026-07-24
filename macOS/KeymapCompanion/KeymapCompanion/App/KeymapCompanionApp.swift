@@ -29,7 +29,7 @@ struct KeymapCompanionApp: App {
         layerHUDController = LayerHUDController(model: model)
     }
 
-    /// The main keymap window and persistent menu-bar extra.
+    /// The main keymap window, persistent menu-bar extra, and application settings.
     var body: some Scene {
         MenuBarExtra {
             MenuBarView(model: model)
@@ -61,6 +61,10 @@ struct KeymapCompanionApp: App {
                 }
                 .keyboardShortcut("r", modifiers: [.command, .shift])
             }
+        }
+
+        Settings {
+            SettingsView()
         }
     }
 }

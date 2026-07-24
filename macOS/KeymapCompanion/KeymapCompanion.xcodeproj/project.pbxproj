@@ -44,6 +44,7 @@
 		B0B9414FA9DF5349608BBC14 /* KeymapMetadataReport.swift in Sources */ = {isa = PBXBuildFile; fileRef = D8F4F26D51CF4D75FAD787FD /* KeymapMetadataReport.swift */; };
 		C58FA95910476439281623E7 /* LayerHUDModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A198319728DE35BAC30DD79 /* LayerHUDModel.swift */; };
 		C5B0FA2506C4A8EC9CB0E265 /* FirmwareKeymap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AD6F3DBD8BF71AB5E053DBB /* FirmwareKeymap.swift */; };
+		C95C5975EBED77BDB99FB221 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 829DB5FFC4BF5BBAFDD906E9 /* SettingsView.swift */; };
 		D90C01812155A5C755F560CC /* KeyStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 958459E40F97A70F7E6F6492 /* KeyStyle.swift */; };
 		D9E615BF566AD6A3E094F55E /* EncoderDirection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 852F6F0FED5CBED341AD96F4 /* EncoderDirection.swift */; };
 		ED73F72757203616AA7C3D6A /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF34605EA194EAA9D892FB88 /* MenuBarView.swift */; };
@@ -87,6 +88,7 @@
 		75ECC9C7348D3C8718B5FDB6 /* LayerHUDModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayerHUDModelTests.swift; sourceTree = "<group>"; };
 		7EFF93D9F5FE314CD455DA4F /* MenuBarKeyboardIcon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuBarKeyboardIcon.swift; sourceTree = "<group>"; };
 		81829E3DBD84F94ABE9BFFAA /* LayerHUDView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayerHUDView.swift; sourceTree = "<group>"; };
+		829DB5FFC4BF5BBAFDD906E9 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		843BE78C3EF4D03FA9E8E56C /* KeyLegend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyLegend.swift; sourceTree = "<group>"; };
 		852F6F0FED5CBED341AD96F4 /* EncoderDirection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncoderDirection.swift; sourceTree = "<group>"; };
 		8A198319728DE35BAC30DD79 /* LayerHUDModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayerHUDModel.swift; sourceTree = "<group>"; };
@@ -142,6 +144,7 @@
 				7EFF93D9F5FE314CD455DA4F /* MenuBarKeyboardIcon.swift */,
 				EF34605EA194EAA9D892FB88 /* MenuBarView.swift */,
 				670902A1AF4074C283DFE454 /* RGBSettingsPopoverButton.swift */,
+				829DB5FFC4BF5BBAFDD906E9 /* SettingsView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -383,6 +386,7 @@
 				682D48C51F8ECC1B8092299C /* RGBEffect.swift in Sources */,
 				8F7D4AF505C96007AA116A34 /* RGBSettings.swift in Sources */,
 				7D9B3B6B276E07ABCA2BC2E8 /* RGBSettingsPopoverButton.swift in Sources */,
+				C95C5975EBED77BDB99FB221 /* SettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
