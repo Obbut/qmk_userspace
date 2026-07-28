@@ -137,9 +137,21 @@ flash_firmware() {
         if [[ -n "$drive" ]]; then
             echo "Found bootloader drive: $drive"
             echo "Copying $uf2_file..."
-            cp "$SCRIPT_DIR/$uf2_file" "$drive/"
-            echo "Firmware flashed successfully!"
-            return 0
+            local attempt
+            for attempt in 1 2 3; do
+                if cp "$SCRIPT_DIR/$uf2_file" "$drive/"; then
+                    echo "Firmware flashed successfully!"
+                    return 0
+                fi
+
+                if [[ $attempt -lt 3 ]]; then
+                    echo "Copy failed; retrying in 1 second... ($attempt/3)"
+                    sleep 1
+                fi
+            done
+
+            echo "Error: Failed to copy firmware after 3 attempts"
+            return 1
         fi
         sleep 1
         elapsed=$((elapsed + 1))
