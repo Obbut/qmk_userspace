@@ -151,7 +151,7 @@ registry. License details and the compatibility-patch attribution are in
 ## Elora Rev2 (Halcyon)
 
 Split ergonomic keyboard with number row:
-- **Left half**: No module
+- **Left half**: TFT display module
 - **Right half**: Encoder module
 
 The Elora shares the Kyria's typing layers and settings, except for the Kyria-only automatic Pointer layer and the Elora's additional number row.
@@ -302,7 +302,7 @@ runtime and its selected Swift firmware modules.
 ### Elora Rev2
 
 ```bash
-./docker-build.sh elora-left         # Build left half (no module)
+./docker-build.sh elora-left         # Build left half (TFT display)
 ./docker-build.sh elora-right        # Build right half (encoder)
 ./docker-build.sh elora-all          # Build both halves
 ./docker-build.sh flash-elora-left   # Build and flash left half

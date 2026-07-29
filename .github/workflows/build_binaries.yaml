@@ -68,14 +68,14 @@ jobs:
           path: |
             kyria_rev4_obbut_left_cirque.uf2
             kyria_rev4_obbut_right_encoder.uf2
-            elora_rev2_obbut_left.uf2
+            elora_rev2_obbut_left_display.uf2
             elora_rev2_obbut_right_encoder.uf2
             kyria_rev4_obbut_left_cirque.elf
             kyria_rev4_obbut_left_cirque.map
             kyria_rev4_obbut_right_encoder.elf
             kyria_rev4_obbut_right_encoder.map
-            elora_rev2_obbut_left.elf
-            elora_rev2_obbut_left.map
+            elora_rev2_obbut_left_display.elf
+            elora_rev2_obbut_left_display.map
             elora_rev2_obbut_right_encoder.elf
             elora_rev2_obbut_right_encoder.map
           retention-days: 1
@@ -166,7 +166,7 @@ jobs:
           - \`kyria_rev4_obbut_right_encoder.uf2\` - Right half with encoder
 
           **Elora Rev2 (Halcyon)**
-          - \`elora_rev2_obbut_left.uf2\` - Left half
+          - \`elora_rev2_obbut_left_display.uf2\` - Left half with TFT display
           - \`elora_rev2_obbut_right_encoder.uf2\` - Right half with encoder
 
           **Keychron Q15 Max**
@@ -178,7 +178,7 @@ jobs:
           Built from commit ${{ github.sha }}" \
             kyria_rev4_obbut_left_cirque.uf2 \
             kyria_rev4_obbut_right_encoder.uf2 \
-            elora_rev2_obbut_left.uf2 \
+            elora_rev2_obbut_left_display.uf2 \
             elora_rev2_obbut_right_encoder.uf2 \
             keychron_q15_max_ansi_encoder_obbut.bin \
             zsa_planck_ez_glow_obbut.bin \
@@ -186,8 +186,8 @@ jobs:
             kyria_rev4_obbut_left_cirque.map \
             kyria_rev4_obbut_right_encoder.elf \
             kyria_rev4_obbut_right_encoder.map \
-            elora_rev2_obbut_left.elf \
-            elora_rev2_obbut_left.map \
+            elora_rev2_obbut_left_display.elf \
+            elora_rev2_obbut_left_display.map \
             elora_rev2_obbut_right_encoder.elf \
             elora_rev2_obbut_right_encoder.map \
             keychron_q15_max_ansi_encoder_obbut.elf \

@@ -321,7 +321,7 @@ test_elora_emulator() {
         -v "$SCRIPT_DIR:/workspace:ro" \
         "$EMULATOR_IMAGE_NAME" \
         --board elora-rev2 \
-        --left /workspace/elora_rev2_obbut_left.uf2 \
+        --left /workspace/elora_rev2_obbut_left_display.uf2 \
         --right /workspace/elora_rev2_obbut_right_encoder.uf2 \
         --suite /opt/emulator/elora-scenarios \
         --repeat "${ELORA_EMULATOR_REPEAT:-2}"
@@ -352,7 +352,7 @@ emulate_kyria_scenario() {
 
 build_elora_left() {
     build_qmk_image
-    echo "Building Elora left half (no module)..."
+    echo "Building Elora left half (TFT display)..."
     docker run --rm \
         -v "$SCRIPT_DIR:/qmk_userspace" \
         -v "$BUILD_CACHE:/qmk_firmware/.build" \
@@ -362,10 +362,10 @@ build_elora_left() {
         -e SKIP_VERSION=1 \
         -e MAKEFLAGS="-j$BUILD_JOBS" \
         "$IMAGE_NAME" \
-        sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/elora/rev2 -km obbut -e HLC_NONE=1 -e TARGET=elora_rev2_obbut_left'
-    cp "$BUILD_CACHE/elora_rev2_obbut_left.elf" "$SCRIPT_DIR/"
-    cp "$BUILD_CACHE/elora_rev2_obbut_left.map" "$SCRIPT_DIR/"
-    echo "Build complete: elora_rev2_obbut_left.uf2"
+        sh -c 'qmk config user.overlay_dir=/qmk_userspace && qmk compile -kb splitkb/halcyon/elora/rev2 -km obbut -e HLC_TFT_DISPLAY=1 -e TARGET=elora_rev2_obbut_left_display'
+    cp "$BUILD_CACHE/elora_rev2_obbut_left_display.elf" "$SCRIPT_DIR/"
+    cp "$BUILD_CACHE/elora_rev2_obbut_left_display.map" "$SCRIPT_DIR/"
+    echo "Build complete: elora_rev2_obbut_left_display.uf2"
 }
 
 build_elora_right() {
@@ -564,7 +564,7 @@ case "${1:-help}" in
         ;;
     flash-elora-left)
         build_elora_left
-        flash_firmware "elora_rev2_obbut_left.uf2" "left"
+        flash_firmware "elora_rev2_obbut_left_display.uf2" "left"
         ;;
     flash-elora-right)
         build_elora_right
@@ -628,7 +628,7 @@ case "${1:-help}" in
         echo "  flash-kyria-right  - Build and flash right half"
         echo ""
         echo "Elora Rev2 (Halcyon) commands:"
-        echo "  elora-left         - Build left half (no module)"
+        echo "  elora-left         - Build left half (TFT display)"
         echo "  elora-right        - Build right half (encoder)"
         echo "  elora-all          - Build both Elora halves"
         echo "  test-elora-emulator - Build both exact UF2s and run the deterministic emulator suite"

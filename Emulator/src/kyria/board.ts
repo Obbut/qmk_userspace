@@ -80,7 +80,12 @@ export class KyriaBoard {
       const message = error instanceof Error ? error.message : String(error);
       throw new Error(`${message}; ${this.paths.board} peripherals did not become ready`);
     }
-    this.scheduler.runFor(profile === 'default' ? 20 : 300);
+    const hostSettleMilliseconds = profile === 'default' ? 20 : 300;
+    // rp2040js executes Quantum Painter's initial TFT surface render entirely
+    // in software. Let that one-time frame finish before a scenario injects
+    // its first key; subsequent display updates and key scans are responsive.
+    const displaySettleMilliseconds = this.paths.board === 'elora-rev2' ? 500 : 0;
+    this.scheduler.runFor(Math.max(hostSettleMilliseconds, displaySettleMilliseconds));
   }
 
   setKey(identifier: string, pressed: boolean): void {

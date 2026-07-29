@@ -178,7 +178,7 @@ then run the relevant Docker build and `./draw-keymap.sh`.
 
 - Elora Rev2 (Halcyon series) split keyboard
 - Same as Kyria but with an additional number row
-- Left half: No module
+- Left half: TFT display module
 - Right half: Encoder module
 - Each half needs different firmware due to asymmetric modules
 
@@ -200,7 +200,7 @@ then run the relevant Docker build and `./draw-keymap.sh`.
 **Manual:**
 1. Build firmware: `./docker-build.sh elora-left` or `./docker-build.sh elora-right`
 2. Put keyboard in bootloader mode (appears as `RPI-RP2` drive)
-3. Copy the `.uf2` file to the drive (e.g., `elora_rev2_obbut_left.uf2`)
+3. Copy the `.uf2` file to the drive (e.g., `elora_rev2_obbut_left_display.uf2`)
 
 ## Physical Layout
 
