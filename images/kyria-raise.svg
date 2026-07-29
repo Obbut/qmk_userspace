@@ -38,11 +38,11 @@ text.hold { font-size: 10px; fill: #666666; }
 </g>
 <g transform="translate(196, 28)" class="key rgb-yellow keypos-3">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key rgb-yellow"/>
-<text x="0" y="0" class="key rgb-yellow tap">[</text>
+<text x="0" y="0" class="key rgb-yellow tap">{</text>
 </g>
 <g transform="translate(252, 42)" class="key rgb-yellow keypos-4">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key rgb-yellow"/>
-<text x="0" y="0" class="key rgb-yellow tap">]</text>
+<text x="0" y="0" class="key rgb-yellow tap">}</text>
 </g>
 <g transform="translate(308, 56)" class="key keypos-5">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
@@ -129,11 +129,11 @@ text.hold { font-size: 10px; fill: #666666; }
 </g>
 <g transform="translate(196, 140)" class="key rgb-yellow keypos-27">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key rgb-yellow"/>
-<text x="0" y="0" class="key rgb-yellow tap">{</text>
+<text x="0" y="0" class="key rgb-yellow tap">[</text>
 </g>
 <g transform="translate(252, 154)" class="key rgb-yellow keypos-28">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key rgb-yellow"/>
-<text x="0" y="0" class="key rgb-yellow tap">}</text>
+<text x="0" y="0" class="key rgb-yellow tap">]</text>
 </g>
 <g transform="translate(308, 168)" class="key keypos-29">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>

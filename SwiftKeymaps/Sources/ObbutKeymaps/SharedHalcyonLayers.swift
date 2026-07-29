@@ -97,7 +97,7 @@ extension SharedHalcyonLayers {
             }
             Row(
                 .grave.style(.symbol), .exclamation.style(.symbol), .at.style(.symbol),
-                .leftBracket.style(.symbol), .rightBracket.style(.symbol), .transparent,
+                .leftBrace.style(.symbol), .rightBrace.style(.symbol), .transparent,
                 .colon.style(.symbol), .seven.style(.number), .eight.style(.number),
                 .nine.style(.number), .minus.style(.symbol), .transparent
             )
@@ -110,7 +110,7 @@ extension SharedHalcyonLayers {
             )
             Row(
                 .transparent, .percent.style(.symbol), .caret.style(.symbol),
-                .leftBrace.style(.symbol), .rightBrace.style(.symbol), .transparent,
+                .leftBracket.style(.symbol), .rightBracket.style(.symbol), .transparent,
                 .transparent, .transparent, .transparent, .transparent,
                 .zero.style(.number), .one.style(.number), .two.style(.number),
                 .three.style(.number), .period.style(.symbol), .backslash.style(.symbol)
